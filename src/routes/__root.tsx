@@ -74,6 +74,8 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
       <body>
         <div id="mockup-manager-toolbar" className="p-2 flex gap-2 text-lg items-center">
           <img src="/firefox.svg" alt="Firefox" width="24" height="24" className="mr-2" />
+          <span className="font-semibold text-gray-700">Firefox Mockup</span>
+          <div className="w-px h-6 bg-gray-300 mx-2" />
           <Link
             to="/"
             activeProps={{

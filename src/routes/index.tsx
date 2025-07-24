@@ -10,14 +10,22 @@ import {
 import { mockProperties } from "~/data/mockProperties";
 import React from "react";
 
+interface Tab {
+  id: string;
+  title: string;
+  url: string;
+  favicon?: React.ReactNode;
+  isPinned?: boolean;
+  isActive?: boolean;
+}
+
 export const Route = createFileRoute("/")({
   component: Home,
 });
 
 function Home(): React.ReactElement {
   const [activeTabId, setActiveTabId] = React.useState("airbnb-2");
-
-  const tabs = [
+  const [tabs, setTabs] = React.useState<Tab[]>([
     {
       id: "firefox",
       title: "Firefox View",
@@ -50,7 +58,7 @@ function Home(): React.ReactElement {
       url: "https://www.youtube.com",
       favicon: <YouTubeFavicon />,
     },
-  ];
+  ]);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
@@ -63,10 +71,33 @@ function Home(): React.ReactElement {
           currentUrl={activeTab?.url ?? ""}
           onTabClick={setActiveTabId}
           onTabClose={(id) => {
-            console.log("Close tab:", id);
+            // Don't close pinned tabs
+            const tabToClose = tabs.find((t) => t.id === id);
+            if (tabToClose?.isPinned) return;
+
+            // Remove the tab
+            const newTabs = tabs.filter((t) => t.id !== id);
+            setTabs(newTabs);
+
+            // If we closed the active tab, switch to another tab
+            if (id === activeTabId && newTabs.length > 0) {
+              const closedIndex = tabs.findIndex((t) => t.id === id);
+              const newActiveIndex = Math.min(closedIndex, newTabs.length - 1);
+              const newActiveTab = newTabs[newActiveIndex];
+              if (newActiveTab) {
+                setActiveTabId(newActiveTab.id);
+              }
+            }
           }}
           onNewTab={() => {
-            console.log("New tab");
+            const newTabId = `tab-${Date.now()}`;
+            const newTab = {
+              id: newTabId,
+              title: "New Tab",
+              url: "about:blank",
+            };
+            setTabs([...tabs, newTab]);
+            setActiveTabId(newTabId);
           }}
           onNavigate={(url) => {
             console.log("Navigate to:", url);
@@ -92,6 +123,14 @@ function Home(): React.ReactElement {
           {activeTabId === "firefox" && (
             <div className="flex items-center justify-center h-full text-gray-500">
               <p>Firefox View content would go here</p>
+            </div>
+          )}
+          {activeTabId.startsWith("tab-") && (
+            <div className="flex items-center justify-center h-full bg-white">
+              <div className="text-center">
+                <h1 className="text-2xl font-light text-gray-700 mb-4">New Tab</h1>
+                <p className="text-gray-500">Start browsing or enter a URL in the address bar</p>
+              </div>
             </div>
           )}
         </BrowserShell>

@@ -3,6 +3,8 @@ import { cn } from '~/lib/utils'
 import { TabStrip } from './TabStrip'
 import { Toolbar } from './Toolbar'
 import { WindowControls } from './WindowControls'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu'
+import { Plus } from 'lucide-react'
 
 interface BrowserShellProps {
   children: React.ReactNode
@@ -41,28 +43,51 @@ export function BrowserShell({
       className
     )}>
       {/* Tab strip with window controls */}
-      <div className="bg-[#f0f0f4] flex items-center shrink-0">
-        <WindowControls />
-        <div className="flex-1">
-          <TabStrip
-            tabs={tabs}
-            activeTabId={activeTabId}
-            onTabClick={onTabClick}
-            onTabClose={onTabClose}
-            onNewTab={onNewTab}
-          />
-        </div>
-      </div>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div id="firefox-tab-strip" className="bg-[#f0f0f4] flex items-center shrink-0 browser-chrome">
+            <WindowControls />
+            <div className="flex-1">
+              <TabStrip
+                tabs={tabs}
+                activeTabId={activeTabId}
+                onTabClick={onTabClick}
+                onTabClose={onTabClose}
+                onNewTab={onNewTab}
+              />
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={onNewTab}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Tab
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
       
       {/* Toolbar */}
-      <Toolbar
-        url={currentUrl}
-        onNavigate={onNavigate}
-        className="shrink-0"
-      />
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div id="firefox-toolbar" className="browser-chrome">
+            <Toolbar
+              url={currentUrl}
+              onNavigate={onNavigate}
+              onNewTab={onNewTab}
+              className="shrink-0"
+            />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={onNewTab}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Tab
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
       
       {/* Content area */}
-      <div className="flex-1 bg-white overflow-hidden min-h-0">
+      <div id="firefox-content-area" className="flex-1 bg-white overflow-hidden min-h-0 browser-content">
         <div className="h-full overflow-auto">
           {children}
         </div>
