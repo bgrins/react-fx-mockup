@@ -3,6 +3,15 @@
     "figma-dev-mode-mcp-server": {
       "type": "sse",
       "url": "http://127.0.0.1:3845/sse"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--isolated",
+        "--browser",
+        "firefox"
+      ]
     }
   }
 }
