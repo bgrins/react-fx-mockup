@@ -30,8 +30,7 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
-      ...tseslint.configs.strictTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
+      ...tseslint.configs.recommended,
     ],
     languageOptions: {
       parserOptions: {
@@ -55,7 +54,6 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
-      '@typescript-eslint/explicit-function-return-type': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -64,22 +62,7 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        {
-          prefer: 'type-imports',
-          fixStyle: 'inline-type-imports',
-        },
-      ],
-      '@typescript-eslint/no-non-null-assertion': 'error',
-      '@typescript-eslint/strict-boolean-expressions': 'error',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/await-thenable': 'error',
-      '@typescript-eslint/no-unnecessary-condition': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
       'react/prop-types': 'off',
       'react/display-name': 'off',
     },

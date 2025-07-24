@@ -14,7 +14,6 @@ export const fetchPost = createServerFn()
     const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${data}`);
     if (!res.ok) {
       if (res.status === 404) {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw notFound();
       }
 

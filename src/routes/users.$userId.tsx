@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import * as React from "react";
 import { NotFound } from "src/components/NotFound";
 import { UserErrorComponent } from "src/components/UserError";
 import {
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/users/$userId")({
         throw new Error("Unexpected status code");
       }
 
-      const data = await res.json() as UserData;
+      const data = (await res.json()) as UserData;
 
       return data;
     } catch {
@@ -42,8 +43,8 @@ export const Route = createFileRoute("/users/$userId")({
   },
 });
 
-function UserComponent(): JSX.Element {
-  const user = Route.useLoaderData() as UserData;
+function UserComponent(): React.ReactElement {
+  const user = Route.useLoaderData();
 
   return (
     <Card>

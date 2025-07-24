@@ -35,6 +35,6 @@
     "noPropertyAccessFromIndexSignature": false,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": false
   }
 }

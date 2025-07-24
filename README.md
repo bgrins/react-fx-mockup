@@ -35,10 +35,12 @@ npm run deploy       # Deploy to Cloudflare Workers
 ### Pre-commit Hooks
 
 When you commit, the following checks run automatically:
+
 - ESLint fixes for staged TypeScript files
 - Prettier formatting for all staged files
 
 To bypass hooks in emergency (not recommended):
+
 ```bash
 git commit --no-verify
 ```
