@@ -110,13 +110,7 @@ function Home(): React.ReactElement {
               rightProperty={mockProperties.saintGeorgeStudio}
             />
           )}
-          {activeTabId === "skyscanner" && (
-            <iframe
-              src="/api/proxy?url=https://www.skyscanner.com"
-              className="w-full h-full border-0"
-              title="Skyscanner"
-            />
-          )}
+          {activeTabId === "skyscanner" && <p>Skyscanner content would go here</p>}
           {activeTabId === "youtube" && (
             <div className="flex items-center justify-center h-full text-gray-500">
               <p>YouTube content would go here</p>
