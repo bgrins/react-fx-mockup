@@ -11,6 +11,8 @@ import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
 import { NotFound } from '~/components/NotFound'
 import appCss from '~/styles/app.css?url'
 import { seo } from '~/utils/seo'
+import { Settings } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -63,13 +65,44 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const [isDark, setIsDark] = React.useState(false)
+
+  React.useEffect(() => {
+    const darkMode = localStorage.getItem('theme') === 'dark' || 
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    setIsDark(darkMode)
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    const newTheme = !isDark
+    setIsDark(newTheme)
+    if (newTheme) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }
+
   return (
     <html>
       <head>
         <HeadContent />
+        <style>{`
+          .tsqd-parent-container {
+            display: none !important;
+          }
+          .tsqd-parent-container.show {
+            display: block !important;
+          }
+        `}</style>
       </head>
       <body>
-        <div className="p-2 flex gap-2 text-lg">
+        <div className="p-2 flex gap-2 text-lg items-center">
           <Link
             to="/"
             activeProps={{
@@ -95,6 +128,53 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           >
             Users
           </Link>
+          <div className="ml-auto">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="p-2 hover:bg-gray-100 rounded-md">
+                  <Settings className="w-5 h-5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80">
+                <div className="space-y-4">
+                  <h3 className="font-medium text-sm">Settings</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">TanStack Router DevTools</span>
+                      <button
+                        onClick={() => {
+                          const devtools = document.querySelector('.tsqd-parent-container')
+                          if (devtools) {
+                            devtools.classList.toggle('hidden')
+                          }
+                        }}
+                        className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                      >
+                        Toggle
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="theme-toggle" className="text-sm">
+                        Dark Mode
+                      </label>
+                      <button
+                        id="theme-toggle"
+                        onClick={toggleTheme}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 ${
+                          isDark ? 'bg-blue-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span className="sr-only">Toggle theme</span>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          isDark ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
         <hr />
         {children}

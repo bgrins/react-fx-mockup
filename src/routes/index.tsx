@@ -1,35 +1,90 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { Button } from '~/components/ui/button'
+import { createFileRoute } from '@tanstack/react-router'
+import { BrowserShell } from '~/components/firefox/BrowserShell'
+import { SplitView } from '~/components/airbnb/SplitView'
+import { AirbnbFavicon, SkyscannerFavicon, YouTubeFavicon, FirefoxFavicon } from '~/components/firefox/Favicons'
+import { mockProperties } from '~/data/mockProperties'
+import React from 'react'
 
 export const Route = createFileRoute('/')({
   component: Home,
 })
 
 function Home() {
+  const [activeTabId, setActiveTabId] = React.useState('airbnb-2')
+  
+  const tabs = [
+    {
+      id: 'firefox',
+      title: 'Firefox View',
+      url: 'about:firefoxview',
+      favicon: <FirefoxFavicon />,
+      isPinned: true
+    },
+    {
+      id: 'skyscanner',
+      title: 'Skyscanner: Compare Cheap Flights & Book Airline Tickets to ...',
+      url: 'https://www.skyscanner.com',
+      favicon: <SkyscannerFavicon />
+    },
+    {
+      id: 'airbnb-1',
+      title: 'Villa il Vecchio courtyard "pergola" - Villas for Rent in Rodos, Greece - Airbnb',
+      url: 'https://www.airbnb.com/rooms/1370154278151273293',
+      favicon: <AirbnbFavicon />
+    },
+    {
+      id: 'airbnb-2',
+      title: 'Saint George Studio - Cottages for Rent in Psinthos, Greece - Airbnb',
+      url: 'https://www.airbnb.com/rooms/1370154278151273293',
+      favicon: <AirbnbFavicon />,
+      isActive: true
+    },
+    {
+      id: 'youtube',
+      title: 'Cheap flights from Toronto to Tokyo | Skyscanner',
+      url: 'https://www.youtube.com',
+      favicon: <YouTubeFavicon />
+    }
+  ]
+  
+  const activeTab = tabs.find(tab => tab.id === activeTabId)
+  
   return (
-    <div className="container mx-auto p-6">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Welcome to React FX Mockup</CardTitle>
-          <CardDescription>
-            Explore the app using the navigation below
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Link to="/posts">
-              <Button>View Posts</Button>
-            </Link>
-            <Link to="/users">
-              <Button variant="secondary">View Users</Button>
-            </Link>
+    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-3 md:p-4 lg:p-6 overflow-hidden">
+      <div className="h-full max-w-[1600px] mx-auto flex flex-col">
+        <BrowserShell
+          tabs={tabs}
+          activeTabId={activeTabId}
+          currentUrl={activeTab?.url || ''}
+          onTabClick={setActiveTabId}
+          onTabClose={(id) => console.log('Close tab:', id)}
+          onNewTab={() => console.log('New tab')}
+          onNavigate={(url) => console.log('Navigate to:', url)}
+          className="flex-1 min-h-0"
+        >
+        {activeTabId.startsWith('airbnb') && (
+          <SplitView
+            leftProperty={mockProperties.villaRodos}
+            rightProperty={mockProperties.saintGeorgeStudio}
+          />
+        )}
+        {activeTabId === 'skyscanner' && (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <p>Skyscanner content would go here</p>
           </div>
-          <p className="text-muted-foreground">
-            This app demonstrates TanStack Router with shadcn/ui components.
-          </p>
-        </CardContent>
-      </Card>
+        )}
+        {activeTabId === 'youtube' && (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <p>YouTube content would go here</p>
+          </div>
+        )}
+        {activeTabId === 'firefox' && (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <p>Firefox View content would go here</p>
+          </div>
+        )}
+        </BrowserShell>
+      </div>
     </div>
   )
 }

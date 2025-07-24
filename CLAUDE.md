@@ -4,3 +4,7 @@ You will have a dev server running at `localhost:3000`, you do not need to start
 
 The top tabs allow migrating between different starting states for the app, but there should be a shared app shell and functionality that looks like a mockup you'd take as a screenshot in the area below.
 
+The navigation header (Home, Posts, Users) in __root.tsx should be kept - it's used to manage various UI states and variations.
+
+After finishing work, run `npm run check` to ensure code passes all linting, formatting, and type checking.
+

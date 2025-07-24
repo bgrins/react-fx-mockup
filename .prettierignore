@@ -1,4 +1,9 @@
-**/build
-**/public
-pnpm-lock.yaml
-routeTree.gen.ts
+node_modules
+dist
+.output
+public
+*.min.js
+*.min.css
+package-lock.json
+src/routeTree.gen.ts
+src/components

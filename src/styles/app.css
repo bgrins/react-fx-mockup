@@ -19,6 +19,38 @@
   .using-mouse * {
     outline: none !important;
   }
+
+  /* Force light mode colors for Firefox UI mockup */
+  .firefox-ui,
+  .firefox-ui * {
+    color-scheme: light !important;
+  }
+  
+  /* Override dark mode text colors in Firefox UI */
+  .dark .firefox-ui,
+  .dark .firefox-ui * {
+    --tw-text-opacity: 1 !important;
+  }
+  
+  .dark .firefox-ui .text-gray-900 {
+    color: rgb(17 24 39 / var(--tw-text-opacity)) !important;
+  }
+  
+  .dark .firefox-ui .text-gray-600 {
+    color: rgb(75 85 99 / var(--tw-text-opacity)) !important;
+  }
+  
+  .dark .firefox-ui .text-gray-500 {
+    color: rgb(107 114 128 / var(--tw-text-opacity)) !important;
+  }
+  
+  .dark .firefox-ui .text-gray-400 {
+    color: rgb(156 163 175 / var(--tw-text-opacity)) !important;
+  }
+  
+  .dark .firefox-ui .bg-white {
+    background-color: rgb(255 255 255) !important;
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
