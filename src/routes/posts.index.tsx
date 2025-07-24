@@ -1,11 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { createFileRoute } from "@tanstack/react-router";
+import * as React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 
-export const Route = createFileRoute('/posts/')({
+export const Route = createFileRoute("/posts/")({
   component: PostsIndexComponent,
-})
+});
 
-function PostsIndexComponent() {
+function PostsIndexComponent(): React.ReactElement {
   return (
     <Card>
       <CardHeader>
@@ -20,5 +21,5 @@ function PostsIndexComponent() {
         </p>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -50,3 +50,13 @@ export function FirefoxFavicon() {
     </svg>
   )
 }
+
+export function FirefoxViewIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 2.5C2 1.67157 2.67157 1 3.5 1H12.5C13.3284 1 14 1.67157 14 2.5V5.5C14 6.32843 13.3284 7 12.5 7H3.5C2.67157 7 2 6.32843 2 5.5V2.5Z" fill="#8B51FF"/>
+      <path d="M2 10.5C2 9.67157 2.67157 9 3.5 9H7.5C8.32843 9 9 9.67157 9 10.5V13.5C9 14.3284 8.32843 15 7.5 15H3.5C2.67157 15 2 14.3284 2 13.5V10.5Z" fill="#8B51FF"/>
+      <circle cx="12" cy="12" r="3" fill="#8B51FF"/>
+    </svg>
+  )
+}

@@ -1,36 +1,49 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { NotFound } from 'src/components/NotFound'
-import { UserErrorComponent } from 'src/components/UserError'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '~/components/ui/card'
-import { Button } from '~/components/ui/button'
-import { Avatar, AvatarFallback } from '~/components/ui/avatar'
-import { Badge } from '~/components/ui/badge'
-import { ExternalLink, Mail, User } from 'lucide-react'
+import { createFileRoute } from "@tanstack/react-router";
+import { NotFound } from "src/components/NotFound";
+import { UserErrorComponent } from "src/components/UserError";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { Badge } from "~/components/ui/badge";
+import { ExternalLink, Mail, User } from "lucide-react";
 
-export const Route = createFileRoute('/users/$userId')({
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export const Route = createFileRoute("/users/$userId")({
   loader: async ({ params: { userId } }) => {
     try {
-      const res = await fetch('/api/users/' + userId)
+      const res = await fetch("/api/users/" + userId);
       if (!res.ok) {
-        throw new Error('Unexpected status code')
+        throw new Error("Unexpected status code");
       }
 
-      const data = await res.json()
+      const data = await res.json() as UserData;
 
-      return data
+      return data;
     } catch {
-      throw new Error('Failed to fetch user')
+      throw new Error("Failed to fetch user");
     }
   },
   errorComponent: UserErrorComponent,
   component: UserComponent,
   notFoundComponent: () => {
-    return <NotFound>User not found</NotFound>
+    return <NotFound>User not found</NotFound>;
   },
-})
+});
 
-function UserComponent() {
-  const user = Route.useLoaderData()
+function UserComponent(): JSX.Element {
+  const user = Route.useLoaderData() as UserData;
 
   return (
     <Card>
@@ -38,7 +51,11 @@ function UserComponent() {
         <div className="flex justify-center mb-4">
           <Avatar className="h-20 w-20">
             <AvatarFallback className="text-lg">
-              {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+              {user.name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -64,5 +81,5 @@ function UserComponent() {
         </a>
       </CardFooter>
     </Card>
-  )
+  );
 }

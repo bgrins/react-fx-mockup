@@ -7,11 +7,32 @@ import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
-  js.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
+  {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      '.output/**',
+      'public/**',
+      '*.js',
+      '*.mjs',
+      '*.cjs',
+      'vite.config.ts',
+      'tailwind.config.mjs',
+      'postcss.config.mjs',
+      'src/routeTree.gen.ts',
+      'src/components/**/*',
+      '.tanstack/**',
+      '.nitro/**',
+      'wrangler.jsonc',
+    ],
+  },
   {
     files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+    ],
     languageOptions: {
       parserOptions: {
         project: './tsconfig.json',
@@ -67,21 +88,5 @@ export default tseslint.config(
         version: 'detect',
       },
     },
-  },
-  {
-    ignores: [
-      'node_modules/**',
-      'dist/**',
-      '.output/**',
-      'public/**',
-      '*.js',
-      '*.mjs',
-      '*.cjs',
-      'vite.config.ts',
-      'tailwind.config.mjs',
-      'postcss.config.mjs',
-      'src/routeTree.gen.ts',
-      'src/components/**/*',
-    ],
   },
 );

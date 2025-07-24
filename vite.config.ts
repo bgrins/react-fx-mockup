@@ -9,7 +9,7 @@ export default defineConfig({
   },
   plugins: [
     tsConfigPaths({
-      projects: ['./tsconfig.json'],
+      projects: ['./tsconfig.build.json'],
     }),
     tanstackStart({ customViteReactPlugin: true, target: "cloudflare-module" }),
     viteReact(),

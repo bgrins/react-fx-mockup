@@ -1,90 +1,84 @@
 /// <reference types="vite/client" />
-import {
-  HeadContent,
-  Link,
-  Scripts,
-  createRootRoute,
-} from '@tanstack/react-router'
-import * as React from 'react'
-import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
-import { NotFound } from '~/components/NotFound'
-import appCss from '~/styles/app.css?url'
-import { seo } from '~/utils/seo'
-import { Settings } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
+import { HeadContent, Link, Scripts, createRootRoute } from "@tanstack/react-router";
+import * as React from "react";
+import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
+import { NotFound } from "~/components/NotFound";
+import appCss from "~/styles/app.css?url";
+import { seo } from "~/utils/seo";
+import { Settings } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       {
-        charSet: 'utf-8',
+        charSet: "utf-8",
       },
       {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
       },
       ...seo({
-        title:
-          'TanStack Start | Type-Safe, Client-First, Full-Stack React Framework',
+        title: "TanStack Start | Type-Safe, Client-First, Full-Stack React Framework",
         description: `TanStack Start is a type-safe, client-first, full-stack React framework. `,
       }),
     ],
     links: [
-      { rel: 'stylesheet', href: appCss },
+      { rel: "stylesheet", href: appCss },
       {
-        rel: 'apple-touch-icon',
-        sizes: '180x180',
-        href: '/apple-touch-icon.png',
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "/apple-touch-icon.png",
       },
       {
-        rel: 'icon',
-        type: 'image/png',
-        sizes: '32x32',
-        href: '/favicon-32x32.png',
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/favicon-32x32.png",
       },
       {
-        rel: 'icon',
-        type: 'image/png',
-        sizes: '16x16',
-        href: '/favicon-16x16.png',
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/favicon-16x16.png",
       },
-      { rel: 'manifest', href: '/site.webmanifest', color: '#fffff' },
-      { rel: 'icon', href: '/favicon.ico' },
+      { rel: "manifest", href: "/site.webmanifest", color: "#fffff" },
+      { rel: "icon", href: "/favicon.ico" },
     ],
     scripts: [
       {
-        src: '/customScript.js',
-        type: 'text/javascript',
+        src: "/customScript.js",
+        type: "text/javascript",
       },
     ],
   }),
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
   shellComponent: RootDocument,
-})
+});
 
-function RootDocument({ children }: { children: React.ReactNode }) {
-  const [isDark, setIsDark] = React.useState(false)
+function RootDocument({ children }: { children: React.ReactNode }): React.ReactElement {
+  const [isDark, setIsDark] = React.useState(false);
 
   React.useEffect(() => {
-    const darkMode = localStorage.getItem('theme') === 'dark'
-    setIsDark(darkMode)
+    const darkMode = localStorage.getItem("theme") === "dark";
+    setIsDark(darkMode);
     if (darkMode) {
-      document.documentElement.classList.add('dark')
+      document.documentElement.classList.add("dark");
     }
-  }, [])
+  }, []);
 
   const toggleTheme = () => {
-    const newTheme = !isDark
-    setIsDark(newTheme)
+    const newTheme = !isDark;
+    setIsDark(newTheme);
     if (newTheme) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
     } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
     }
-  }
+  };
 
   return (
     <html>
@@ -96,24 +90,24 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <Link
             to="/"
             activeProps={{
-              className: 'font-bold',
+              className: "font-bold",
             }}
             activeOptions={{ exact: true }}
           >
             Home
-          </Link>{' '}
+          </Link>{" "}
           <Link
             to="/posts"
             activeProps={{
-              className: 'font-bold',
+              className: "font-bold",
             }}
           >
             Posts
-          </Link>{' '}
+          </Link>{" "}
           <Link
             to="/users"
             activeProps={{
-              className: 'font-bold',
+              className: "font-bold",
             }}
           >
             Users
@@ -137,13 +131,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                         id="theme-toggle"
                         onClick={toggleTheme}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 ${
-                          isDark ? 'bg-blue-600' : 'bg-gray-200'
+                          isDark ? "bg-blue-600" : "bg-gray-200"
                         }`}
                       >
                         <span className="sr-only">Toggle theme</span>
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          isDark ? 'translate-x-6' : 'translate-x-1'
-                        }`} />
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            isDark ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
                       </button>
                     </div>
                   </div>
@@ -157,5 +153,5 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

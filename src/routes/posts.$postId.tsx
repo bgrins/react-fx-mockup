@@ -1,22 +1,30 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { fetchPost } from '../utils/posts'
-import { NotFound } from '~/components/NotFound'
-import { PostErrorComponent } from '~/components/PostError'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '~/components/ui/card'
-import { Button } from '~/components/ui/button'
-import { ArrowRight } from 'lucide-react'
+import { Link, createFileRoute } from "@tanstack/react-router";
+import * as React from "react";
+import { fetchPost } from "../utils/posts";
+import { NotFound } from "~/components/NotFound";
+import { PostErrorComponent } from "~/components/PostError";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
-export const Route = createFileRoute('/posts/$postId')({
+export const Route = createFileRoute("/posts/$postId")({
   loader: ({ params: { postId } }) => fetchPost({ data: postId }),
   errorComponent: PostErrorComponent,
   component: PostComponent,
   notFoundComponent: () => {
-    return <NotFound>Post not found</NotFound>
+    return <NotFound>Post not found</NotFound>;
   },
-})
+});
 
-function PostComponent() {
-  const post = Route.useLoaderData()
+function PostComponent(): React.ReactElement {
+  const post = Route.useLoaderData();
 
   return (
     <Card>
@@ -41,5 +49,5 @@ function PostComponent() {
         </Link>
       </CardFooter>
     </Card>
-  )
+  );
 }
