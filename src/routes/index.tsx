@@ -111,9 +111,11 @@ function Home(): React.ReactElement {
             />
           )}
           {activeTabId === "skyscanner" && (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <p>Skyscanner content would go here</p>
-            </div>
+            <iframe
+              src="/api/proxy?url=https://www.skyscanner.com"
+              className="w-full h-full border-0"
+              title="Skyscanner"
+            />
           )}
           {activeTabId === "youtube" && (
             <div className="flex items-center justify-center h-full text-gray-500">

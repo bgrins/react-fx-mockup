@@ -21,6 +21,7 @@ export const Route = createRootRoute({
       ...seo({
         title: "Firefox UI Mockup",
         description: `Interactive mockup of the Firefox browser UI.`,
+        image: "/firefox.svg",
       }),
     ],
     links: [
