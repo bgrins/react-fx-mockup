@@ -28,9 +28,9 @@ interface SplitViewProps {
 
 export function SplitView({ leftProperty, rightProperty }: SplitViewProps) {
   return (
-    <div className="flex h-full">
+    <div className="flex h-full gap-1 p-1 bg-gray-100">
       {/* Left panel */}
-      <div className="w-1/2 border-r border-gray-200 overflow-hidden">
+      <div className="w-1/2 bg-white rounded-lg overflow-hidden">
         <div className="h-full overflow-auto">
           <div className="max-w-2xl mx-auto px-6 py-8">
             <PropertyCard {...leftProperty} />
@@ -39,9 +39,9 @@ export function SplitView({ leftProperty, rightProperty }: SplitViewProps) {
       </div>
       
       {/* Right panel */}
-      <div className="w-1/2 overflow-hidden relative">
+      <div className="w-1/2 bg-white rounded-lg overflow-hidden relative">
         {/* Domain indicator */}
-        <div className="absolute bottom-4 right-4 bg-[#f0f0f4] rounded-tl-lg rounded-br-lg px-2 py-1 flex items-center gap-2 shadow-sm">
+        <div className="absolute bottom-4 right-4 bg-[#f0f0f4] rounded-tl-lg rounded-br-lg px-2 py-1 flex items-center gap-2 shadow-sm z-10">
           <AirbnbFavicon />
           <span className="text-[13px] font-sans text-[#15141a]">airbnb.com</span>
           <button className="w-6 h-6 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]">

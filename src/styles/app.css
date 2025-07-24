@@ -130,3 +130,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Browser chrome - non-selectable UI */
+.browser-chrome {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Content area - selectable */
+.browser-content {
+  user-select: auto;
+}

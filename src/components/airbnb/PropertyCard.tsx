@@ -1,4 +1,3 @@
-import React from 'react'
 import { Heart, Star } from 'lucide-react'
 import { cn } from '~/lib/utils'
 
@@ -37,74 +36,73 @@ export function PropertyCard({
   isFavorite,
   onFavoriteToggle
 }: PropertyCardProps) {
-  const [currentImageIndex, setCurrentImageIndex] = React.useState(0)
-  
   return (
     <div className="group cursor-pointer">
-      {/* Image carousel */}
-      <div className="relative aspect-square rounded-xl overflow-hidden mb-3">
-        <img 
-          src={images[currentImageIndex]} 
-          alt={title}
-          className="w-full h-full object-cover"
-        />
-        
-        {/* Image navigation dots */}
-        {images.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
-            {images.map((_, index) => (
-              <button
-                key={index}
+      {/* Image grid layout */}
+      <div className="relative rounded-xl overflow-hidden mb-3">
+        <div className="grid grid-cols-2 gap-2 aspect-[2/1]">
+          {/* Main image */}
+          <div className="relative">
+            <img 
+              src={images[0]} 
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Favorite button */}
+            <button
+              className="absolute top-3 left-3 p-2 rounded-full hover:scale-110 transition-transform"
+              onClick={(e) => {
+                e.stopPropagation()
+                onFavoriteToggle?.()
+              }}
+            >
+              <Heart 
                 className={cn(
-                  "w-1.5 h-1.5 rounded-full transition-all",
-                  index === currentImageIndex 
-                    ? "bg-white w-2" 
-                    : "bg-white/70"
+                  "w-6 h-6",
+                  isFavorite 
+                    ? "fill-[#FF385C] text-[#FF385C]" 
+                    : "fill-black/50 text-white stroke-[1.5]"
                 )}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setCurrentImageIndex(index)
-                }}
               />
-            ))}
-          </div>
-        )}
-        
-        {/* Favorite button */}
-        <button
-          className="absolute top-3 right-3 p-2 rounded-full hover:scale-110 transition-transform"
-          onClick={(e) => {
-            e.stopPropagation()
-            onFavoriteToggle?.()
-          }}
-        >
-          <Heart 
-            className={cn(
-              "w-6 h-6",
-              isFavorite 
-                ? "fill-[#FF385C] text-[#FF385C]" 
-                : "fill-black/50 text-white stroke-[1.5]"
+            </button>
+            
+            {/* Guest favorite badge */}
+            {rating && rating >= 4.9 && (
+              <div className="absolute top-3 right-3 bg-white px-2 py-1 rounded-full shadow-md">
+                <span className="text-xs font-medium">Guest favourite</span>
+              </div>
             )}
-          />
-        </button>
-        
-        {/* Guest favorite badge */}
-        {rating && rating >= 4.9 && (
-          <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded-full shadow-md">
-            <span className="text-xs font-medium">Guest favourite</span>
           </div>
-        )}
-        
-        {/* Show all photos button */}
-        <button className="absolute bottom-3 right-3 bg-white text-xs font-medium px-3 py-1.5 rounded-lg border border-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
-            <rect x="9" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
-            <rect x="1" y="9" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
-            <rect x="9" y="9" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
-          </svg>
-          Show all photos
-        </button>
+          
+          {/* Grid of 4 smaller images */}
+          <div className="grid grid-cols-2 gap-2 relative">
+            {[1, 2, 3, 4].map((index) => (
+              <div key={index} className="relative aspect-square">
+                {images[index] ? (
+                  <img 
+                    src={images[index]} 
+                    alt={`${title} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200" />
+                )}
+              </div>
+            ))}
+            
+            {/* Show all photos button */}
+            <button className="absolute bottom-2 right-2 bg-white text-xs font-medium px-3 py-1.5 rounded-lg border border-black shadow-sm flex items-center gap-1">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+                <rect x="9" y="1" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+                <rect x="1" y="9" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+                <rect x="9" y="9" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+              Show all photos
+            </button>
+          </div>
+        </div>
       </div>
       
       {/* Property details */}

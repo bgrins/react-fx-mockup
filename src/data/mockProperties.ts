@@ -36,10 +36,11 @@ export const mockProperties = {
     rating: 0,
     reviews: 2,
     images: [
-      "https://images.unsplash.com/photo-1540569014015-19a7be504e3c?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1567496898669-ee935f5f647a?w=800&h=800&fit=crop",
     ],
     host: {
       name: "Marianthi Galateia",

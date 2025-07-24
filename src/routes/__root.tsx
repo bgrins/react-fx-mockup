@@ -72,7 +72,7 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
         <HeadContent />
       </head>
       <body>
-        <div className="p-2 flex gap-2 text-lg items-center">
+        <div id="mockup-manager-toolbar" className="p-2 flex gap-2 text-lg items-center">
           <img src="/firefox.svg" alt="Firefox" width="24" height="24" className="mr-2" />
           <Link
             to="/"
@@ -120,7 +120,7 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
           </div>
         </div>
         <hr />
-        {children}
+        <div id="firefox-mockup-container">{children}</div>
         <Scripts />
       </body>
     </html>
