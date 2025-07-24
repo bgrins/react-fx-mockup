@@ -37,7 +37,7 @@ export function BrowserShell({
   return (
     <div className={cn(
       "firefox-ui bg-[#f9f9fb] rounded-xl shadow-2xl overflow-hidden flex flex-col",
-      "border border-gray-200/50",
+      "border-2 border-gray-300",
       className
     )}>
       {/* Tab strip with window controls */}

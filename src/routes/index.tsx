@@ -55,7 +55,7 @@ function Home(): React.ReactElement {
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   return (
-    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-3 md:p-4 lg:p-6 overflow-hidden">
+    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-6 md:p-8 lg:p-12 overflow-hidden">
       <div className="h-full max-w-[1600px] mx-auto flex flex-col">
         <BrowserShell
           tabs={tabs}

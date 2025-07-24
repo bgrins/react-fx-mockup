@@ -73,6 +73,7 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
       </head>
       <body>
         <div className="p-2 flex gap-2 text-lg items-center">
+          <img src="/firefox.svg" alt="Firefox" width="24" height="24" className="mr-2" />
           <Link
             to="/"
             activeProps={{
@@ -80,23 +81,7 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
             }}
             activeOptions={{ exact: true }}
           >
-            Home
-          </Link>{" "}
-          <Link
-            to="/posts"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Posts
-          </Link>{" "}
-          <Link
-            to="/users"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Users
+            Split View
           </Link>
           <div className="ml-auto">
             <Popover>
