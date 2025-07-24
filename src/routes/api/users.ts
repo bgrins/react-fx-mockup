@@ -4,7 +4,7 @@ import { createMiddleware, json } from '@tanstack/react-start'
 import type { User } from '~/utils/users'
 
 const userLoggerMiddleware = createMiddleware({ type: 'request' }).server(
-  async ({ next, request }) => {
+  async ({ next }) => {
     console.info('In: /users')
     console.info('Request Headers:', getRequestHeaders())
     const result = await next()
@@ -15,7 +15,7 @@ const userLoggerMiddleware = createMiddleware({ type: 'request' }).server(
 )
 
 const testParentMiddleware = createMiddleware({ type: 'request' }).server(
-  async ({ next, request }) => {
+  async ({ next }) => {
     console.info('In: testParentMiddleware')
     const result = await next()
     result.response.headers.set('x-test-parent', 'true')
@@ -26,7 +26,7 @@ const testParentMiddleware = createMiddleware({ type: 'request' }).server(
 
 const testMiddleware = createMiddleware({ type: 'request' })
   .middleware([testParentMiddleware])
-  .server(async ({ next, request }) => {
+  .server(async ({ next }) => {
     console.info('In: testMiddleware')
     const result = await next()
     result.response.headers.set('x-test', 'true')

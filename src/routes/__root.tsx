@@ -5,7 +5,6 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import * as React from 'react'
 import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
 import { NotFound } from '~/components/NotFound'
@@ -68,8 +67,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = React.useState(false)
 
   React.useEffect(() => {
-    const darkMode = localStorage.getItem('theme') === 'dark' || 
-      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    const darkMode = localStorage.getItem('theme') === 'dark'
     setIsDark(darkMode)
     if (darkMode) {
       document.documentElement.classList.add('dark')
@@ -92,14 +90,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html>
       <head>
         <HeadContent />
-        <style>{`
-          .tsqd-parent-container {
-            display: none !important;
-          }
-          .tsqd-parent-container.show {
-            display: block !important;
-          }
-        `}</style>
       </head>
       <body>
         <div className="p-2 flex gap-2 text-lg items-center">
@@ -140,20 +130,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                   <h3 className="font-medium text-sm">Settings</h3>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">TanStack Router DevTools</span>
-                      <button
-                        onClick={() => {
-                          const devtools = document.querySelector('.tsqd-parent-container')
-                          if (devtools) {
-                            devtools.classList.toggle('hidden')
-                          }
-                        }}
-                        className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                      >
-                        Toggle
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
                       <label htmlFor="theme-toggle" className="text-sm">
                         Dark Mode
                       </label>
@@ -178,7 +154,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </div>
         <hr />
         {children}
-        <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>
     </html>

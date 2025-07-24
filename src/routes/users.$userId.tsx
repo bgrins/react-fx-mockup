@@ -38,7 +38,7 @@ function UserComponent() {
         <div className="flex justify-center mb-4">
           <Avatar className="h-20 w-20">
             <AvatarFallback className="text-lg">
-              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
