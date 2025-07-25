@@ -19,6 +19,10 @@ interface ToolbarProps {
   canGoBack?: boolean | undefined
   canGoForward?: boolean | undefined
   className?: string | undefined
+  onNewTabBelow?: () => void
+  onCompareTabs?: () => void
+  onCloseBothTabs?: () => void
+  showSplitView?: boolean
 }
 
 export function Toolbar({
@@ -30,7 +34,11 @@ export function Toolbar({
   onNewTab,
   canGoBack = true,
   canGoForward = true,
-  className
+  className,
+  onNewTabBelow,
+  onCompareTabs,
+  onCloseBothTabs,
+  showSplitView
 }: ToolbarProps) {
   return (
     <div className={cn("h-10 bg-[#f9f9fb] flex items-center gap-1 px-2 py-1", className)}>
@@ -70,7 +78,14 @@ export function Toolbar({
       
       {/* Address bar */}
       <div className="flex-1 px-16">
-        <AddressBar url={url} onNavigate={onNavigate} />
+        <AddressBar 
+          url={url} 
+          onNavigate={onNavigate}
+          onNewTabBelow={onNewTabBelow}
+          onCompareTabs={onCompareTabs}
+          onCloseBothTabs={onCloseBothTabs}
+          showSplitView={showSplitView}
+        />
       </div>
       
       {/* Right actions */}

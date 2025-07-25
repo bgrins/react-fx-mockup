@@ -23,6 +23,10 @@ interface BrowserShellProps {
   onNewTab?: () => void
   onNavigate?: (url: string) => void
   className?: string
+  onNewTabBelow?: () => void
+  onCompareTabs?: () => void
+  onCloseBothTabs?: () => void
+  showSplitView?: boolean
 }
 
 export function BrowserShell({
@@ -34,7 +38,11 @@ export function BrowserShell({
   onTabClose,
   onNewTab,
   onNavigate,
-  className
+  className,
+  onNewTabBelow,
+  onCompareTabs,
+  onCloseBothTabs,
+  showSplitView
 }: BrowserShellProps) {
   return (
     <div className={cn(
@@ -75,6 +83,10 @@ export function BrowserShell({
               onNavigate={onNavigate}
               onNewTab={onNewTab}
               className="shrink-0"
+              onNewTabBelow={onNewTabBelow}
+              onCompareTabs={onCompareTabs}
+              onCloseBothTabs={onCloseBothTabs}
+              showSplitView={showSplitView}
             />
           </div>
         </ContextMenuTrigger>

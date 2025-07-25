@@ -102,6 +102,16 @@ function Home(): React.ReactElement {
           onNavigate={(url) => {
             console.log("Navigate to:", url);
           }}
+          onNewTabBelow={() => {
+            console.log("New tab below");
+          }}
+          onCompareTabs={() => {
+            console.log("Compare tabs");
+          }}
+          onCloseBothTabs={() => {
+            console.log("Close both tabs");
+          }}
+          showSplitView={activeTabId.startsWith("airbnb")}
           className="flex-1 min-h-0"
         >
           {activeTabId.startsWith("airbnb") && (
