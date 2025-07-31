@@ -1,4 +1,4 @@
-import { Heart, Star } from 'lucide-react'
+import { HeartIcon, StarIcon } from '~/components/icons'
 import { cn } from '~/lib/utils'
 
 interface PropertyCardProps {
@@ -57,14 +57,13 @@ export function PropertyCard({
                 onFavoriteToggle?.()
               }}
             >
-              <Heart 
-                className={cn(
-                  "w-6 h-6",
+              <div className={cn(
                   isFavorite 
-                    ? "fill-[#FF385C] text-[#FF385C]" 
-                    : "fill-black/50 text-white stroke-[1.5]"
-                )}
-              />
+                    ? "text-[#FF385C]" 
+                    : "text-white"
+                )}>
+                <HeartIcon />
+              </div>
             </button>
             
             {/* Guest favorite badge */}
@@ -111,7 +110,7 @@ export function PropertyCard({
           <h3 className="font-medium text-[15px] text-[#222222]">{title}</h3>
           {rating && (
             <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 fill-current" />
+              <StarIcon />
               <span className="text-sm">{rating}</span>
               {reviews && (
                 <span className="text-sm text-gray-500">({reviews})</span>

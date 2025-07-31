@@ -1,5 +1,5 @@
 import React from 'react'
-import { X } from 'lucide-react'
+import { CloseIcon, PlusIcon } from '~/components/icons'
 import { cn } from '~/lib/utils'
 
 interface Tab {
@@ -96,7 +96,7 @@ export function TabStrip({
                     onTabClose?.(tab.id)
                   }}
                 >
-                  <X className="w-3 h-3" />
+                  <CloseIcon />
                 </button>
               )}
               </div>
@@ -111,9 +111,7 @@ export function TabStrip({
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]"
           onClick={onNewTab}
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
+          <PlusIcon />
         </button>
       </div>
       

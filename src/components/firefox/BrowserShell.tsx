@@ -4,7 +4,7 @@ import { TabStrip } from './TabStrip'
 import { Toolbar } from './Toolbar'
 import { WindowControls } from './WindowControls'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu'
-import { Plus } from 'lucide-react'
+import { PlusIcon } from '~/components/icons'
 
 interface BrowserShellProps {
   children: React.ReactNode
@@ -22,6 +22,10 @@ interface BrowserShellProps {
   onTabClose?: (tabId: string) => void
   onNewTab?: () => void
   onNavigate?: (url: string) => void
+  onBack?: () => void
+  onForward?: () => void
+  canGoBack?: boolean
+  canGoForward?: boolean
   className?: string
   onNewTabBelow?: () => void
   onCompareTabs?: () => void
@@ -38,6 +42,10 @@ export function BrowserShell({
   onTabClose,
   onNewTab,
   onNavigate,
+  onBack,
+  onForward,
+  canGoBack = false,
+  canGoForward = false,
   className,
   onNewTabBelow,
   onCompareTabs,
@@ -68,8 +76,8 @@ export function BrowserShell({
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem onClick={onNewTab}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Tab
+            <PlusIcon />
+            <span className="ml-2">New Tab</span>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -82,6 +90,10 @@ export function BrowserShell({
               url={currentUrl}
               onNavigate={onNavigate}
               onNewTab={onNewTab}
+              onBack={onBack}
+              onForward={onForward}
+              canGoBack={canGoBack}
+              canGoForward={canGoForward}
               className="shrink-0"
               onNewTabBelow={onNewTabBelow}
               onCompareTabs={onCompareTabs}
@@ -92,8 +104,8 @@ export function BrowserShell({
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem onClick={onNewTab}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Tab
+            <PlusIcon />
+            <span className="ml-2">New Tab</span>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>

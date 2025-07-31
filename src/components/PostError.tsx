@@ -1,12 +1,12 @@
 import { ErrorComponentProps } from '@tanstack/react-router'
-import { XCircle } from 'lucide-react'
+import { XCircleIcon } from '~/components/icons'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 
 export function PostErrorComponent({ error, reset }: ErrorComponentProps) {
   return (
     <div className="container max-w-2xl mx-auto p-4">
       <Alert variant="destructive">
-        <XCircle className="h-4 w-4" />
+        <XCircleIcon />
         <AlertTitle>Error Loading Post</AlertTitle>
         <AlertDescription>
           <div className="space-y-4">

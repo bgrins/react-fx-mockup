@@ -8,19 +8,34 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
 import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SplitViewRouteImport } from './routes/split-view'
 import { Route as RedirectRouteImport } from './routes/redirect'
 import { Route as PathlessLayoutRouteImport } from './routes/_pathlessLayout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InferTestIndexRouteImport } from './routes/infer-test/index'
+import { Route as InferTestInferTestRouteImport } from './routes/infer-test/_infer-test'
 import { ServerRoute as CustomScriptDotjsServerRouteImport } from './routes/customScript[.]js'
 import { ServerRoute as ApiUsersServerRouteImport } from './routes/api/users'
 import { ServerRoute as ApiProxyServerRouteImport } from './routes/api/proxy'
 import { ServerRoute as ApiUsersUserIdServerRouteImport } from './routes/api/users.$userId'
 
+const InferTestRouteImport = createFileRoute('/infer-test')()
 const rootServerRouteImport = createServerRootRoute()
 
+const InferTestRoute = InferTestRouteImport.update({
+  id: '/infer-test',
+  path: '/infer-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplitViewRoute = SplitViewRouteImport.update({
+  id: '/split-view',
+  path: '/split-view',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RedirectRoute = RedirectRouteImport.update({
   id: '/redirect',
   path: '/redirect',
@@ -34,6 +49,15 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const InferTestIndexRoute = InferTestIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InferTestRoute,
+} as any)
+const InferTestInferTestRoute = InferTestInferTestRouteImport.update({
+  id: '/_infer-test',
+  getParentRoute: () => InferTestRoute,
 } as any)
 const CustomScriptDotjsServerRoute = CustomScriptDotjsServerRouteImport.update({
   id: '/customScript.js',
@@ -59,29 +83,48 @@ const ApiUsersUserIdServerRoute = ApiUsersUserIdServerRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/redirect': typeof RedirectRoute
+  '/split-view': typeof SplitViewRoute
+  '/infer-test': typeof InferTestInferTestRoute
+  '/infer-test/': typeof InferTestIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/redirect': typeof RedirectRoute
+  '/split-view': typeof SplitViewRoute
+  '/infer-test': typeof InferTestIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_pathlessLayout': typeof PathlessLayoutRoute
   '/redirect': typeof RedirectRoute
+  '/split-view': typeof SplitViewRoute
+  '/infer-test': typeof InferTestRouteWithChildren
+  '/infer-test/_infer-test': typeof InferTestInferTestRoute
+  '/infer-test/': typeof InferTestIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/redirect'
+  fullPaths: '/' | '/redirect' | '/split-view' | '/infer-test' | '/infer-test/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/redirect'
-  id: '__root__' | '/' | '/_pathlessLayout' | '/redirect'
+  to: '/' | '/redirect' | '/split-view' | '/infer-test'
+  id:
+    | '__root__'
+    | '/'
+    | '/_pathlessLayout'
+    | '/redirect'
+    | '/split-view'
+    | '/infer-test'
+    | '/infer-test/_infer-test'
+    | '/infer-test/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PathlessLayoutRoute: typeof PathlessLayoutRoute
   RedirectRoute: typeof RedirectRoute
+  SplitViewRoute: typeof SplitViewRoute
+  InferTestRoute: typeof InferTestRouteWithChildren
 }
 export interface FileServerRoutesByFullPath {
   '/customScript.js': typeof CustomScriptDotjsServerRoute
@@ -127,6 +170,20 @@ export interface RootServerRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/infer-test': {
+      id: '/infer-test'
+      path: '/infer-test'
+      fullPath: '/infer-test'
+      preLoaderRoute: typeof InferTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/split-view': {
+      id: '/split-view'
+      path: '/split-view'
+      fullPath: '/split-view'
+      preLoaderRoute: typeof SplitViewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/redirect': {
       id: '/redirect'
       path: '/redirect'
@@ -147,6 +204,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/infer-test/': {
+      id: '/infer-test/'
+      path: '/'
+      fullPath: '/infer-test/'
+      preLoaderRoute: typeof InferTestIndexRouteImport
+      parentRoute: typeof InferTestRoute
+    }
+    '/infer-test/_infer-test': {
+      id: '/infer-test/_infer-test'
+      path: '/infer-test'
+      fullPath: '/infer-test'
+      preLoaderRoute: typeof InferTestInferTestRouteImport
+      parentRoute: typeof InferTestRoute
     }
   }
 }
@@ -183,6 +254,20 @@ declare module '@tanstack/react-start/server' {
   }
 }
 
+interface InferTestRouteChildren {
+  InferTestInferTestRoute: typeof InferTestInferTestRoute
+  InferTestIndexRoute: typeof InferTestIndexRoute
+}
+
+const InferTestRouteChildren: InferTestRouteChildren = {
+  InferTestInferTestRoute: InferTestInferTestRoute,
+  InferTestIndexRoute: InferTestIndexRoute,
+}
+
+const InferTestRouteWithChildren = InferTestRoute._addFileChildren(
+  InferTestRouteChildren,
+)
+
 interface ApiUsersServerRouteChildren {
   ApiUsersUserIdServerRoute: typeof ApiUsersUserIdServerRoute
 }
@@ -199,6 +284,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PathlessLayoutRoute: PathlessLayoutRoute,
   RedirectRoute: RedirectRoute,
+  SplitViewRoute: SplitViewRoute,
+  InferTestRoute: InferTestRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

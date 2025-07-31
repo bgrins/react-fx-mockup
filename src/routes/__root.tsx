@@ -5,8 +5,11 @@ import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
 import { NotFound } from "~/components/NotFound";
 import appCss from "~/styles/app.css?url";
 import { seo } from "~/utils/seo";
-import { Settings } from "lucide-react";
+import { SettingsIcon } from "~/components/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { useLocation } from "@tanstack/react-router";
+import { proxyToUrl } from "~/utils/proxy";
+import { DebugProvider, useDebug } from "~/contexts/DebugContext";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -41,29 +44,52 @@ export const Route = createRootRoute({
   }),
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
-  shellComponent: RootDocument,
+  shellComponent: (props) => (
+    <DebugProvider>
+      <RootDocument {...props} />
+    </DebugProvider>
+  ),
 });
 
 function RootDocument({ children }: { children: React.ReactNode }): React.ReactElement {
-  const [isDark, setIsDark] = React.useState(false);
+  const [accessKey, setAccessKey] = React.useState("");
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const location = useLocation();
+  const { debugInfo } = useDebug();
 
   React.useEffect(() => {
-    const darkMode = localStorage.getItem("theme") === "dark";
-    setIsDark(darkMode);
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
+    // First check localStorage
+    const stored = localStorage.getItem("infer-access-key");
+    if (stored) {
+      setAccessKey(stored);
+    } else if (import.meta.env.VITE_INFER_ACCESS_KEY) {
+      // If no stored value, use env variable in development
+      const envKey = import.meta.env.VITE_INFER_ACCESS_KEY;
+      setAccessKey(envKey);
+      localStorage.setItem("infer-access-key", envKey);
     }
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    if (newTheme) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Alt+? (Alt+Shift+/)
+      if (e.altKey && e.shiftKey && e.key === "?") {
+        e.preventDefault();
+        setSettingsOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleAccessKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAccessKey(value);
+    if (value) {
+      localStorage.setItem("infer-access-key", value);
     } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+      localStorage.removeItem("infer-access-key");
     }
   };
 
@@ -84,37 +110,100 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
             }}
             activeOptions={{ exact: true }}
           >
+            Browser
+          </Link>
+          <Link
+            to="/split-view"
+            activeProps={{
+              className: "font-bold",
+            }}
+          >
             Split View
           </Link>
           <div className="ml-auto">
-            <Popover>
+            <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
               <PopoverTrigger asChild>
-                <button className="p-2 hover:bg-gray-100 rounded-md">
-                  <Settings className="w-5 h-5" />
+                <button className="p-2 hover:bg-gray-100 rounded-md" title="Settings (Alt+?)">
+                  <SettingsIcon />
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-80">
+              <PopoverContent align="end" className="w-96">
                 <div className="space-y-4">
-                  <h3 className="font-medium text-sm">Settings</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-sm">Settings & Debug Info</h3>
+                    <span className="text-xs text-gray-500">Alt+?</span>
+                  </div>
+
+                  {/* Debug Info Section */}
+                  <div className="space-y-2 p-3 bg-gray-50 rounded-md">
+                    <h4 className="text-xs font-medium text-gray-700">Debug Information</h4>
+                    <div className="space-y-2">
+                      <div className="text-xs">
+                        <span className="font-medium text-gray-600">Current Route:</span>{" "}
+                        <code className="bg-gray-200 px-1 rounded">{location.pathname}</code>
+                      </div>
+
+                      {debugInfo.currentTab && (
+                        <>
+                          <div className="text-xs">
+                            <span className="font-medium text-gray-600">Tab Type:</span>{" "}
+                            <code className="bg-gray-200 px-1 rounded">
+                              {debugInfo.currentTab.type || "none"}
+                            </code>
+                          </div>
+
+                          <div className="text-xs">
+                            <span className="font-medium text-gray-600">Tab URL:</span>{" "}
+                            <code className="bg-gray-200 px-1 rounded text-xs break-all">
+                              {debugInfo.currentTab.url || "about:blank"}
+                            </code>
+                          </div>
+
+                          {debugInfo.currentTab.type === "proxy" &&
+                            debugInfo.currentTab.url !== "about:blank" && (
+                              <>
+                                <div className="text-xs">
+                                  <span className="font-medium text-gray-600">Proxy URL:</span>{" "}
+                                  <code className="bg-gray-200 px-1 rounded text-xs break-all">
+                                    {debugInfo.currentTab.proxyUrl}
+                                  </code>
+                                </div>
+
+                                <div className="text-xs">
+                                  <span className="font-medium text-gray-600">Real URL:</span>{" "}
+                                  <code className="bg-gray-200 px-1 rounded text-xs break-all">
+                                    {proxyToUrl(debugInfo.currentTab.proxyUrl || "")}
+                                  </code>
+                                </div>
+                              </>
+                            )}
+                        </>
+                      )}
+
+                      {!debugInfo.currentTab && (
+                        <div className="text-xs text-gray-500">
+                          <p className="italic">Navigate to a page to see debug info</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="theme-toggle" className="text-sm">
-                        Dark Mode
+                    <div className="space-y-2">
+                      <label htmlFor="access-key" className="text-sm font-medium">
+                        Infer Access Key
                       </label>
-                      <button
-                        id="theme-toggle"
-                        onClick={toggleTheme}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 ${
-                          isDark ? "bg-blue-600" : "bg-gray-200"
-                        }`}
-                      >
-                        <span className="sr-only">Toggle theme</span>
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            isDark ? "translate-x-6" : "translate-x-1"
-                          }`}
-                        />
-                      </button>
+                      <input
+                        id="access-key"
+                        type="password"
+                        value={accessKey}
+                        onChange={handleAccessKeyChange}
+                        placeholder="Enter your access key..."
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Used for authentication with the Infer proxy
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Plus } from 'lucide-react'
+import { PlusIcon } from '~/components/icons'
 import { cn } from '~/lib/utils'
 import { AddressBar } from './AddressBar'
 import {
@@ -32,8 +32,8 @@ export function Toolbar({
   onRefresh,
   onNavigate,
   onNewTab,
-  canGoBack = true,
-  canGoForward = true,
+  canGoBack = false,
+  canGoForward = false,
   className,
   onNewTabBelow,
   onCompareTabs,
@@ -101,8 +101,8 @@ export function Toolbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onNewTab}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Tab
+              <PlusIcon />
+              <span className="ml-2">New Tab</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

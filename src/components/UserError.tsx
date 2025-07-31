@@ -1,12 +1,12 @@
 import { ErrorComponentProps } from '@tanstack/react-router'
-import { UserX } from 'lucide-react'
+import { UserXIcon } from '~/components/icons'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 
 export function UserErrorComponent({ error, reset }: ErrorComponentProps) {
   return (
     <div className="container max-w-2xl mx-auto p-4">
       <Alert variant="destructive">
-        <UserX className="h-4 w-4" />
+        <UserXIcon />
         <AlertTitle>Error Loading User</AlertTitle>
         <AlertDescription>
           <div className="space-y-4">

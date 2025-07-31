@@ -28,8 +28,13 @@ export function AddressBar({
   onCloseBothTabs,
   showSplitView = true
 }: AddressBarProps) {
-  const [value, setValue] = useState(url)
-  const [isFocused, setIsFocused] = useState(false)
+  const [value, setValue] = useState(url === 'about:blank' ? '' : url)
+  const [isFocused, setIsFocused] = useState(url === 'about:blank')
+  
+  // Update value when URL prop changes
+  React.useEffect(() => {
+    setValue(url === 'about:blank' ? '' : url)
+  }, [url])
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,10 +109,10 @@ export function AddressBar({
           className="flex-1 px-2 text-[15px] font-sans cursor-text flex items-center"
           onClick={() => {
             setIsFocused(true)
-            setValue(url)
+            setValue(url === 'about:blank' ? '' : url)
           }}
         >
-          {url ? (
+          {url && url !== 'about:blank' ? (
             <>
               <span className="text-gray-500">www.</span>
               <span className="text-gray-900">{domain}</span>

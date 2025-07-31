@@ -1,0 +1,43 @@
+{
+  // Worker name
+  "name": "static-fx-mockups-proxy",
+  
+  // Main worker script
+  "main": "proxy-worker.js",
+  
+  // Compatibility date for worker features
+  "compatibility_date": "2025-07-24",
+  
+  // Enable workers.dev subdomain
+  "workers_dev": true,
+  
+  // Routes configuration for custom domain
+  "routes": [
+    {
+      "pattern": "*.arewexblstill.com/*",
+      "zone_name": "arewexblstill.com"
+    }
+  ],
+  
+  // Environment-specific configurations
+  "env": {
+    // Infer worker for AI/inference endpoints
+    "infer": {
+      "name": "static-fx-mockups-infer",
+      "main": "infer-worker.js",
+      "routes": [
+        {
+          "pattern": "infer.arewexblstill.com/*",
+          "zone_name": "arewexblstill.com"
+        }
+      ],
+      // Add your secrets:
+      // npx wrangler secret put OPENAI_API_KEY --env infer --config wrangler-proxy.jsonc
+      // npx wrangler secret put ACCESS_KEYS --env infer --config wrangler-proxy.jsonc
+      // ACCESS_KEYS should be a comma-separated list: "key1,key2,key3"
+      "vars": {
+        // You can add non-secret environment variables here
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDownIcon } from '~/components/icons'
 import { Button } from '~/components/ui/button'
 
 interface ReservationFormProps {
@@ -34,7 +34,7 @@ export function ReservationForm({
           <label className="text-xs font-medium uppercase tracking-wide">Guests</label>
           <div className="flex items-center justify-between mt-1">
             <span className="text-sm">2 guests</span>
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDownIcon />
           </div>
         </div>
       </div>

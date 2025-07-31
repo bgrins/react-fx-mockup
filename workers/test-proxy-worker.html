@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Proxy Tunnel Test</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				margin: 20px;
+			}
+			iframe {
+				width: 100%;
+				height: 500px;
+				border: 2px solid #ccc;
+			}
+			.controls {
+				margin: 20px 0;
+			}
+			button {
+				margin: 5px;
+				padding: 10px;
+			}
+			.log {
+				background: #f5f5f5;
+				padding: 10px;
+				margin-top: 20px;
+				max-height: 200px;
+				overflow-y: auto;
+			}
+			.log pre {
+				margin: 5px 0;
+				padding: 5px;
+				background: white;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>PostMessage Tunnel Test</h1>
+
+		<div class="controls">
+			<button onclick="getPageInfo()">Get Page Info</button>
+			<button onclick="querySelector('a')">Find All Links</button>
+			<button onclick="querySelector('p')">Find All Paragraphs</button>
+			<button onclick="getElement('h1')">Get First H1</button>
+			<button onclick="scrollToElement('footer')">Scroll to Footer</button>
+			<button onclick="clickElement('button')">Click First Button</button>
+		</div>
+
+		<iframe id="proxyFrame" src="https://www-example-com.arewexblstill.com"></iframe>
+
+		<div class="log" id="log">
+			<strong>Log:</strong>
+		</div>
+
+		<script>
+			const iframe = document.getElementById('proxyFrame');
+			const log = document.getElementById('log');
+			let messageId = 0;
+			const pendingMessages = new Map();
+
+			// Log helper
+			function addLog(message, data) {
+				const entry = document.createElement('pre');
+				entry.textContent = `${new Date().toLocaleTimeString()} - ${message}\n${data ? JSON.stringify(data, null, 2) : ''}`;
+				log.appendChild(entry);
+				log.scrollTop = log.scrollHeight;
+			}
+
+			// Listen for messages
+			window.addEventListener('message', (event) => {
+				if (event.data.type === 'PROXY_TUNNEL_READY') {
+					addLog('Tunnel ready!', event.data);
+				} else if (event.data.type === 'PROXY_TUNNEL_RESPONSE') {
+					const pending = pendingMessages.get(event.data.id);
+					if (pending) {
+						pending.resolve(event.data);
+						pendingMessages.delete(event.data.id);
+						const result = event.data.error || event.data.result;
+						addLog(`Response for ${event.data.command}:`, result);
+					}
+				}
+			});
+
+			// Send command helper
+			function sendCommand(command, ...args) {
+				return new Promise((resolve, reject) => {
+					const id = ++messageId;
+					pendingMessages.set(id, { resolve, reject });
+
+					iframe.contentWindow.postMessage(
+						{
+							type: 'PROXY_TUNNEL_COMMAND',
+							id,
+							command,
+							args
+						},
+						'*'
+					);
+
+					addLog(`Sending command: ${command}`, args);
+
+					// Timeout after 5 seconds
+					setTimeout(() => {
+						if (pendingMessages.has(id)) {
+							pendingMessages.delete(id);
+							reject(new Error('Command timeout'));
+							addLog(`Command timeout: ${command}`);
+						}
+					}, 5000);
+				});
+			}
+
+			// Command functions
+			async function getPageInfo() {
+				try {
+					await sendCommand('getPageInfo');
+				} catch (err) {
+					addLog('Error:', err.message);
+				}
+			}
+
+			async function querySelector(selector) {
+				try {
+					await sendCommand('querySelector', selector);
+				} catch (err) {
+					addLog('Error:', err.message);
+				}
+			}
+
+			async function getElement(selector) {
+				try {
+					await sendCommand('getElement', selector);
+				} catch (err) {
+					addLog('Error:', err.message);
+				}
+			}
+
+			async function scrollToElement(selector) {
+				try {
+					await sendCommand('scrollToElement', selector);
+				} catch (err) {
+					addLog('Error:', err.message);
+				}
+			}
+
+			async function clickElement(selector) {
+				try {
+					await sendCommand('clickElement', selector);
+				} catch (err) {
+					addLog('Error:', err.message);
+				}
+			}
+		</script>
+	</body>
+</html>

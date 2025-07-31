@@ -62,3 +62,5 @@ export function FirefoxViewIcon() {
     </svg>
   )
 }
+
+export { DynamicFavicon } from './DynamicFavicon';
