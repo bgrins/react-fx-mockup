@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
 import { DynamicFavicon, FirefoxFavicon } from "~/components/firefox/Favicons";
+import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { urlToProxy, proxyToUrl } from "~/utils/proxy";
 import { useDebug } from "~/contexts/DebugContext";
 import React from "react";
@@ -246,6 +247,33 @@ function Browser(): React.ReactElement {
     setActiveTabId(newTabId);
   };
 
+  const handleTabReorder = (draggedTabId: string, targetTabId: string, dropBefore: boolean) => {
+    const draggedIndex = tabs.findIndex((t) => t.id === draggedTabId);
+    const targetIndex = tabs.findIndex((t) => t.id === targetTabId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newTabs = [...tabs];
+    const [draggedTab] = newTabs.splice(draggedIndex, 1);
+
+    if (!draggedTab) return;
+
+    // Calculate the new index based on drop position
+    let newIndex = targetIndex;
+    if (!dropBefore && draggedIndex < targetIndex) {
+      // When dragging left to right and dropping after, we need to account for the removed item
+      newIndex = targetIndex;
+    } else if (!dropBefore) {
+      newIndex = targetIndex + 1;
+    } else if (draggedIndex < targetIndex) {
+      // When dragging left to right and dropping before
+      newIndex = targetIndex - 1;
+    }
+
+    newTabs.splice(newIndex, 0, draggedTab);
+    setTabs(newTabs);
+  };
+
   return (
     <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-6 md:p-8 lg:p-12 overflow-hidden">
       <div className="h-full max-w-[1600px] mx-auto flex flex-col">
@@ -260,6 +288,7 @@ function Browser(): React.ReactElement {
           }}
           onTabClose={handleTabClose}
           onNewTab={handleNewTab}
+          onTabReorder={handleTabReorder}
           onNavigate={handleNavigate}
           onBack={handleBack}
           onForward={handleForward}
@@ -270,12 +299,7 @@ function Browser(): React.ReactElement {
           className="flex-1 min-h-0"
         >
           {activeTab?.url === "about:blank" ? (
-            <div className="flex items-center justify-center h-full bg-white">
-              <div className="text-center">
-                <h1 className="text-2xl font-light text-gray-700 mb-4">New Tab</h1>
-                <p className="text-gray-500">Start browsing or enter a URL in the address bar</p>
-              </div>
-            </div>
+            <NewTabPage onNavigate={handleNavigate} />
           ) : activeTab?.type === "proxy" ? (
             <iframe
               ref={iframeRef}

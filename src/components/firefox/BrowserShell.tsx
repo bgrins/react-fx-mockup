@@ -21,6 +21,7 @@ interface BrowserShellProps {
   onTabClick?: (tabId: string) => void
   onTabClose?: (tabId: string) => void
   onNewTab?: () => void
+  onTabReorder?: (draggedTabId: string, targetTabId: string, dropBefore: boolean) => void
   onNavigate?: (url: string) => void
   onBack?: () => void
   onForward?: () => void
@@ -41,6 +42,7 @@ export function BrowserShell({
   onTabClick,
   onTabClose,
   onNewTab,
+  onTabReorder,
   onNavigate,
   onBack,
   onForward,
@@ -70,6 +72,7 @@ export function BrowserShell({
                 onTabClick={onTabClick}
                 onTabClose={onTabClose}
                 onNewTab={onNewTab}
+                onTabReorder={onTabReorder}
               />
             </div>
           </div>

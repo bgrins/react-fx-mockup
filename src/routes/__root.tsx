@@ -120,6 +120,14 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
           >
             Split View
           </Link>
+          <Link
+            to="/infer-test"
+            activeProps={{
+              className: "font-bold",
+            }}
+          >
+            Infer Test
+          </Link>
           <div className="ml-auto">
             <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
               <PopoverTrigger asChild>
