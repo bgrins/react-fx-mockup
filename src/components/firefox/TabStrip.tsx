@@ -20,6 +20,12 @@ interface TabStripProps {
   onTabReorder?: ((draggedTabId: string, targetTabId: string, dropBefore: boolean) => void) | undefined
 }
 
+const TAB_WIDTH = {
+  REGULAR: `w-[224px]`,
+  SPLIT: `w-[127.5px]`,
+  PINNED: `w-9`
+} as const;
+
 export function TabStrip({ 
   tabs, 
   onTabClick, 
@@ -39,7 +45,7 @@ export function TabStrip({
               <div
                 className={cn(
                   "relative flex items-center gap-2 h-9 px-0 py-[5px] rounded cursor-pointer group",
-                  "w-9 justify-center",
+                  `${TAB_WIDTH.PINNED} justify-center`,
                   tab.isActive 
                     ? "bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]" 
                     : "hover:bg-[rgba(21,20,26,0.05)]"
@@ -70,7 +76,7 @@ export function TabStrip({
               <div
                 className={cn(
                   "relative flex items-center gap-2 h-9 px-2 py-[5px] rounded cursor-pointer group",
-                  isSplitTab ? "w-[127.5px]" : "w-[224px]",
+                  isSplitTab ? TAB_WIDTH.SPLIT : TAB_WIDTH.REGULAR,
                   tab.isActive 
                     ? "bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]" 
                     : "hover:bg-[rgba(21,20,26,0.05)]",

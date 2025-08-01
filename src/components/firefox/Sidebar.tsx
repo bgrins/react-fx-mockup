@@ -86,6 +86,15 @@ export function Sidebar({
            Page content:
            ${contentString.substring(0, 3000)}...`
         : "No page content available.";
+      
+      // Log exactly what we're sending to the LLM
+      console.log("[SIDEBAR] Sending to LLM:", {
+        pageTitle,
+        pageUrl,
+        contentLength: contentString.length,
+        contentPreview: contentString.substring(0, 500),
+        fullContext: context
+      });
 
       const infer = createInferClient(accessKey);
       

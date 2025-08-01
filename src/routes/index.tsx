@@ -223,9 +223,11 @@ function Browser(): React.ReactElement {
           }
         }
 
-        if (command === "getElement" && result && result.textContent) {
-          console.log("[PROXY] getElement result - text length:", result.textContent.length);
-          setPageContent(result.textContent);
+        if (command === "getElement" && result) {
+          const content = result.innerText || "";
+          console.log("[PROXY] getElement result - text length:", content.length);
+          console.log("[PROXY] Content preview:", content.substring(0, 200));
+          setPageContent(content);
         }
       }
     };

@@ -511,6 +511,7 @@ function createInjectionScript(targetUrl) {
         tagName: el.tagName,
         innerHTML: el.innerHTML,
         textContent: el.textContent,
+        innerText: el.innerText,
         attributes: Array.from(el.attributes).reduce((acc, attr) => {
           acc[attr.name] = attr.value;
           return acc;

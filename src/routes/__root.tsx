@@ -19,7 +19,8 @@ export const Route = createRootRoute({
       },
       {
         name: "viewport",
-        content: "width=1200, initial-scale=0.5, maximum-scale=1, user-scalable=yes",
+        content:
+          "width=1600, initial-scale=0.25, minimum-scale=0.2, maximum-scale=1, user-scalable=yes",
       },
       ...seo({
         title: "Firefox UI Mockup",

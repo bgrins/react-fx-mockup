@@ -139,9 +139,6 @@ export function AddressBar({
               <DropdownMenuItem onClick={onNewTabBelow}>
                 New Tab Below
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onNewTabBelow}>
-                New Tab Below
-              </DropdownMenuItem>
               <div className="h-px bg-[#cfcfd8] mx-2 my-1" />
               <DropdownMenuItem onClick={onCompareTabs}>
                 <SparklesIcon className="mr-1.5 h-4 w-4" />

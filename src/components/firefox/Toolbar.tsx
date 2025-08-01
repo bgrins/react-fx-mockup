@@ -58,6 +58,7 @@ export function Toolbar({
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] disabled:opacity-50"
           onClick={onBack}
           disabled={!canGoBack}
+          aria-disabled={!canGoBack}
         >
           <BackArrowIcon />
         </button>
@@ -66,6 +67,7 @@ export function Toolbar({
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] disabled:opacity-50"
           onClick={onForward}
           disabled={!canGoForward}
+          aria-disabled={!canGoForward}
         >
           <ForwardArrowIcon />
         </button>
