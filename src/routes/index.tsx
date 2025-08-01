@@ -3,8 +3,9 @@ import { BrowserShell } from "~/components/firefox/BrowserShell";
 import { DynamicFavicon, FirefoxFavicon, FirefoxViewIcon } from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
-import { urlToProxy, proxyToUrl } from "~/utils/proxy";
+import { urlToProxy } from "~/utils/proxy";
 import { useDebug } from "~/contexts/DebugContext";
+import { useProxyTunnel } from "~/hooks/useProxyTunnel";
 import React from "react";
 
 interface Tab {
@@ -49,7 +50,7 @@ function Browser(): React.ReactElement {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [pageContent, setPageContent] = React.useState<string>("");
   const { setDebugInfo } = useDebug();
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
@@ -115,126 +116,37 @@ function Browser(): React.ReactElement {
     }
   }, [activeTab, setDebugInfo]);
 
+  // Use proxy tunnel hook
+  const { requestPageInfo, requestPageContent } = useProxyTunnel({
+    onNavigate: handleNavigate,
+    onPageInfo: (info) => {
+      // Update tab title
+      setTabs((currentTabs) =>
+        currentTabs.map((tab) =>
+          tab.id === activeTabId
+            ? {
+                ...tab,
+                title: info.title || tab.title,
+                // Keep the original URL, not the proxy URL
+                url: tab.url,
+              }
+            : tab,
+        ),
+      );
+    },
+    onPageContent: setPageContent,
+    activeTabUrl: activeTab?.url,
+    iframeRef,
+    enabled: activeTab?.type === "proxy",
+  });
+
   // Request page content when sidebar is opened or tab changes
   React.useEffect(() => {
-    if (sidebarOpen && activeTab?.type === "proxy" && iframeRef.current?.contentWindow) {
-      // Get page info
-      iframeRef.current.contentWindow.postMessage(
-        {
-          type: "PROXY_TUNNEL_COMMAND",
-          id: `cmd-info-${Date.now()}`,
-          command: "getPageInfo",
-          args: [],
-        },
-        "*",
-      );
-
-      // Get page content from body
-      iframeRef.current.contentWindow.postMessage(
-        {
-          type: "PROXY_TUNNEL_COMMAND",
-          id: `cmd-content-${Date.now()}`,
-          command: "getElement",
-          args: ["body"],
-        },
-        "*",
-      );
+    if (sidebarOpen && activeTab?.type === "proxy") {
+      requestPageInfo();
+      requestPageContent();
     }
-  }, [sidebarOpen, activeTabId, activeTab?.type]);
-
-  // Handle messages from proxy tunnel
-  React.useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Handle proxy tunnel ready message
-      if (event.data?.type === "PROXY_TUNNEL_READY") {
-        console.log("[PROXY] Tunnel ready:", event.data);
-
-        // Extract the URL from the proxy URL
-        if (event.data.url) {
-          const realUrl = proxyToUrl(event.data.url);
-
-          // Update tab URL if it changed (navigation within iframe)
-          if (activeTab && realUrl !== activeTab.url && realUrl !== event.data.url) {
-            handleNavigate(realUrl);
-          }
-        }
-
-        // Request page info to update tab
-        if (iframeRef.current?.contentWindow) {
-          const commandId = `cmd-${Date.now()}`;
-          console.log("[PROXY] Sending getPageInfo command:", commandId);
-
-          iframeRef.current.contentWindow.postMessage(
-            {
-              type: "PROXY_TUNNEL_COMMAND",
-              id: commandId,
-              command: "getPageInfo",
-              args: [],
-            },
-            "*",
-          );
-
-          // Also get page content
-          const contentId = `cmd-content-${Date.now()}`;
-          console.log("[PROXY] Sending getElement command:", contentId);
-
-          iframeRef.current.contentWindow.postMessage(
-            {
-              type: "PROXY_TUNNEL_COMMAND",
-              id: contentId,
-              command: "getElement",
-              args: ["body"],
-            },
-            "*",
-          );
-        }
-      }
-
-      // Handle proxy tunnel responses
-      if (event.data?.type === "PROXY_TUNNEL_RESPONSE") {
-        const { result, command, id } = event.data;
-        console.log("[PROXY] Response received:", {
-          command,
-          id,
-          result,
-        });
-
-        if (command === "getPageInfo" && result) {
-          // Update tab title and URL
-          setTabs((currentTabs) =>
-            currentTabs.map((tab) =>
-              tab.id === activeTabId
-                ? {
-                    ...tab,
-                    title: result.title || tab.title,
-                    // Keep the original URL, not the proxy URL
-                    url: tab.url,
-                  }
-                : tab,
-            ),
-          );
-
-          // Log what's actually in the result
-          console.log("[PROXY] getPageInfo result contains:", Object.keys(result));
-
-          // Also update page content if available
-          if (result.content || result.text) {
-            setPageContent(result.content || result.text || "");
-          }
-        }
-
-        if (command === "getElement" && result) {
-          const content = result.innerText || "";
-          console.log("[PROXY] getElement result - text length:", content.length);
-          console.log("[PROXY] Content preview:", content.substring(0, 200));
-          setPageContent(content);
-        }
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [activeTabId, activeTab, handleNavigate]);
+  }, [sidebarOpen, activeTabId, activeTab?.type, requestPageInfo, requestPageContent]);
 
   const handleBack = () => {
     if (!activeTab || !activeTab.history || activeTab.historyIndex === undefined) return;
@@ -359,66 +271,113 @@ function Browser(): React.ReactElement {
     setTabs(newTabs);
   };
 
+  // Calculate scale for mobile
+  const [scale, setScale] = React.useState(1);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const updateScale = () => {
+      const headerHeight = 60;
+      const padding = 40; // Total padding (20px on each side)
+      const browserWidth = 1200;
+      const browserHeight = 800;
+
+      // Get available space
+      const availableWidth = window.innerWidth - padding;
+      const availableHeight = window.innerHeight - headerHeight - padding;
+
+      // Calculate scale based on which dimension is more constrained
+      const scaleX = availableWidth / browserWidth;
+      const scaleY = availableHeight / browserHeight;
+      const newScale = Math.min(scaleX, scaleY, 1); // Never scale up beyond 1
+
+      setScale(newScale);
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
+
   return (
-    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-6 md:p-8 lg:p-12 overflow-hidden">
-      <div className="h-full max-w-[1600px] mx-auto flex flex-col">
-        <BrowserShell
-          tabs={tabs}
-          activeTabId={activeTabId}
-          currentUrl={activeTab?.url ?? ""}
-          onTabClick={(tabId) => {
-            setActiveTabId(tabId);
-            // Update active state
-            setTabs(tabs.map((tab) => ({ ...tab, isActive: tab.id === tabId })));
+    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-5 flex items-start justify-center overflow-hidden">
+      <div
+        className="relative"
+        style={{
+          width: `${Math.min(1200 * scale, 1200)}px`,
+          height: `${Math.min(800 * scale, 800)}px`,
+        }}
+      >
+        <div
+          ref={containerRef}
+          className="flex flex-col absolute"
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            width: "1200px",
+            height: "800px",
+            left: "50%",
+            marginLeft: `${-600 * scale}px`,
           }}
-          onTabClose={handleTabClose}
-          onNewTab={handleNewTab}
-          onTabReorder={handleTabReorder}
-          onNavigate={handleNavigate}
-          onBack={handleBack}
-          onForward={handleForward}
-          canGoBack={Boolean(activeTab?.history && (activeTab.historyIndex ?? 0) > 0)}
-          canGoForward={Boolean(
-            activeTab?.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1,
-          )}
-          onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-          className="flex-1 min-h-0"
         >
-          <Sidebar
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            pageContent={pageContent}
-            pageTitle={activeTab?.title}
-            pageUrl={activeTab?.url}
-            accessKey={
-              typeof window !== "undefined"
-                ? localStorage.getItem("infer-access-key") || undefined
-                : undefined
-            }
-          />
-          <div className="flex-1 h-full bg-white overflow-auto">
-            {activeTab?.url === "about:blank" ? (
-              <NewTabPage onNavigate={handleNavigate} />
-            ) : activeTab?.url === "about:firefoxview" ? (
-              <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
-                <div className="text-center">
-                  <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
-                  <p className="text-gray-500">
-                    Recently closed tabs and synced tabs would appear here
-                  </p>
+          <BrowserShell
+            tabs={tabs}
+            activeTabId={activeTabId}
+            currentUrl={activeTab?.url ?? ""}
+            onTabClick={(tabId) => {
+              setActiveTabId(tabId);
+              // Update active state
+              setTabs(tabs.map((tab) => ({ ...tab, isActive: tab.id === tabId })));
+            }}
+            onTabClose={handleTabClose}
+            onNewTab={handleNewTab}
+            onTabReorder={handleTabReorder}
+            onNavigate={handleNavigate}
+            onBack={handleBack}
+            onForward={handleForward}
+            canGoBack={Boolean(activeTab?.history && (activeTab.historyIndex ?? 0) > 0)}
+            canGoForward={Boolean(
+              activeTab?.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1,
+            )}
+            onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+            className="flex-1 min-h-0"
+          >
+            <Sidebar
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+              pageContent={pageContent}
+              pageTitle={activeTab?.title}
+              pageUrl={activeTab?.url}
+              accessKey={
+                typeof window !== "undefined"
+                  ? localStorage.getItem("infer-access-key") || undefined
+                  : undefined
+              }
+            />
+            <div className="flex-1 h-full bg-white overflow-auto">
+              {activeTab?.url === "about:blank" ? (
+                <NewTabPage onNavigate={handleNavigate} />
+              ) : activeTab?.url === "about:firefoxview" ? (
+                <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
+                  <div className="text-center">
+                    <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
+                    <p className="text-gray-500">
+                      Recently closed tabs and synced tabs would appear here
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : activeTab?.type === "proxy" ? (
-              <iframe
-                ref={iframeRef}
-                src={urlToProxy(activeTab.url)}
-                className="w-full h-full"
-                title={activeTab.title}
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-              />
-            ) : null}
-          </div>
-        </BrowserShell>
+              ) : activeTab?.type === "proxy" ? (
+                <iframe
+                  ref={iframeRef}
+                  src={urlToProxy(activeTab.url)}
+                  className="w-full h-full"
+                  title={activeTab.title}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                />
+              ) : null}
+            </div>
+          </BrowserShell>
+        </div>
       </div>
     </div>
   );

@@ -19,8 +19,7 @@ export const Route = createRootRoute({
       },
       {
         name: "viewport",
-        content:
-          "width=1600, initial-scale=0.25, minimum-scale=0.2, maximum-scale=1, user-scalable=yes",
+        content: "width=device-width, initial-scale=1, maximum-scale=1",
       },
       ...seo({
         title: "Firefox UI Mockup",
@@ -108,11 +107,8 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
       <head>
         <HeadContent />
       </head>
-      <body>
-        <div
-          id="mockup-manager-toolbar"
-          className="p-2 flex gap-2 text-lg items-center min-w-[1200px]"
-        >
+      <body className="overflow-x-hidden">
+        <div id="mockup-manager-toolbar" className="p-2 flex gap-2 text-lg items-center">
           <img src="/firefox.svg" alt="Firefox" width="24" height="24" className="mr-2" />
           <span className="font-semibold text-gray-700">Firefox Mockup</span>
           <div className="w-px h-6 bg-gray-300 mx-2" />
@@ -233,9 +229,7 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
           </div>
         </div>
         <hr />
-        <div id="firefox-mockup-container" className="min-w-[1200px]">
-          {children}
-        </div>
+        <div id="firefox-mockup-container">{children}</div>
         <Scripts />
       </body>
     </html>

@@ -84,16 +84,3 @@
 .browser-content {
   user-select: auto;
 }
-
-/* Mobile viewport adjustments */
-@media (max-width: 768px) {
-  #mockup-manager-toolbar,
-  #firefox-mockup-container {
-    min-width: 1200px;
-  }
-
-  body {
-    overflow-x: auto;
-    overflow-y: auto;
-  }
-}
