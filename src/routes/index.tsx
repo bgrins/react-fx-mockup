@@ -278,7 +278,7 @@ function Browser(): React.ReactElement {
   React.useEffect(() => {
     const updateScale = () => {
       const headerHeight = 60;
-      const padding = 40; // Total padding (20px on each side)
+      const padding = window.innerWidth < 640 ? 16 : 40; // 8px each side on mobile, 20px on desktop
       const browserWidth = 1200;
       const browserHeight = 800;
 
@@ -300,7 +300,7 @@ function Browser(): React.ReactElement {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-5 flex items-start justify-center overflow-hidden">
+    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-5 flex items-start justify-center overflow-hidden">
       <div
         className="relative"
         style={{

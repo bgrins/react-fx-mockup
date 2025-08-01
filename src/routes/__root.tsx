@@ -54,6 +54,7 @@ export const Route = createRootRoute({
 function RootDocument({ children }: { children: React.ReactNode }): React.ReactElement {
   const [accessKey, setAccessKey] = React.useState("");
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [statesOpen, setStatesOpen] = React.useState(false);
   const location = useLocation();
   const { debugInfo } = useDebug();
 
@@ -108,40 +109,65 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
         <HeadContent />
       </head>
       <body className="overflow-x-hidden">
-        <div id="mockup-manager-toolbar" className="p-2 flex gap-2 text-lg items-center">
-          <img src="/firefox.svg" alt="Firefox" width="24" height="24" className="mr-2" />
-          <span className="font-semibold text-gray-700">Firefox Mockup</span>
-          <div className="w-px h-6 bg-gray-300 mx-2" />
-          <Link
-            to="/"
-            activeProps={{
-              className: "font-bold",
-            }}
-            activeOptions={{ exact: true }}
-          >
-            Browser
-          </Link>
-          <Link
-            to="/split-view"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Split View
-          </Link>
-          <Link
-            to="/infer-test"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Infer Test
-          </Link>
-          <div className="ml-auto">
+        <div
+          id="mockup-manager-toolbar"
+          className="p-1 sm:p-2 flex gap-1 sm:gap-2 text-lg items-center"
+        >
+          <img src="/firefox.svg" alt="Firefox" width="20" height="20" className="sm:w-6 sm:h-6" />
+          <span className="font-semibold text-gray-700 text-sm sm:text-lg">Firefox Mockup</span>
+          <div className="ml-auto flex items-center gap-2">
+            <Popover open={statesOpen} onOpenChange={setStatesOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className="px-1.5 py-1 sm:px-2 sm:py-1.5 hover:bg-gray-100 rounded-md text-xs sm:text-sm"
+                  title="Switch View"
+                >
+                  States
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-48">
+                <div className="space-y-1">
+                  <Link
+                    to="/"
+                    className="block px-3 py-2 text-sm rounded-md hover:bg-gray-100"
+                    activeProps={{
+                      className: "block px-3 py-2 text-sm rounded-md bg-gray-100 font-semibold",
+                    }}
+                    activeOptions={{ exact: true }}
+                    onClick={() => setStatesOpen(false)}
+                  >
+                    Browser
+                  </Link>
+                  <Link
+                    to="/split-view"
+                    className="block px-3 py-2 text-sm rounded-md hover:bg-gray-100"
+                    activeProps={{
+                      className: "block px-3 py-2 text-sm rounded-md bg-gray-100 font-semibold",
+                    }}
+                    onClick={() => setStatesOpen(false)}
+                  >
+                    Split View
+                  </Link>
+                  <Link
+                    to="/infer-test"
+                    className="block px-3 py-2 text-sm rounded-md hover:bg-gray-100"
+                    activeProps={{
+                      className: "block px-3 py-2 text-sm rounded-md bg-gray-100 font-semibold",
+                    }}
+                    onClick={() => setStatesOpen(false)}
+                  >
+                    Infer Test
+                  </Link>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
               <PopoverTrigger asChild>
-                <button className="p-2 hover:bg-gray-100 rounded-md" title="Settings (Alt+?)">
-                  <SettingsIcon />
+                <button
+                  className="p-1 sm:p-2 hover:bg-gray-100 rounded-md"
+                  title="Settings (Alt+?)"
+                >
+                  <SettingsIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-96">
