@@ -226,6 +226,8 @@ function Browser(): React.ReactElement {
       const newActiveTab = newTabs[newActiveIndex];
       if (newActiveTab) {
         setActiveTabId(newActiveTab.id);
+        // Update the isActive state for all tabs
+        setTabs(newTabs.map((tab) => ({ ...tab, isActive: tab.id === newActiveTab.id })));
       }
     } else {
       setTabs(newTabs);
