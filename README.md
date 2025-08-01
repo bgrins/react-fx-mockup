@@ -1,1 +1,1 @@
-# react-fx-mockup
+# static-fx-mockup
