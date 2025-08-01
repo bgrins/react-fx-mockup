@@ -58,15 +58,24 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
   const { debugInfo } = useDebug();
 
   React.useEffect(() => {
-    // First check localStorage
-    const stored = localStorage.getItem("infer-access-key");
-    if (stored) {
-      setAccessKey(stored);
-    } else if (import.meta.env.VITE_INFER_ACCESS_KEY) {
-      // If no stored value, use env variable in development
-      const envKey = import.meta.env.VITE_INFER_ACCESS_KEY;
-      setAccessKey(envKey);
-      localStorage.setItem("infer-access-key", envKey);
+    // First check URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlAccessKey = urlParams.get("accessKey") || urlParams.get("access-key");
+
+    if (urlAccessKey) {
+      setAccessKey(urlAccessKey);
+      localStorage.setItem("infer-access-key", urlAccessKey);
+    } else {
+      // Then check localStorage
+      const stored = localStorage.getItem("infer-access-key");
+      if (stored) {
+        setAccessKey(stored);
+      } else if (import.meta.env.VITE_INFER_ACCESS_KEY) {
+        // If no stored value, use env variable in development
+        const envKey = import.meta.env.VITE_INFER_ACCESS_KEY;
+        setAccessKey(envKey);
+        localStorage.setItem("infer-access-key", envKey);
+      }
     }
   }, []);
 

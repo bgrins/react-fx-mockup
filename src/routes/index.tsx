@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
-import { DynamicFavicon, FirefoxFavicon } from "~/components/firefox/Favicons";
+import { DynamicFavicon, FirefoxFavicon, FirefoxViewIcon } from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { urlToProxy, proxyToUrl } from "~/utils/proxy";
 import { useDebug } from "~/contexts/DebugContext";
@@ -25,6 +25,14 @@ export const Route = createFileRoute("/")({
 function Browser(): React.ReactElement {
   const [activeTabId, setActiveTabId] = React.useState("tab-1");
   const [tabs, setTabs] = React.useState<Tab[]>([
+    {
+      id: "firefox-view",
+      title: "Firefox View",
+      url: "about:firefoxview",
+      favicon: <FirefoxViewIcon />,
+      isPinned: true,
+      isActive: false,
+    },
     {
       id: "tab-1",
       title: "New Tab",
@@ -206,6 +214,10 @@ function Browser(): React.ReactElement {
   };
 
   const handleTabClose = (id: string) => {
+    // Don't close pinned tabs
+    const tabToClose = tabs.find((t) => t.id === id);
+    if (tabToClose?.isPinned) return;
+
     const newTabs = tabs.filter((t) => t.id !== id);
 
     // If we're closing the last tab, create a new one
@@ -302,6 +314,15 @@ function Browser(): React.ReactElement {
         >
           {activeTab?.url === "about:blank" ? (
             <NewTabPage onNavigate={handleNavigate} />
+          ) : activeTab?.url === "about:firefoxview" ? (
+            <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
+              <div className="text-center">
+                <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
+                <p className="text-gray-500">
+                  Recently closed tabs and synced tabs would appear here
+                </p>
+              </div>
+            </div>
           ) : activeTab?.type === "proxy" ? (
             <iframe
               ref={iframeRef}
