@@ -15,6 +15,24 @@ interface NewTabPageProps {
 
 const defaultTiles: Tile[] = [
   {
+    id: 'example',
+    title: 'Example',
+    url: 'https://example.com',
+    favicon: '/default-favicon.svg'
+  },
+  {
+    id: 'npr',
+    title: 'NPR Text',
+    url: 'https://text.npr.org',
+    favicon: 'https://text.npr.org/favicon.ico'
+  },
+  {
+    id: 'espn',
+    title: 'ESPN',
+    url: 'https://espn.com',
+    favicon: 'https://a.espncdn.com/favicon.ico'
+  },
+  {
     id: 'wikipedia',
     title: 'Wikipedia',
     url: 'https://en.wikipedia.org/wiki/Main_Page',
@@ -42,24 +60,24 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
   return (
     <div className="flex items-center justify-center h-full bg-[#f9f9fb] p-8">
       <div className="max-w-4xl w-full">
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-8 max-w-5xl mx-auto">
           {defaultTiles.map((tile) => (
             <button
               key={tile.id}
               onClick={() => handleTileClick(tile.url)}
               className={cn(
-                "group relative flex flex-col items-center justify-center p-4 h-[120px]",
-                "bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200",
-                "border border-gray-200 hover:border-gray-300",
+                "group relative flex flex-col items-center justify-center p-3 h-[110px]",
+                "bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-200",
+                "border border-gray-200 hover:border-gray-400",
                 "cursor-pointer"
               )}
             >
-              <div className="w-16 h-16 mb-2 flex items-center justify-center">
+              <div className="w-12 h-12 mb-2 flex items-center justify-center rounded-lg overflow-hidden bg-gray-50">
                 {tile.favicon ? (
                   <img 
                     src={tile.favicon} 
                     alt={tile.title}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain p-1"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
                       e.currentTarget.nextElementSibling?.classList.remove('hidden')
@@ -67,11 +85,13 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
                   />
                 ) : null}
                 <div className={cn(
-                  "w-full h-full bg-gray-300 rounded",
+                  "w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center text-gray-500 text-2xl font-bold",
                   tile.favicon ? "hidden" : ""
-                )} />
+                )}>
+                  {tile.title.charAt(0).toUpperCase()}
+                </div>
               </div>
-              <span className="text-sm text-gray-700 font-medium">
+              <span className="text-xs text-gray-700 font-medium truncate w-full text-center px-1">
                 {tile.title}
               </span>
             </button>

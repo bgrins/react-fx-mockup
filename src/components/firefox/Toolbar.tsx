@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { PlusIcon } from '~/components/icons'
 import { cn } from '~/lib/utils'
-import { AddressBar } from './AddressBar'
+import { AddressBar, AddressBarHandle } from './AddressBar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ interface ToolbarProps {
   onSidebarToggle?: () => void
 }
 
-export function Toolbar({
+export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolbar({
   url = '',
   onBack,
   onForward,
@@ -41,7 +41,8 @@ export function Toolbar({
   onCloseBothTabs,
   showSplitView,
   onSidebarToggle
-}: ToolbarProps) {
+}, ref) {
+  console.log('[TOOLBAR] Props received:', { canGoBack, canGoForward, url });
   return (
     <div className={cn("h-10 bg-[#f9f9fb] flex items-center gap-1 px-2 py-1", className)}>
       {/* Left actions */}
@@ -83,6 +84,7 @@ export function Toolbar({
       {/* Address bar */}
       <div className="flex-1 px-16">
         <AddressBar 
+          ref={ref}
           url={url} 
           onNavigate={onNavigate}
           onNewTabBelow={onNewTabBelow}
@@ -113,7 +115,7 @@ export function Toolbar({
       </div>
     </div>
   )
-}
+})
 
 interface ToolbarIconProps {
   icon: React.ReactNode

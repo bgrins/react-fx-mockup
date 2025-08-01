@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '~/lib/utils'
 import { TabStrip } from './TabStrip'
 import { Toolbar } from './Toolbar'
+import { type AddressBarHandle } from './AddressBar'
 import { WindowControls } from './WindowControls'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu'
 import { PlusIcon } from '~/components/icons'
@@ -25,6 +26,7 @@ interface BrowserShellProps {
   onNavigate?: (url: string) => void
   onBack?: () => void
   onForward?: () => void
+  onRefresh?: () => void
   canGoBack?: boolean
   canGoForward?: boolean
   className?: string
@@ -35,7 +37,7 @@ interface BrowserShellProps {
   onSidebarToggle?: () => void
 }
 
-export function BrowserShell({
+export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(function BrowserShell({
   children,
   tabs = [],
   activeTabId,
@@ -47,6 +49,7 @@ export function BrowserShell({
   onNavigate,
   onBack,
   onForward,
+  onRefresh,
   canGoBack = false,
   canGoForward = false,
   className,
@@ -55,7 +58,7 @@ export function BrowserShell({
   onCloseBothTabs,
   showSplitView,
   onSidebarToggle
-}: BrowserShellProps) {
+}, ref) {
   return (
     <div className={cn(
       "firefox-ui bg-[#f9f9fb] rounded-xl shadow-2xl overflow-hidden flex flex-col",
@@ -92,11 +95,13 @@ export function BrowserShell({
         <ContextMenuTrigger asChild>
           <div id="firefox-toolbar" className="browser-chrome">
             <Toolbar
+              ref={ref}
               url={currentUrl}
               onNavigate={onNavigate}
               onNewTab={onNewTab}
               onBack={onBack}
               onForward={onForward}
+              onRefresh={onRefresh}
               canGoBack={canGoBack}
               canGoForward={canGoForward}
               className="shrink-0"
@@ -122,4 +127,4 @@ export function BrowserShell({
       </div>
     </div>
   )
-}
+})

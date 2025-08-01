@@ -558,6 +558,40 @@ function createInjectionScript(targetUrl) {
         return true;
       }
       return false;
+    },
+    
+    // Reload the page
+    reload: () => {
+      window.location.reload();
+      return true;
+    },
+    
+    // Navigate back
+    goBack: () => {
+      try {
+        window.history.back();
+        return true;
+      } catch (e) {
+        console.error('[PROXY] Failed to go back:', e);
+        return false;
+      }
+    },
+    
+    // Navigate forward
+    goForward: () => {
+      try {
+        window.history.forward();
+        return true;
+      } catch (e) {
+        console.error('[PROXY] Failed to go forward:', e);
+        return false;
+      }
+    },
+    
+    // Navigate to a URL
+    navigate: (url) => {
+      window.location.href = url;
+      return true;
     }
   };
   
@@ -601,11 +635,58 @@ function createInjectionScript(targetUrl) {
   
   // Notify parent that tunnel is ready
   if (window.parent !== window) {
+    console.log('[PROXY WORKER] Sending READY message, history.length:', window.history.length);
     window.parent.postMessage({
       type: 'PROXY_TUNNEL_READY',
       origin: TARGET_ORIGIN,
       url: window.location.href
     }, '*');
+    
+    // Send initial navigation state
+    console.log('[PROXY WORKER] Sending initial navigation state');
+    window.parent.postMessage({
+      type: 'PROXY_TUNNEL_NAVIGATION',
+      url: window.location.href,
+      canGoBack: window.history.length > 1,
+      canGoForward: false
+    }, '*');
+    
+    // Listen for navigation events and notify parent
+    window.addEventListener('popstate', () => {
+      console.log('[PROXY WORKER] popstate event, history.length:', window.history.length);
+      window.parent.postMessage({
+        type: 'PROXY_TUNNEL_NAVIGATION',
+        url: window.location.href,
+        canGoBack: window.history.length > 1,
+        canGoForward: false // We can't reliably detect this
+      }, '*');
+    });
+    
+    // Also listen for pushstate/replacestate
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    window.history.pushState = function() {
+      originalPushState.apply(window.history, arguments);
+      console.log('[PROXY WORKER] pushState called, history.length:', window.history.length);
+      window.parent.postMessage({
+        type: 'PROXY_TUNNEL_NAVIGATION',
+        url: window.location.href,
+        canGoBack: window.history.length > 1,
+        canGoForward: false
+      }, '*');
+    };
+    
+    window.history.replaceState = function() {
+      originalReplaceState.apply(window.history, arguments);
+      console.log('[PROXY WORKER] replaceState called, history.length:', window.history.length);
+      window.parent.postMessage({
+        type: 'PROXY_TUNNEL_NAVIGATION',
+        url: window.location.href,
+        canGoBack: window.history.length > 1,
+        canGoForward: false
+      }, '*');
+    };
   }
 })();
 </script>

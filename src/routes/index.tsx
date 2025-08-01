@@ -7,6 +7,9 @@ import { urlToProxy } from "~/utils/proxy";
 import { useDebug } from "~/contexts/DebugContext";
 import { useProxyTunnel } from "~/hooks/useProxyTunnel";
 import React from "react";
+import type { AddressBarHandle } from "~/components/firefox/AddressBar";
+import { ABOUT_PAGES } from "~/constants/browser";
+import { cn } from "~/lib/utils";
 
 interface Tab {
   id: string;
@@ -25,34 +28,88 @@ export const Route = createFileRoute("/")({
 });
 
 function Browser(): React.ReactElement {
+  const addressBarRef = React.useRef<AddressBarHandle>(null);
   const [activeTabId, setActiveTabId] = React.useState("tab-1");
   const [tabs, setTabs] = React.useState<Tab[]>([
     {
       id: "firefox-view",
       title: "Firefox View",
-      url: "about:firefoxview",
+      url: ABOUT_PAGES.FIREFOX_VIEW,
       favicon: <FirefoxViewIcon />,
       isPinned: true,
       isActive: false,
-      history: ["about:firefoxview"],
+      history: [ABOUT_PAGES.FIREFOX_VIEW],
       historyIndex: 0,
+      type: "stub",
     },
     {
       id: "tab-1",
       title: "New Tab",
-      url: "about:blank",
+      url: ABOUT_PAGES.BLANK,
       favicon: <FirefoxFavicon />,
       isActive: true,
-      history: ["about:blank"],
+      history: [ABOUT_PAGES.BLANK],
       historyIndex: 0,
+      type: "stub",
     },
   ]);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [pageContent, setPageContent] = React.useState<string>("");
+  const [proxyNavigationState, setProxyNavigationState] = React.useState<{
+    canGoBack: boolean;
+    canGoForward: boolean;
+  }>({ canGoBack: false, canGoForward: false });
   const { setDebugInfo } = useDebug();
-  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const iframeRefs = React.useRef<{ [key: string]: HTMLIFrameElement | null }>({});
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
+
+  // Memoize navigation states to ensure consistent values during SSR
+  const canGoBack = React.useMemo(() => {
+    const result = (() => {
+      if (!activeTab) return false;
+
+      // Check if we have local history to navigate back
+      const hasLocalHistory = !!(activeTab.history && (activeTab.historyIndex ?? 0) > 0);
+
+      // For proxy tabs, we can go back if:
+      // 1. The proxy iframe can go back, OR
+      // 2. We have local history (e.g., going back to about:blank)
+      if (activeTab.type === "proxy") {
+        return proxyNavigationState.canGoBack || hasLocalHistory;
+      }
+
+      return hasLocalHistory;
+    })();
+
+    console.log("[INDEX] canGoBack computed:", result, {
+      activeTab: activeTab?.id,
+      type: activeTab?.type,
+      proxyState: proxyNavigationState.canGoBack,
+      localHistory: activeTab?.history,
+      historyIndex: activeTab?.historyIndex,
+    });
+
+    return result;
+  }, [activeTab, proxyNavigationState.canGoBack]);
+
+  const canGoForward = React.useMemo(() => {
+    if (!activeTab) return false;
+
+    // Check if we have local history to navigate forward
+    const hasLocalForwardHistory = !!(
+      activeTab.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1
+    );
+
+    // For proxy tabs, we can go forward if:
+    // 1. The proxy iframe can go forward, OR
+    // 2. We have local forward history (e.g., going forward from about:blank)
+    if (activeTab.type === "proxy") {
+      return proxyNavigationState.canGoForward || hasLocalForwardHistory;
+    }
+
+    return hasLocalForwardHistory;
+  }, [activeTab, proxyNavigationState.canGoForward]);
 
   const handleNavigate = React.useCallback(
     (url: string) => {
@@ -75,6 +132,7 @@ function Browser(): React.ReactElement {
 
               // Add new URL to history (remove any forward history)
               const newHistory = [...history.slice(0, historyIndex + 1), fullUrl];
+              const newHistoryIndex = newHistory.length - 1;
 
               return {
                 ...tab,
@@ -83,7 +141,7 @@ function Browser(): React.ReactElement {
                 favicon: <DynamicFavicon url={fullUrl} />,
                 type: "proxy" as const,
                 history: newHistory,
-                historyIndex: newHistory.length - 1,
+                historyIndex: newHistoryIndex,
               };
             }
             return tab;
@@ -101,7 +159,7 @@ function Browser(): React.ReactElement {
   React.useEffect(() => {
     if (activeTab) {
       const proxyUrl =
-        activeTab.type === "proxy" && activeTab.url !== "about:blank"
+        activeTab.type === "proxy" && activeTab.url !== ABOUT_PAGES.BLANK
           ? urlToProxy(activeTab.url)
           : undefined;
 
@@ -116,8 +174,15 @@ function Browser(): React.ReactElement {
     }
   }, [activeTab, setDebugInfo]);
 
+  // Get current iframe ref
+  const currentIframeRef = React.useMemo(() => {
+    return {
+      current: activeTab ? iframeRefs.current[activeTab.id] || null : null,
+    };
+  }, [activeTab]);
+
   // Use proxy tunnel hook
-  const { requestPageInfo, requestPageContent } = useProxyTunnel({
+  const { requestPageInfo, requestPageContent, sendCommand } = useProxyTunnel({
     onNavigate: handleNavigate,
     onPageInfo: (info) => {
       // Update tab title
@@ -135,8 +200,12 @@ function Browser(): React.ReactElement {
       );
     },
     onPageContent: setPageContent,
+    onNavigationStateChange: (state) => {
+      console.log("[INDEX] Setting proxy navigation state:", state, "for tab:", activeTabId);
+      setProxyNavigationState(state);
+    },
     activeTabUrl: activeTab?.url,
-    iframeRef,
+    iframeRef: currentIframeRef,
     enabled: activeTab?.type === "proxy",
   });
 
@@ -148,6 +217,13 @@ function Browser(): React.ReactElement {
     }
   }, [sidebarOpen, activeTabId, activeTab?.type, requestPageInfo, requestPageContent]);
 
+  // Reset proxy navigation state when switching tabs
+  React.useEffect(() => {
+    if (activeTab?.type !== "proxy") {
+      setProxyNavigationState({ canGoBack: false, canGoForward: false });
+    }
+  }, [activeTabId, activeTab?.type]);
+
   const handleBack = () => {
     if (!activeTab || !activeTab.history || activeTab.historyIndex === undefined) return;
 
@@ -157,19 +233,67 @@ function Browser(): React.ReactElement {
     const previousUrl = activeTab.history[newIndex];
     if (!previousUrl) return;
 
-    setTabs(
-      tabs.map((tab) =>
-        tab.id === activeTabId
-          ? {
-              ...tab,
-              url: previousUrl,
-              historyIndex: newIndex,
-              title: `Loading...`,
-              favicon: <DynamicFavicon url={previousUrl} />,
-            }
-          : tab,
-      ),
+    console.log(
+      "[INDEX] handleBack:",
+      "activeTab:",
+      activeTab.id,
+      "type:",
+      activeTab.type,
+      "history:",
+      JSON.stringify(activeTab.history),
+      "historyIndex:",
+      activeTab.historyIndex,
+      "newIndex:",
+      newIndex,
+      "previousUrl:",
+      JSON.stringify(previousUrl),
+      "previousUrl.length:",
+      previousUrl.length,
+      "previousUrl === ABOUT_PAGES.BLANK:",
+      previousUrl === ABOUT_PAGES.BLANK,
+      "previousUrl.trim() === ABOUT_PAGES.BLANK:",
+      previousUrl.trim() === ABOUT_PAGES.BLANK,
     );
+
+    // If we're going back to about:blank, handle it locally even for proxy tabs
+    // since the proxy iframe can't navigate back to about:blank
+    const shouldHandleLocally = activeTab.type !== "proxy" || previousUrl === ABOUT_PAGES.BLANK;
+
+    console.log("[INDEX] Navigation decision:", {
+      shouldHandleLocally,
+      tabType: activeTab.type,
+      previousUrl,
+      previousUrlLength: previousUrl.length,
+      previousUrlCharCodes: previousUrl.split("").map((c) => c.charCodeAt(0)),
+    });
+
+    if (!shouldHandleLocally) {
+      // For proxy tabs going to non-about:blank URLs, send the goBack command
+      console.log("[INDEX] Sending goBack command to proxy");
+      sendCommand("goBack");
+    } else {
+      // For non-proxy tabs or when going back to about:blank, handle locally
+      console.log("[INDEX] Handling back navigation locally");
+      setTabs(
+        tabs.map((tab) =>
+          tab.id === activeTabId
+            ? {
+                ...tab,
+                url: previousUrl,
+                historyIndex: newIndex,
+                title: previousUrl === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
+                favicon:
+                  previousUrl === ABOUT_PAGES.BLANK ? (
+                    <FirefoxFavicon />
+                  ) : (
+                    <DynamicFavicon url={previousUrl} />
+                  ),
+                type: previousUrl === ABOUT_PAGES.BLANK ? "stub" : tab.type,
+              }
+            : tab,
+        ),
+      );
+    }
   };
 
   const handleForward = () => {
@@ -181,25 +305,63 @@ function Browser(): React.ReactElement {
     const nextUrl = activeTab.history[newIndex];
     if (!nextUrl) return;
 
-    setTabs(
-      tabs.map((tab) =>
-        tab.id === activeTabId
-          ? {
-              ...tab,
-              url: nextUrl,
-              historyIndex: newIndex,
-              title: `Loading...`,
-              favicon: <DynamicFavicon url={nextUrl} />,
-            }
-          : tab,
-      ),
-    );
+    // If we're currently on about:blank, handle forward navigation locally
+    // since we need to transition from stub to proxy tab
+    if (activeTab.type === "proxy" && activeTab.url !== ABOUT_PAGES.BLANK) {
+      // For proxy tabs that aren't on about:blank, send the goForward command
+      sendCommand("goForward");
+    } else {
+      // For non-proxy tabs or when navigating from about:blank, handle locally
+      setTabs(
+        tabs.map((tab) =>
+          tab.id === activeTabId
+            ? {
+                ...tab,
+                url: nextUrl,
+                historyIndex: newIndex,
+                title: nextUrl === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
+                favicon:
+                  nextUrl === ABOUT_PAGES.BLANK ? (
+                    <FirefoxFavicon />
+                  ) : (
+                    <DynamicFavicon url={nextUrl} />
+                  ),
+                type: nextUrl === ABOUT_PAGES.BLANK ? "stub" : "proxy",
+              }
+            : tab,
+        ),
+      );
+    }
+  };
+
+  const handleRefresh = () => {
+    if (!activeTab) return;
+
+    if (activeTab.type === "proxy") {
+      // Update tab to show loading state
+      setTabs(
+        tabs.map((tab) =>
+          tab.id === activeTabId
+            ? {
+                ...tab,
+                title: `Loading ${new URL(tab.url).hostname}...`,
+              }
+            : tab,
+        ),
+      );
+
+      // Send reload command through the proxy tunnel
+      sendCommand("reload");
+    }
   };
 
   const handleTabClose = (id: string) => {
     // Don't close pinned tabs
     const tabToClose = tabs.find((t) => t.id === id);
     if (tabToClose?.isPinned) return;
+
+    // Clean up iframe reference
+    delete iframeRefs.current[id];
 
     const newTabs = tabs.filter((t) => t.id !== id);
 
@@ -208,12 +370,20 @@ function Browser(): React.ReactElement {
       const newTab: Tab = {
         id: `tab-${Date.now()}`,
         title: "New Tab",
-        url: "about:blank",
+        url: ABOUT_PAGES.BLANK,
         favicon: <FirefoxFavicon />,
         isActive: true,
+        history: [ABOUT_PAGES.BLANK],
+        historyIndex: 0,
+        type: "stub",
       };
       setTabs([newTab]);
       setActiveTabId(newTab.id);
+
+      // Focus the address bar for the new tab
+      setTimeout(() => {
+        addressBarRef.current?.focus();
+      }, 0);
     } else if (id === activeTabId) {
       // If we closed the active tab, switch to another tab
       const closedIndex = tabs.findIndex((t) => t.id === id);
@@ -234,14 +404,22 @@ function Browser(): React.ReactElement {
     const newTab: Tab = {
       id: newTabId,
       title: "New Tab",
-      url: "about:blank",
+      url: ABOUT_PAGES.BLANK,
       favicon: <FirefoxFavicon />,
       isActive: true,
+      history: [ABOUT_PAGES.BLANK],
+      historyIndex: 0,
+      type: "stub",
     };
     // Set all other tabs as inactive
     const updatedTabs = tabs.map((tab) => ({ ...tab, isActive: false }));
     setTabs([...updatedTabs, newTab]);
     setActiveTabId(newTabId);
+
+    // Focus the address bar for the new tab
+    setTimeout(() => {
+      addressBarRef.current?.focus();
+    }, 0);
   };
 
   const handleTabReorder = (draggedTabId: string, targetTabId: string, dropBefore: boolean) => {
@@ -321,6 +499,7 @@ function Browser(): React.ReactElement {
           }}
         >
           <BrowserShell
+            ref={addressBarRef}
             tabs={tabs}
             activeTabId={activeTabId}
             currentUrl={activeTab?.url ?? ""}
@@ -328,6 +507,14 @@ function Browser(): React.ReactElement {
               setActiveTabId(tabId);
               // Update active state
               setTabs(tabs.map((tab) => ({ ...tab, isActive: tab.id === tabId })));
+
+              // Focus address bar if clicking on a new tab (about:blank)
+              const clickedTab = tabs.find((tab) => tab.id === tabId);
+              if (clickedTab?.url === ABOUT_PAGES.BLANK) {
+                setTimeout(() => {
+                  addressBarRef.current?.focus();
+                }, 0);
+              }
             }}
             onTabClose={handleTabClose}
             onNewTab={handleNewTab}
@@ -335,10 +522,9 @@ function Browser(): React.ReactElement {
             onNavigate={handleNavigate}
             onBack={handleBack}
             onForward={handleForward}
-            canGoBack={Boolean(activeTab?.history && (activeTab.historyIndex ?? 0) > 0)}
-            canGoForward={Boolean(
-              activeTab?.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1,
-            )}
+            onRefresh={handleRefresh}
+            canGoBack={canGoBack}
+            canGoForward={canGoForward}
             onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
             className="flex-1 min-h-0"
           >
@@ -354,10 +540,34 @@ function Browser(): React.ReactElement {
                   : undefined
               }
             />
-            <div className="flex-1 h-full bg-white overflow-auto">
-              {activeTab?.url === "about:blank" ? (
-                <NewTabPage onNavigate={handleNavigate} />
-              ) : activeTab?.url === "about:firefoxview" ? (
+            <div className="flex-1 h-full bg-white overflow-auto relative">
+              {/* Render all proxy iframes but only show the active one */}
+              {tabs.map((tab) => {
+                if (tab.type === "proxy") {
+                  return (
+                    <iframe
+                      key={tab.id}
+                      ref={(el) => {
+                        if (el) {
+                          iframeRefs.current[tab.id] = el;
+                        }
+                      }}
+                      src={urlToProxy(tab.url)}
+                      className={cn(
+                        "w-full h-full absolute inset-0",
+                        tab.id === activeTabId ? "block" : "hidden",
+                      )}
+                      title={tab.title}
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                    />
+                  );
+                }
+                return null;
+              })}
+
+              {/* Show special pages for active tab */}
+              {activeTab?.url === ABOUT_PAGES.BLANK && <NewTabPage onNavigate={handleNavigate} />}
+              {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
                 <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
                   <div className="text-center">
                     <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
@@ -366,15 +576,7 @@ function Browser(): React.ReactElement {
                     </p>
                   </div>
                 </div>
-              ) : activeTab?.type === "proxy" ? (
-                <iframe
-                  ref={iframeRef}
-                  src={urlToProxy(activeTab.url)}
-                  className="w-full h-full"
-                  title={activeTab.title}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                />
-              ) : null}
+              )}
             </div>
           </BrowserShell>
         </div>

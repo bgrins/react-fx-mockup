@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react'
 import { cn } from '~/lib/utils'
 import {
   DropdownMenu,
@@ -18,7 +18,11 @@ interface AddressBarProps {
   showSplitView?: boolean
 }
 
-export function AddressBar({ 
+export interface AddressBarHandle {
+  focus: () => void
+}
+
+export const AddressBar = forwardRef<AddressBarHandle, AddressBarProps>(function AddressBar({ 
   url = '', 
   onNavigate,
   showSecurity = true,
@@ -27,9 +31,22 @@ export function AddressBar({
   onCompareTabs,
   onCloseBothTabs,
   showSplitView = true
-}: AddressBarProps) {
+}, ref) {
   const [value, setValue] = useState(url === 'about:blank' ? '' : url)
   const [isFocused, setIsFocused] = useState(url === 'about:blank')
+  const inputRef = useRef<HTMLInputElement>(null)
+  
+  // Expose focus method through ref
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      setIsFocused(true)
+      setValue(url === 'about:blank' ? '' : url)
+      // Focus the input after state update
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 0)
+    }
+  }), [url])
   
   // Update value when URL prop changes
   React.useEffect(() => {
@@ -38,7 +55,44 @@ export function AddressBar({
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onNavigate?.(value)
+    
+    // Check if the input looks like a URL
+    const isURL = (input: string): boolean => {
+      // Check for protocol
+      if (input.startsWith('http://') || input.startsWith('https://')) {
+        return true
+      }
+      
+      // Check for common TLDs or domain patterns
+      const domainPattern = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:[0-9]+)?(\/.*)?$/
+      if (domainPattern.test(input)) {
+        return true
+      }
+      
+      // Check for localhost or IP addresses
+      if (input.startsWith('localhost') || /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(input)) {
+        return true
+      }
+      
+      // Check for about: pages
+      if (input.startsWith('about:')) {
+        return true
+      }
+      
+      return false
+    }
+    
+    let navigateUrl = value
+    
+    if (!isURL(value) && value.trim() !== '') {
+      // If not a URL, search on DuckDuckGo
+      navigateUrl = `https://duckduckgo.com/?q=${encodeURIComponent(value)}`
+    } else if (isURL(value) && !value.startsWith('http://') && !value.startsWith('https://') && !value.startsWith('about:')) {
+      // Add https:// if missing
+      navigateUrl = `https://${value}`
+    }
+    
+    onNavigate?.(navigateUrl)
   }
   
   const getDomain = (url: string) => {
@@ -96,6 +150,7 @@ export function AddressBar({
       
       {isFocused ? (
         <input
+          ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -160,7 +215,7 @@ export function AddressBar({
       </div>
     </form>
   )
-}
+})
 
 function ShieldIcon() {
   return (

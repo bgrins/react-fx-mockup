@@ -6,6 +6,7 @@ interface ProxyTunnelOptions {
   onNavigate?: (url: string) => void;
   onPageInfo?: (info: { title?: string; content?: string; text?: string }) => void;
   onPageContent?: (content: string) => void;
+  onNavigationStateChange?: (state: { canGoBack: boolean; canGoForward: boolean }) => void;
   activeTabId?: string;
   activeTabUrl?: string;
   iframeRef: RefObject<HTMLIFrameElement | null>;
@@ -23,6 +24,7 @@ export function useProxyTunnel({
   onNavigate,
   onPageInfo,
   onPageContent,
+  onNavigationStateChange,
   activeTabUrl,
   iframeRef,
   enabled = true,
@@ -113,6 +115,34 @@ export function useProxyTunnel({
           onPageContent?.(content);
         }
       }
+
+      // Handle proxy tunnel navigation events
+      if (event.data?.type === PROXY_MESSAGE_TYPES.NAVIGATION) {
+        console.log("[PROXY] Navigation event received:", {
+          url: event.data.url,
+          canGoBack: event.data.canGoBack,
+          canGoForward: event.data.canGoForward,
+          fullData: event.data,
+        });
+
+        // Update navigation state (back/forward availability)
+        if (event.data.canGoBack !== undefined || event.data.canGoForward !== undefined) {
+          const newState = {
+            canGoBack: event.data.canGoBack || false,
+            canGoForward: event.data.canGoForward || false,
+          };
+          console.log("[PROXY] Calling onNavigationStateChange with:", newState);
+          onNavigationStateChange?.(newState);
+        }
+
+        // Update URL if it changed
+        if (event.data.url) {
+          const realUrl = proxyToUrl(event.data.url);
+          if (activeTabUrl && realUrl !== activeTabUrl) {
+            onNavigate?.(realUrl);
+          }
+        }
+      }
     };
 
     window.addEventListener("message", handleMessage);
@@ -123,6 +153,7 @@ export function useProxyTunnel({
     onNavigate,
     onPageInfo,
     onPageContent,
+    onNavigationStateChange,
     requestPageInfo,
     requestPageContent,
   ]);
