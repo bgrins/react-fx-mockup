@@ -32,6 +32,7 @@ interface BrowserShellProps {
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void
   showSplitView?: boolean
+  onSidebarToggle?: () => void
 }
 
 export function BrowserShell({
@@ -52,7 +53,8 @@ export function BrowserShell({
   onNewTabBelow,
   onCompareTabs,
   onCloseBothTabs,
-  showSplitView
+  showSplitView,
+  onSidebarToggle
 }: BrowserShellProps) {
   return (
     <div className={cn(
@@ -102,6 +104,7 @@ export function BrowserShell({
               onCompareTabs={onCompareTabs}
               onCloseBothTabs={onCloseBothTabs}
               showSplitView={showSplitView}
+              onSidebarToggle={onSidebarToggle}
             />
           </div>
         </ContextMenuTrigger>
@@ -114,10 +117,8 @@ export function BrowserShell({
       </ContextMenu>
       
       {/* Content area */}
-      <div id="firefox-content-area" className="flex-1 bg-white overflow-hidden min-h-0 browser-content">
-        <div className="h-full overflow-auto">
-          {children}
-        </div>
+      <div id="firefox-content-area" className="flex-1 flex overflow-hidden min-h-0 browser-content">
+        {children}
       </div>
     </div>
   )

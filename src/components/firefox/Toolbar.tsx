@@ -23,6 +23,7 @@ interface ToolbarProps {
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void
   showSplitView?: boolean
+  onSidebarToggle?: () => void
 }
 
 export function Toolbar({
@@ -38,7 +39,8 @@ export function Toolbar({
   onNewTabBelow,
   onCompareTabs,
   onCloseBothTabs,
-  showSplitView
+  showSplitView,
+  onSidebarToggle
 }: ToolbarProps) {
   return (
     <div className={cn("h-10 bg-[#f9f9fb] flex items-center gap-1 px-2 py-1", className)}>
@@ -46,7 +48,7 @@ export function Toolbar({
       <div className="flex items-center gap-1">
         <button 
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]"
-          onClick={() => {}}
+          onClick={onSidebarToggle}
           title="Sidebar"
         >
           <SidebarCollapsedIcon />

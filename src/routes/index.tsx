@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
 import { DynamicFavicon, FirefoxFavicon, FirefoxViewIcon } from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
+import { Sidebar } from "~/components/firefox/Sidebar";
 import { urlToProxy, proxyToUrl } from "~/utils/proxy";
 import { useDebug } from "~/contexts/DebugContext";
 import React from "react";
@@ -32,6 +33,8 @@ function Browser(): React.ReactElement {
       favicon: <FirefoxViewIcon />,
       isPinned: true,
       isActive: false,
+      history: ["about:firefoxview"],
+      historyIndex: 0,
     },
     {
       id: "tab-1",
@@ -39,8 +42,12 @@ function Browser(): React.ReactElement {
       url: "about:blank",
       favicon: <FirefoxFavicon />,
       isActive: true,
+      history: ["about:blank"],
+      historyIndex: 0,
     },
   ]);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [pageContent, setPageContent] = React.useState<string>("");
   const { setDebugInfo } = useDebug();
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
@@ -108,12 +115,39 @@ function Browser(): React.ReactElement {
     }
   }, [activeTab, setDebugInfo]);
 
+  // Request page content when sidebar is opened or tab changes
+  React.useEffect(() => {
+    if (sidebarOpen && activeTab?.type === "proxy" && iframeRef.current?.contentWindow) {
+      // Get page info
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: "PROXY_TUNNEL_COMMAND",
+          id: `cmd-info-${Date.now()}`,
+          command: "getPageInfo",
+          args: [],
+        },
+        "*",
+      );
+
+      // Get page content from body
+      iframeRef.current.contentWindow.postMessage(
+        {
+          type: "PROXY_TUNNEL_COMMAND",
+          id: `cmd-content-${Date.now()}`,
+          command: "getElement",
+          args: ["body"],
+        },
+        "*",
+      );
+    }
+  }, [sidebarOpen, activeTabId, activeTab?.type]);
+
   // Handle messages from proxy tunnel
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       // Handle proxy tunnel ready message
       if (event.data?.type === "PROXY_TUNNEL_READY") {
-        console.log("Proxy tunnel ready:", event.data);
+        console.log("[PROXY] Tunnel ready:", event.data);
 
         // Extract the URL from the proxy URL
         if (event.data.url) {
@@ -127,12 +161,29 @@ function Browser(): React.ReactElement {
 
         // Request page info to update tab
         if (iframeRef.current?.contentWindow) {
+          const commandId = `cmd-${Date.now()}`;
+          console.log("[PROXY] Sending getPageInfo command:", commandId);
+
           iframeRef.current.contentWindow.postMessage(
             {
               type: "PROXY_TUNNEL_COMMAND",
-              id: `cmd-${Date.now()}`,
+              id: commandId,
               command: "getPageInfo",
               args: [],
+            },
+            "*",
+          );
+
+          // Also get page content
+          const contentId = `cmd-content-${Date.now()}`;
+          console.log("[PROXY] Sending getElement command:", contentId);
+
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: "PROXY_TUNNEL_COMMAND",
+              id: contentId,
+              command: "getElement",
+              args: ["body"],
             },
             "*",
           );
@@ -141,7 +192,12 @@ function Browser(): React.ReactElement {
 
       // Handle proxy tunnel responses
       if (event.data?.type === "PROXY_TUNNEL_RESPONSE") {
-        const { result, command } = event.data;
+        const { result, command, id } = event.data;
+        console.log("[PROXY] Response received:", {
+          command,
+          id,
+          result,
+        });
 
         if (command === "getPageInfo" && result) {
           // Update tab title and URL
@@ -157,6 +213,19 @@ function Browser(): React.ReactElement {
                 : tab,
             ),
           );
+
+          // Log what's actually in the result
+          console.log("[PROXY] getPageInfo result contains:", Object.keys(result));
+
+          // Also update page content if available
+          if (result.content || result.text) {
+            setPageContent(result.content || result.text || "");
+          }
+        }
+
+        if (command === "getElement" && result && result.textContent) {
+          console.log("[PROXY] getElement result - text length:", result.textContent.length);
+          setPageContent(result.textContent);
         }
       }
     };
@@ -306,32 +375,47 @@ function Browser(): React.ReactElement {
           onNavigate={handleNavigate}
           onBack={handleBack}
           onForward={handleForward}
-          canGoBack={!!activeTab?.history && (activeTab.historyIndex ?? 0) > 0}
-          canGoForward={
-            !!activeTab?.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1
-          }
+          canGoBack={Boolean(activeTab?.history && (activeTab.historyIndex ?? 0) > 0)}
+          canGoForward={Boolean(
+            activeTab?.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1,
+          )}
+          onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
           className="flex-1 min-h-0"
         >
-          {activeTab?.url === "about:blank" ? (
-            <NewTabPage onNavigate={handleNavigate} />
-          ) : activeTab?.url === "about:firefoxview" ? (
-            <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
-              <div className="text-center">
-                <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
-                <p className="text-gray-500">
-                  Recently closed tabs and synced tabs would appear here
-                </p>
+          <Sidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            pageContent={pageContent}
+            pageTitle={activeTab?.title}
+            pageUrl={activeTab?.url}
+            accessKey={
+              typeof window !== "undefined"
+                ? localStorage.getItem("infer-access-key") || undefined
+                : undefined
+            }
+          />
+          <div className="flex-1 h-full bg-white overflow-auto">
+            {activeTab?.url === "about:blank" ? (
+              <NewTabPage onNavigate={handleNavigate} />
+            ) : activeTab?.url === "about:firefoxview" ? (
+              <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
+                <div className="text-center">
+                  <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
+                  <p className="text-gray-500">
+                    Recently closed tabs and synced tabs would appear here
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : activeTab?.type === "proxy" ? (
-            <iframe
-              ref={iframeRef}
-              src={urlToProxy(activeTab.url)}
-              className="w-full h-full"
-              title={activeTab.title}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-            />
-          ) : null}
+            ) : activeTab?.type === "proxy" ? (
+              <iframe
+                ref={iframeRef}
+                src={urlToProxy(activeTab.url)}
+                className="w-full h-full"
+                title={activeTab.title}
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+              />
+            ) : null}
+          </div>
         </BrowserShell>
       </div>
     </div>

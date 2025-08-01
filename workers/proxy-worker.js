@@ -510,7 +510,7 @@ function createInjectionScript(targetUrl) {
       return {
         tagName: el.tagName,
         innerHTML: el.innerHTML,
-        innerText: el.innerText,
+        textContent: el.textContent,
         attributes: Array.from(el.attributes).reduce((acc, attr) => {
           acc[attr.name] = attr.value;
           return acc;
@@ -524,7 +524,7 @@ function createInjectionScript(targetUrl) {
       const elements = document.querySelectorAll(selector);
       return Array.from(elements).map(el => ({
         tagName: el.tagName,
-        innerText: el.innerText?.substring(0, 100), // Truncate for performance
+        textContent: el.textContent,
         id: el.id,
         className: el.className
       }));

@@ -106,18 +106,18 @@ export function AddressBar({
         />
       ) : (
         <div
-          className="flex-1 px-2 text-[15px] font-sans cursor-text flex items-center"
+          className="flex-1 px-2 text-[15px] font-sans cursor-text flex items-center min-w-0"
           onClick={() => {
             setIsFocused(true)
             setValue(url === 'about:blank' ? '' : url)
           }}
         >
           {url && url !== 'about:blank' ? (
-            <>
-              <span className="text-gray-500">www.</span>
-              <span className="text-gray-900">{domain}</span>
-              <span className="text-gray-500">{path}</span>
-            </>
+            <div className="flex items-center min-w-0">
+              <span className="text-gray-500 flex-shrink-0">www.</span>
+              <span className="text-gray-900 flex-shrink-0">{domain}</span>
+              <span className="text-gray-500 truncate">{path}</span>
+            </div>
           ) : (
             <span className="text-gray-400">Search or enter address</span>
           )}
