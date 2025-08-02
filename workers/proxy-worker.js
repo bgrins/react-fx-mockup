@@ -24,6 +24,18 @@ export default {
     const url = new URL(request.url);
     const hostname = url.hostname;
 
+    // Handle script subdomain - serve from root
+    if (hostname === `script.${CONFIG.PROXY_DOMAIN}`) {
+      return new Response(INJECTION_JS, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/javascript",
+          "Cache-Control": "public, max-age=300", // Cache for 5 minutes
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
     // Extract subdomain from *.{PROXY_DOMAIN}
     const domainPattern = new RegExp(`^([^.]+)\\.${CONFIG.PROXY_DOMAIN.replace(/\./g, "\\.")}$`);
     const subdomainMatch = hostname.match(domainPattern);
@@ -338,17 +350,14 @@ async function streamHTMLWithInjection(readable, writer, injectionScript) {
   }
 }
 
-// Create the postMessage tunnel injection script
-function createInjectionScript(targetUrl) {
-  const targetOrigin = new URL(targetUrl).origin;
-
-  return `
-<script data-proxy-tunnel="true">
-(function() {
+const INJECTION_JS = `(function() {
+  // Get configuration from script tag data attributes
+  const currentScript = document.currentScript || document.querySelector('script[src*="proxy-tunnel"]');
+  
   // PostMessage tunnel for cross-origin communication
-  const PROXY_DOMAIN = ${JSON.stringify(CONFIG.PROXY_DOMAIN)};
-  const TARGET_ORIGIN = ${JSON.stringify(targetOrigin)};
-  const ALLOWED_ORIGINS = ${JSON.stringify(CONFIG.TUNNEL_ORIGIN_WHITELIST)};
+  const PROXY_DOMAIN = currentScript?.getAttribute('data-proxy-domain') || 'arewexblstill.com';
+  const TARGET_ORIGIN = window.location.origin;
+  const ALLOWED_ORIGINS = (currentScript?.getAttribute('data-allowed-origins')?.split(',') || ['*']);
   
   // ===== URL REWRITING FUNCTIONALITY =====
   
@@ -648,7 +657,8 @@ function createInjectionScript(targetUrl) {
       type: 'PROXY_TUNNEL_NAVIGATION',
       url: window.location.href,
       canGoBack: window.history.length > 1,
-      canGoForward: false
+      canGoForward: false,
+      navigationType: 'initial'
     }, '*');
     
     // Listen for navigation events and notify parent
@@ -658,7 +668,20 @@ function createInjectionScript(targetUrl) {
         type: 'PROXY_TUNNEL_NAVIGATION',
         url: window.location.href,
         canGoBack: window.history.length > 1,
-        canGoForward: false // We can't reliably detect this
+        canGoForward: false, // We can't reliably detect this
+        navigationType: 'popstate'
+      }, '*');
+    });
+    
+    // Track beforeunload for regular navigation
+    window.addEventListener('beforeunload', () => {
+      console.log('[PROXY WORKER] beforeunload event');
+      window.parent.postMessage({
+        type: 'PROXY_TUNNEL_NAVIGATION',
+        url: window.location.href,
+        canGoBack: window.history.length > 1,
+        canGoForward: false,
+        navigationType: 'beforeunload'
       }, '*');
     });
     
@@ -673,7 +696,8 @@ function createInjectionScript(targetUrl) {
         type: 'PROXY_TUNNEL_NAVIGATION',
         url: window.location.href,
         canGoBack: window.history.length > 1,
-        canGoForward: false
+        canGoForward: false,
+        navigationType: 'pushstate'
       }, '*');
     };
     
@@ -684,11 +708,28 @@ function createInjectionScript(targetUrl) {
         type: 'PROXY_TUNNEL_NAVIGATION',
         url: window.location.href,
         canGoBack: window.history.length > 1,
-        canGoForward: false
+        canGoForward: false,
+        navigationType: 'replacestate'
       }, '*');
     };
   }
-})();
+})();`;
+
+// Create the postMessage tunnel injection script
+function createInjectionScript(targetUrl) {
+  const targetOrigin = new URL(targetUrl).origin;
+
+  // When injecting into proxied pages, inline the script directly
+  // This avoids an extra network request and potential timing issues
+  return `
+<script data-proxy-tunnel="true">
+// Injected configuration
+window.PROXY_TUNNEL_CONFIG = {
+  PROXY_DOMAIN: ${JSON.stringify(CONFIG.PROXY_DOMAIN)},
+  ALLOWED_ORIGINS: ${JSON.stringify(CONFIG.TUNNEL_ORIGIN_WHITELIST)}
+};
+// Tunnel script
+${INJECTION_JS}
 </script>
 `;
 }

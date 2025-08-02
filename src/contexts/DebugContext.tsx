@@ -6,7 +6,7 @@ interface DebugInfo {
     proxyUrl?: string;
     realUrl?: string;
     title: string;
-    type?: "proxy" | "stub";
+    type?: "proxy" | "stub" | "local";
   };
 }
 

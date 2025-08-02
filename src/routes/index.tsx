@@ -8,20 +8,8 @@ import { useDebug } from "~/contexts/DebugContext";
 import { useProxyTunnel } from "~/hooks/useProxyTunnel";
 import React from "react";
 import type { AddressBarHandle } from "~/components/firefox/AddressBar";
-import { ABOUT_PAGES } from "~/constants/browser";
+import { ABOUT_PAGES, TabType, Tab } from "~/constants/browser";
 import { cn } from "~/lib/utils";
-
-interface Tab {
-  id: string;
-  title: string;
-  url: string;
-  favicon?: React.ReactNode;
-  isPinned?: boolean;
-  isActive?: boolean;
-  type?: "proxy" | "stub";
-  history?: string[];
-  historyIndex?: number;
-}
 
 export const Route = createFileRoute("/")({
   component: Browser,
@@ -40,7 +28,7 @@ function Browser(): React.ReactElement {
       isActive: false,
       history: [ABOUT_PAGES.FIREFOX_VIEW],
       historyIndex: 0,
-      type: "stub",
+      type: TabType.STUB,
     },
     {
       id: "tab-1",
@@ -50,7 +38,7 @@ function Browser(): React.ReactElement {
       isActive: true,
       history: [ABOUT_PAGES.BLANK],
       historyIndex: 0,
-      type: "stub",
+      type: TabType.STUB,
     },
   ]);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -75,7 +63,7 @@ function Browser(): React.ReactElement {
       // For proxy tabs, we can go back if:
       // 1. The proxy iframe can go back, OR
       // 2. We have local history (e.g., going back to about:blank)
-      if (activeTab.type === "proxy") {
+      if (activeTab.type === TabType.PROXY) {
         return proxyNavigationState.canGoBack || hasLocalHistory;
       }
 
@@ -94,35 +82,67 @@ function Browser(): React.ReactElement {
   }, [activeTab, proxyNavigationState.canGoBack]);
 
   const canGoForward = React.useMemo(() => {
-    if (!activeTab) return false;
+    const result = (() => {
+      if (!activeTab) return false;
 
-    // Check if we have local history to navigate forward
-    const hasLocalForwardHistory = !!(
-      activeTab.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1
-    );
+      // Check if we have local history to navigate forward
+      const hasLocalForwardHistory = !!(
+        activeTab.history && (activeTab.historyIndex ?? 0) < activeTab.history.length - 1
+      );
 
-    // For proxy tabs, we can go forward if:
-    // 1. The proxy iframe can go forward, OR
-    // 2. We have local forward history (e.g., going forward from about:blank)
-    if (activeTab.type === "proxy") {
-      return proxyNavigationState.canGoForward || hasLocalForwardHistory;
-    }
+      // For all tabs (including proxy), we rely on local history tracking
+      // because the browser doesn't provide a way to detect forward navigation capability
+      return hasLocalForwardHistory;
+    })();
 
-    return hasLocalForwardHistory;
-  }, [activeTab, proxyNavigationState.canGoForward]);
+    console.log("[INDEX] canGoForward computed:", result, {
+      activeTab: activeTab?.id,
+      type: activeTab?.type,
+      proxyState: proxyNavigationState.canGoForward,
+      localHistory: activeTab?.history,
+      historyIndex: activeTab?.historyIndex,
+      historyLength: activeTab?.history?.length,
+      hasLocalForward:
+        activeTab?.history &&
+        activeTab?.historyIndex !== undefined &&
+        activeTab.historyIndex < activeTab.history.length - 1,
+    });
+
+    return result;
+  }, [activeTab]);
 
   const handleNavigate = React.useCallback(
-    (url: string) => {
+    (url: string, navigationType?: string) => {
       if (!url || !activeTab) return;
 
-      // Ensure URL has a protocol
+      // Check if this is a local file with a display URL
       let fullUrl = url;
-      if (!url.match(/^https?:\/\//)) {
+      let displayUrl = url;
+      let isLocalFile = false;
+
+      if (url.startsWith("local:")) {
+        // Extract the local path and display URL
+        const [localPath, hashUrl] = url.substring(6).split("#");
+        fullUrl = localPath || "";
+        displayUrl = hashUrl || url;
+        isLocalFile = true;
+      } else if (!url.match(/^https?:\/\//)) {
+        // Ensure URL has a protocol
         fullUrl = `https://${url}`;
+        displayUrl = fullUrl;
       }
 
       try {
-        const urlObj = new URL(fullUrl);
+        const urlObj = isLocalFile ? { hostname: new URL(displayUrl).hostname } : new URL(fullUrl);
+
+        console.log("[INDEX] handleNavigate called:", {
+          url: fullUrl,
+          navigationType,
+          currentUrl: activeTab.url,
+          currentHistory: activeTab.history,
+          currentIndex: activeTab.historyIndex,
+        });
+
         // Update the active tab with the new URL and history
         setTabs(
           tabs.map((tab) => {
@@ -130,16 +150,35 @@ function Browser(): React.ReactElement {
               const history = tab.history || [tab.url];
               const historyIndex = tab.historyIndex ?? 0;
 
-              // Add new URL to history (remove any forward history)
-              const newHistory = [...history.slice(0, historyIndex + 1), fullUrl];
+              // For popstate navigation (back/forward in iframe), update the URL but find the correct index
+              if (navigationType === "popstate") {
+                // Find if this URL already exists in our history
+                const existingIndex = history.findIndex((h) => h === fullUrl);
+                if (existingIndex !== -1) {
+                  // URL exists in history, just update the index
+                  return {
+                    ...tab,
+                    url: fullUrl,
+                    historyIndex: existingIndex,
+                    title: `Loading ${urlObj.hostname}...`,
+                    favicon: <DynamicFavicon url={fullUrl} />,
+                  };
+                }
+              }
+
+              // For new navigation, add to history
+              // Store the original URL format in history (including local: prefix)
+              const historyUrl = isLocalFile ? url : fullUrl;
+              const newHistory = [...history.slice(0, historyIndex + 1), historyUrl];
               const newHistoryIndex = newHistory.length - 1;
 
               return {
                 ...tab,
-                url: fullUrl,
+                url: isLocalFile ? displayUrl : fullUrl,
                 title: `Loading ${urlObj.hostname}...`,
-                favicon: <DynamicFavicon url={fullUrl} />,
-                type: "proxy" as const,
+                favicon: <DynamicFavicon url={displayUrl} />,
+                type: isLocalFile ? TabType.LOCAL : TabType.PROXY,
+                localPath: isLocalFile ? fullUrl : undefined,
                 history: newHistory,
                 historyIndex: newHistoryIndex,
               };
@@ -159,7 +198,7 @@ function Browser(): React.ReactElement {
   React.useEffect(() => {
     if (activeTab) {
       const proxyUrl =
-        activeTab.type === "proxy" && activeTab.url !== ABOUT_PAGES.BLANK
+        activeTab.type === TabType.PROXY && activeTab.url !== ABOUT_PAGES.BLANK
           ? urlToProxy(activeTab.url)
           : undefined;
 
@@ -206,12 +245,15 @@ function Browser(): React.ReactElement {
     },
     activeTabUrl: activeTab?.url,
     iframeRef: currentIframeRef,
-    enabled: activeTab?.type === "proxy",
+    // Enable for both proxy AND local tabs to capture navigation from local files
+    enabled:
+      (activeTab?.type === TabType.PROXY || activeTab?.type === TabType.LOCAL) &&
+      activeTab?.url !== ABOUT_PAGES.BLANK,
   });
 
   // Request page content when sidebar is opened or tab changes
   React.useEffect(() => {
-    if (sidebarOpen && activeTab?.type === "proxy") {
+    if (sidebarOpen && activeTab?.type === TabType.PROXY) {
       requestPageInfo();
       requestPageContent();
     }
@@ -219,7 +261,7 @@ function Browser(): React.ReactElement {
 
   // Reset proxy navigation state when switching tabs
   React.useEffect(() => {
-    if (activeTab?.type !== "proxy") {
+    if (activeTab?.type !== TabType.PROXY) {
       setProxyNavigationState({ canGoBack: false, canGoForward: false });
     }
   }, [activeTabId, activeTab?.type]);
@@ -232,6 +274,17 @@ function Browser(): React.ReactElement {
 
     const previousUrl = activeTab.history[newIndex];
     if (!previousUrl) return;
+
+    // Check if the previous URL is a local file
+    const isLocalFile = previousUrl.startsWith("local:");
+    let displayUrl = previousUrl;
+    let localPath = undefined;
+
+    if (isLocalFile) {
+      const [path, hashUrl] = previousUrl.substring(6).split("#");
+      localPath = path;
+      displayUrl = hashUrl || previousUrl;
+    }
 
     console.log(
       "[INDEX] handleBack:",
@@ -247,17 +300,26 @@ function Browser(): React.ReactElement {
       newIndex,
       "previousUrl:",
       JSON.stringify(previousUrl),
-      "previousUrl.length:",
-      previousUrl.length,
-      "previousUrl === ABOUT_PAGES.BLANK:",
-      previousUrl === ABOUT_PAGES.BLANK,
-      "previousUrl.trim() === ABOUT_PAGES.BLANK:",
-      previousUrl.trim() === ABOUT_PAGES.BLANK,
+      "isLocalFile:",
+      isLocalFile,
+      "displayUrl:",
+      displayUrl,
+      "localPath:",
+      localPath,
     );
 
-    // If we're going back to about:blank, handle it locally even for proxy tabs
-    // since the proxy iframe can't navigate back to about:blank
-    const shouldHandleLocally = activeTab.type !== "proxy" || previousUrl === ABOUT_PAGES.BLANK;
+    // If we're going back to about:blank or a local file, handle it locally
+    // since the proxy iframe can't navigate to these
+    const shouldHandleLocally =
+      activeTab.type !== TabType.PROXY || previousUrl === ABOUT_PAGES.BLANK || isLocalFile;
+
+    console.log("[INDEX] About to check navigation - Debug values:", {
+      previousUrl,
+      ABOUT_PAGES_BLANK: ABOUT_PAGES.BLANK,
+      areEqual: previousUrl === ABOUT_PAGES.BLANK,
+      typeofPreviousUrl: typeof previousUrl,
+      typeofABOUT_BLANK: typeof ABOUT_PAGES.BLANK,
+    });
 
     console.log("[INDEX] Navigation decision:", {
       shouldHandleLocally,
@@ -271,24 +333,42 @@ function Browser(): React.ReactElement {
       // For proxy tabs going to non-about:blank URLs, send the goBack command
       console.log("[INDEX] Sending goBack command to proxy");
       sendCommand("goBack");
+
+      // Update the local history index to track that we went back
+      setTabs(
+        tabs.map((tab) =>
+          tab.id === activeTabId
+            ? {
+                ...tab,
+                historyIndex: newIndex,
+              }
+            : tab,
+        ),
+      );
     } else {
-      // For non-proxy tabs or when going back to about:blank, handle locally
+      // For non-proxy tabs or when going back to about:blank or local files, handle locally
       console.log("[INDEX] Handling back navigation locally");
       setTabs(
         tabs.map((tab) =>
           tab.id === activeTabId
             ? {
                 ...tab,
-                url: previousUrl,
+                url: isLocalFile ? displayUrl : previousUrl,
                 historyIndex: newIndex,
                 title: previousUrl === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
                 favicon:
                   previousUrl === ABOUT_PAGES.BLANK ? (
                     <FirefoxFavicon />
                   ) : (
-                    <DynamicFavicon url={previousUrl} />
+                    <DynamicFavicon url={isLocalFile ? displayUrl : previousUrl} />
                   ),
-                type: previousUrl === ABOUT_PAGES.BLANK ? "stub" : tab.type,
+                type:
+                  previousUrl === ABOUT_PAGES.BLANK
+                    ? TabType.STUB
+                    : isLocalFile
+                      ? TabType.LOCAL
+                      : tab.type,
+                localPath: isLocalFile ? localPath : undefined,
               }
             : tab,
         ),
@@ -305,28 +385,70 @@ function Browser(): React.ReactElement {
     const nextUrl = activeTab.history[newIndex];
     if (!nextUrl) return;
 
-    // If we're currently on about:blank, handle forward navigation locally
-    // since we need to transition from stub to proxy tab
-    if (activeTab.type === "proxy" && activeTab.url !== ABOUT_PAGES.BLANK) {
+    // Check if the next URL is a local file
+    const isLocalFile = nextUrl.startsWith("local:");
+    let displayUrl = nextUrl;
+    let localPath = undefined;
+
+    if (isLocalFile) {
+      const [path, hashUrl] = nextUrl.substring(6).split("#");
+      localPath = path;
+      displayUrl = hashUrl || nextUrl;
+    }
+
+    console.log("[INDEX] handleForward:", {
+      activeTab: activeTab.id,
+      type: activeTab.type,
+      history: JSON.stringify(activeTab.history),
+      historyIndex: activeTab.historyIndex,
+      newIndex,
+      nextUrl,
+      isLocalFile,
+      displayUrl,
+      localPath,
+      currentUrl: activeTab.url,
+    });
+
+    // If we're currently on about:blank or going to a local file, handle locally
+    // since we need to transition from stub to proxy/local tab
+    if (activeTab.type === TabType.PROXY && activeTab.url !== ABOUT_PAGES.BLANK && !isLocalFile) {
       // For proxy tabs that aren't on about:blank, send the goForward command
       sendCommand("goForward");
-    } else {
-      // For non-proxy tabs or when navigating from about:blank, handle locally
+
+      // Update the local history index to track that we went forward
       setTabs(
         tabs.map((tab) =>
           tab.id === activeTabId
             ? {
                 ...tab,
-                url: nextUrl,
+                historyIndex: newIndex,
+              }
+            : tab,
+        ),
+      );
+    } else {
+      // For non-proxy tabs or when navigating from about:blank or to local files, handle locally
+      setTabs(
+        tabs.map((tab) =>
+          tab.id === activeTabId
+            ? {
+                ...tab,
+                url: isLocalFile ? displayUrl : nextUrl,
                 historyIndex: newIndex,
                 title: nextUrl === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
                 favicon:
                   nextUrl === ABOUT_PAGES.BLANK ? (
                     <FirefoxFavicon />
                   ) : (
-                    <DynamicFavicon url={nextUrl} />
+                    <DynamicFavicon url={isLocalFile ? displayUrl : nextUrl} />
                   ),
-                type: nextUrl === ABOUT_PAGES.BLANK ? "stub" : "proxy",
+                type:
+                  nextUrl === ABOUT_PAGES.BLANK
+                    ? TabType.STUB
+                    : isLocalFile
+                      ? TabType.LOCAL
+                      : TabType.PROXY,
+                localPath: isLocalFile ? localPath : undefined,
               }
             : tab,
         ),
@@ -337,7 +459,7 @@ function Browser(): React.ReactElement {
   const handleRefresh = () => {
     if (!activeTab) return;
 
-    if (activeTab.type === "proxy") {
+    if (activeTab.type === TabType.PROXY) {
       // Update tab to show loading state
       setTabs(
         tabs.map((tab) =>
@@ -375,7 +497,7 @@ function Browser(): React.ReactElement {
         isActive: true,
         history: [ABOUT_PAGES.BLANK],
         historyIndex: 0,
-        type: "stub",
+        type: TabType.STUB,
       };
       setTabs([newTab]);
       setActiveTabId(newTab.id);
@@ -409,7 +531,7 @@ function Browser(): React.ReactElement {
       isActive: true,
       history: [ABOUT_PAGES.BLANK],
       historyIndex: 0,
-      type: "stub",
+      type: TabType.STUB,
     };
     // Set all other tabs as inactive
     const updatedTabs = tabs.map((tab) => ({ ...tab, isActive: false }));
@@ -543,7 +665,7 @@ function Browser(): React.ReactElement {
             <div className="flex-1 h-full bg-white overflow-auto relative">
               {/* Render all proxy iframes but only show the active one */}
               {tabs.map((tab) => {
-                if (tab.type === "proxy") {
+                if (tab.type === TabType.PROXY || tab.type === TabType.LOCAL) {
                   return (
                     <iframe
                       key={tab.id}
@@ -552,10 +674,12 @@ function Browser(): React.ReactElement {
                           iframeRefs.current[tab.id] = el;
                         }
                       }}
-                      src={urlToProxy(tab.url)}
+                      src={tab.type === TabType.LOCAL ? tab.localPath : urlToProxy(tab.url)}
                       className={cn(
                         "w-full h-full absolute inset-0",
-                        tab.id === activeTabId ? "block" : "hidden",
+                        tab.id === activeTabId && tab.url !== ABOUT_PAGES.BLANK
+                          ? "block"
+                          : "hidden",
                       )}
                       title={tab.title}
                       sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"

@@ -49,6 +49,12 @@ const defaultTiles: Tile[] = [
     title: 'Firefox',
     url: 'https://firefox.com',
     favicon: 'https://www.mozilla.org/media/img/favicons/firefox/browser/favicon-196x196.png'
+  },
+  {
+    id: 'firefox-wiki',
+    title: 'Firefox Wiki',
+    url: 'local:/pages/firefox-wiki.html#https://en.wikipedia.org/wiki/Firefox',
+    favicon: 'https://en.wikipedia.org/static/favicon/wikipedia.ico'
   }
 ]
 

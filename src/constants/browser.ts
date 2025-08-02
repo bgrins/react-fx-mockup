@@ -3,6 +3,7 @@ import React from "react";
 export enum TabType {
   PROXY = "proxy",
   STUB = "stub",
+  LOCAL = "local",
 }
 
 export interface Tab {
@@ -13,6 +14,7 @@ export interface Tab {
   isPinned?: boolean;
   isActive?: boolean;
   type?: TabType;
+  localPath?: string;
   history?: string[];
   historyIndex?: number;
 }

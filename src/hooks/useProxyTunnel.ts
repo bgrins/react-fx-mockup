@@ -3,7 +3,7 @@ import { proxyToUrl } from "~/utils/proxy";
 import { PROXY_MESSAGE_TYPES } from "~/constants/browser";
 
 interface ProxyTunnelOptions {
-  onNavigate?: (url: string) => void;
+  onNavigate?: (url: string, navigationType?: string) => void;
   onPageInfo?: (info: { title?: string; content?: string; text?: string }) => void;
   onPageContent?: (content: string) => void;
   onNavigationStateChange?: (state: { canGoBack: boolean; canGoForward: boolean }) => void;
@@ -74,7 +74,9 @@ export function useProxyTunnel({
           const realUrl = proxyToUrl(event.data.url);
 
           // Update tab URL if it changed (navigation within iframe)
-          if (activeTabUrl && realUrl !== activeTabUrl && realUrl !== event.data.url) {
+          // For local files, activeTabUrl might be a display URL, so also check if it's a proxy URL
+          const isProxyUrl = event.data.url.includes(".arewexblstill.com");
+          if (isProxyUrl && realUrl !== activeTabUrl) {
             onNavigate?.(realUrl);
           }
         }
@@ -122,6 +124,7 @@ export function useProxyTunnel({
           url: event.data.url,
           canGoBack: event.data.canGoBack,
           canGoForward: event.data.canGoForward,
+          navigationType: event.data.navigationType,
           fullData: event.data,
         });
 
@@ -137,9 +140,17 @@ export function useProxyTunnel({
 
         // Update URL if it changed
         if (event.data.url) {
-          const realUrl = proxyToUrl(event.data.url);
-          if (activeTabUrl && realUrl !== activeTabUrl) {
-            onNavigate?.(realUrl);
+          // Only process navigation if it's a proxied URL
+          // This prevents local files from overriding their display URL
+          const isProxyUrl = event.data.url.includes(".arewexblstill.com");
+
+          if (isProxyUrl) {
+            const realUrl = proxyToUrl(event.data.url);
+            // Navigate if we have a new URL from the iframe
+            // This handles navigation from local files to proxied URLs
+            if (realUrl && realUrl !== activeTabUrl) {
+              onNavigate?.(realUrl, event.data.navigationType);
+            }
           }
         }
       }
