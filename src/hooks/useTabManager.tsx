@@ -15,32 +15,35 @@ interface TabNavigationOptions {
 }
 
 export function useTabManager(options: UseTabManagerOptions = {}) {
-  const [activeTabId, setActiveTabId] = React.useState("tab-1");
-  const [tabs, setTabs] = React.useState<Tab[]>(
-    options.initialTabs || [
-      {
-        id: "firefox-view",
-        title: "Firefox View",
-        url: ABOUT_PAGES.FIREFOX_VIEW,
-        favicon: <FirefoxViewIcon />,
-        isPinned: true,
-        isActive: false,
-        history: [ABOUT_PAGES.FIREFOX_VIEW],
-        historyIndex: 0,
-        type: TabType.STUB,
-      },
-      {
-        id: "tab-1",
-        title: "New Tab",
-        url: ABOUT_PAGES.BLANK,
-        favicon: <FirefoxFavicon />,
-        isActive: true,
-        history: [ABOUT_PAGES.BLANK],
-        historyIndex: 0,
-        type: TabType.STUB,
-      },
-    ],
-  );
+  const defaultTabs: Tab[] = [
+    {
+      id: "firefox-view",
+      title: "Firefox View",
+      url: ABOUT_PAGES.FIREFOX_VIEW,
+      favicon: <FirefoxViewIcon />,
+      isPinned: true,
+      isActive: false,
+      history: [ABOUT_PAGES.FIREFOX_VIEW],
+      historyIndex: 0,
+      type: TabType.STUB,
+    },
+    {
+      id: "tab-1",
+      title: "New Tab",
+      url: ABOUT_PAGES.BLANK,
+      favicon: <FirefoxFavicon />,
+      isActive: true,
+      history: [ABOUT_PAGES.BLANK],
+      historyIndex: 0,
+      type: TabType.STUB,
+    },
+  ];
+
+  const initialTabs = options.initialTabs || defaultTabs;
+  const initialActiveTab = initialTabs.find((tab) => tab.isActive) || initialTabs[0];
+
+  const [activeTabId, setActiveTabId] = React.useState(initialActiveTab?.id || "tab-1");
+  const [tabs, setTabs] = React.useState<Tab[]>(initialTabs);
 
   const activeTab = React.useMemo(
     () => tabs.find((tab) => tab.id === activeTabId),

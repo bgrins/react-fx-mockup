@@ -11,3 +11,4 @@ The navigation header (Home, Posts, Users) in \_\_root.tsx should be kept - it's
 - When using images ALWAYS use the canonical version from Figma, do not use packages like lucide-react without consulting first
 - Inside of the Firefox UI, ALWAYS use components from Figma (or if existing from `src/components/firefox`). NEVER use the shadcn components in src/components/ui, those are only for the surrounding UI.
 - After finishing work, run `npm run check` to ensure code passes all linting, formatting, and type checking.
+- Make sure `npm run test` passes. Prefer to write unit tests when possible.
