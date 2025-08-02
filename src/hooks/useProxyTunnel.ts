@@ -32,7 +32,10 @@ export function useProxyTunnel({
   // Send a command to the proxy tunnel
   const sendCommand = useCallback(
     (command: string, args: any[] = []) => {
-      if (!iframeRef.current?.contentWindow) return;
+      if (!iframeRef.current?.contentWindow) {
+        console.log(`[PROXY] Cannot send ${command} command - no iframe contentWindow`);
+        return;
+      }
 
       const commandId = `cmd-${command}-${Date.now()}`;
       console.log(`[PROXY] Sending ${command} command:`, commandId);
@@ -44,6 +47,7 @@ export function useProxyTunnel({
         args,
       };
 
+      console.log(`[PROXY] Posting message to iframe:`, message);
       iframeRef.current.contentWindow.postMessage(message, "*");
       return commandId;
     },
@@ -81,9 +85,17 @@ export function useProxyTunnel({
           }
         }
 
-        // Request page info and content when tunnel is ready
-        requestPageInfo();
-        requestPageContent();
+        // Handle page info if provided
+        if (event.data.pageInfo) {
+          console.log("[PROXY] Page info from ready event:", event.data.pageInfo);
+          onPageInfo?.(event.data.pageInfo);
+        }
+
+        // Request page content when DOM is loaded
+        if (event.data.domLoaded) {
+          console.log("[PROXY] DOM loaded, requesting page content");
+          requestPageContent();
+        }
       }
 
       // Handle proxy tunnel responses
@@ -125,6 +137,7 @@ export function useProxyTunnel({
           canGoBack: event.data.canGoBack,
           canGoForward: event.data.canGoForward,
           navigationType: event.data.navigationType,
+          pageInfo: event.data.pageInfo,
           fullData: event.data,
         });
 
@@ -136,6 +149,12 @@ export function useProxyTunnel({
           };
           console.log("[PROXY] Calling onNavigationStateChange with:", newState);
           onNavigationStateChange?.(newState);
+        }
+
+        // Handle page info if provided
+        if (event.data.pageInfo) {
+          console.log("[PROXY] Page info from navigation event:", event.data.pageInfo);
+          onPageInfo?.(event.data.pageInfo);
         }
 
         // Update URL if it changed

@@ -291,13 +291,26 @@
     }
   });
   
+  // Helper function to get page info
+  function getPageInfo() {
+    return {
+      title: document.title,
+      url: window.location.href,
+      readyState: document.readyState,
+      documentHeight: document.documentElement.scrollHeight,
+      viewportHeight: window.innerHeight
+    };
+  }
+  
   // Notify parent that tunnel is ready
   if (window.parent !== window) {
+    // Send ready message immediately
     console.log('[PROXY WORKER] Sending READY message, history.length:', window.history.length);
     window.parent.postMessage({
       type: 'PROXY_TUNNEL_READY',
       origin: TARGET_ORIGIN,
-      url: window.location.href
+      url: window.location.href,
+      pageInfo: getPageInfo()
     }, '*');
     
     // Send initial navigation state
@@ -307,8 +320,33 @@
       url: window.location.href,
       canGoBack: window.history.length > 1,
       canGoForward: false,
-      navigationType: 'initial'
+      navigationType: 'initial',
+      pageInfo: getPageInfo()
     }, '*');
+    
+    // Send updated ready message when DOM is loaded (with proper title)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('[PROXY WORKER] DOM loaded, sending updated READY message with page info');
+        window.parent.postMessage({
+          type: 'PROXY_TUNNEL_READY',
+          origin: TARGET_ORIGIN,
+          url: window.location.href,
+          domLoaded: true,
+          pageInfo: getPageInfo()
+        }, '*');
+      });
+    } else {
+      // DOM already loaded
+      console.log('[PROXY WORKER] DOM already loaded, sending updated READY message with page info');
+      window.parent.postMessage({
+        type: 'PROXY_TUNNEL_READY',
+        origin: TARGET_ORIGIN,
+        url: window.location.href,
+        domLoaded: true,
+        pageInfo: getPageInfo()
+      }, '*');
+    }
     
     // Listen for navigation events and notify parent
     window.addEventListener('popstate', () => {
@@ -318,7 +356,8 @@
         url: window.location.href,
         canGoBack: window.history.length > 1,
         canGoForward: false, // We can't reliably detect this
-        navigationType: 'popstate'
+        navigationType: 'popstate',
+        pageInfo: getPageInfo()
       }, '*');
     });
     
@@ -330,7 +369,8 @@
         url: window.location.href,
         canGoBack: window.history.length > 1,
         canGoForward: false,
-        navigationType: 'beforeunload'
+        navigationType: 'beforeunload',
+        pageInfo: getPageInfo()
       }, '*');
     });
     
@@ -346,7 +386,8 @@
         url: window.location.href,
         canGoBack: window.history.length > 1,
         canGoForward: false,
-        navigationType: 'pushstate'
+        navigationType: 'pushstate',
+        pageInfo: getPageInfo()
       }, '*');
     };
     
@@ -358,7 +399,8 @@
         url: window.location.href,
         canGoBack: window.history.length > 1,
         canGoForward: false,
-        navigationType: 'replacestate'
+        navigationType: 'replacestate',
+        pageInfo: getPageInfo()
       }, '*');
     };
   }
