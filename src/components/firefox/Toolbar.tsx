@@ -56,7 +56,7 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
         </button>
         
         <button 
-          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] disabled:opacity-50"
+          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] disabled:opacity-50 nav-back"
           onClick={onBack}
           disabled={!canGoBack}
           aria-disabled={!canGoBack}
@@ -65,7 +65,7 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
         </button>
         
         <button 
-          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] disabled:opacity-50"
+          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] disabled:opacity-50 nav-forward"
           onClick={onForward}
           disabled={!canGoForward}
           aria-disabled={!canGoForward}
@@ -74,7 +74,7 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
         </button>
         
         <button 
-          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]"
+          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] nav-refresh"
           onClick={onRefresh}
         >
           <RefreshIcon />

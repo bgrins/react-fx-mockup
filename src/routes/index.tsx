@@ -3,11 +3,13 @@ import { BrowserShell } from "~/components/firefox/BrowserShell";
 import { DynamicFavicon, FirefoxFavicon } from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
+import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { urlToProxy } from "~/utils/proxy";
 import { useDebug } from "~/contexts/DebugContext";
 import { useProxyTunnel } from "~/hooks/useProxyTunnel";
 import { useBrowserScale } from "~/hooks/useBrowserScale";
 import { useTabManager } from "~/hooks/useTabManager";
+import { useKeyboardShortcuts } from "~/hooks/useKeyboardShortcuts";
 import React from "react";
 import type { AddressBarHandle } from "~/components/firefox/AddressBar";
 import { ABOUT_PAGES, TabType } from "~/constants/browser";
@@ -172,15 +174,23 @@ function Browser(): React.ReactElement {
       });
     } else {
       // For non-proxy tabs or when going back to about:blank or local files, handle locally
+      // Check if this is a local path and get the display URL
+      let displayUrl = parsedUrl.displayUrl;
+      if (isLocalPath(previous.url)) {
+        const realUrl = getUrlForLocalPath(previous.url);
+        displayUrl = realUrl || previous.url;
+      }
+
       updateActiveTab({
-        url: parsedUrl.displayUrl,
+        url: previous.url,
+        displayUrl: displayUrl,
         historyIndex: previous.index,
         title: previous.url === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
         favicon:
           previous.url === ABOUT_PAGES.BLANK ? (
             <FirefoxFavicon />
           ) : (
-            <DynamicFavicon url={parsedUrl.displayUrl} />
+            <DynamicFavicon url={displayUrl} />
           ),
         type: getTabTypeForUrl(previous.url),
       });
@@ -207,16 +217,20 @@ function Browser(): React.ReactElement {
       });
     } else {
       // For non-proxy tabs or when navigating from about:blank or to local files, handle locally
+      // Check if this is a local path and get the display URL
+      let displayUrl = parsedUrl.displayUrl;
+      if (isLocalPath(next.url)) {
+        const realUrl = getUrlForLocalPath(next.url);
+        displayUrl = realUrl || next.url;
+      }
+
       updateActiveTab({
-        url: parsedUrl.displayUrl,
+        url: next.url,
+        displayUrl: displayUrl,
         historyIndex: next.index,
         title: next.url === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
         favicon:
-          next.url === ABOUT_PAGES.BLANK ? (
-            <FirefoxFavicon />
-          ) : (
-            <DynamicFavicon url={parsedUrl.displayUrl} />
-          ),
+          next.url === ABOUT_PAGES.BLANK ? <FirefoxFavicon /> : <DynamicFavicon url={displayUrl} />,
         type: getTabTypeForUrl(next.url),
       });
     }
@@ -265,6 +279,46 @@ function Browser(): React.ReactElement {
   // Calculate scale for mobile
   const { containerStyle, browserStyle } = useBrowserScale();
   const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Setup keyboard shortcuts
+  const { showHelp, setShowHelp } = useKeyboardShortcuts({
+    // Navigation
+    back: handleBack,
+    forward: handleForward,
+    reload: handleRefresh,
+
+    // Tabs
+    newTab: handleNewTab,
+    closeTab: () => activeTabId && handleTabClose(activeTabId),
+    nextTab: () => {
+      const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+      if (currentIndex >= 0 && currentIndex < tabs.length - 1) {
+        switchTab(tabs[currentIndex + 1]!.id);
+      }
+    },
+    previousTab: () => {
+      const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+      if (currentIndex > 0) {
+        switchTab(tabs[currentIndex - 1]!.id);
+      }
+    },
+
+    // Tab selection by number
+    selectTab1: () => tabs[0] && switchTab(tabs[0].id),
+    selectTab2: () => tabs[1] && switchTab(tabs[1].id),
+    selectTab3: () => tabs[2] && switchTab(tabs[2].id),
+    selectTab4: () => tabs[3] && switchTab(tabs[3].id),
+    selectTab5: () => tabs[4] && switchTab(tabs[4].id),
+    selectTab6: () => tabs[5] && switchTab(tabs[5].id),
+    selectTab7: () => tabs[6] && switchTab(tabs[6].id),
+    selectTab8: () => tabs[7] && switchTab(tabs[7].id),
+    selectLastTab: () => tabs.length > 0 && switchTab(tabs[tabs.length - 1]!.id),
+
+    // UI
+    focusAddressBar: () => addressBarRef.current?.focus(),
+    toggleSidebar: () => setSidebarOpen(!sidebarOpen),
+    toggleSettings: () => setShowHelp((prev) => !prev),
+  });
 
   return (
     <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-5 flex items-start justify-center overflow-hidden">
@@ -373,6 +427,7 @@ function Browser(): React.ReactElement {
           </BrowserShell>
         </div>
       </div>
+      <SettingsModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   );
 }

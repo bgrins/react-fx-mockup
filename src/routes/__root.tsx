@@ -1,15 +1,13 @@
 /// <reference types="vite/client" />
-import { HeadContent, Link, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import * as React from "react";
 import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
 import { NotFound } from "~/components/NotFound";
 import appCss from "~/styles/app.css?url";
 import { seo } from "~/utils/seo";
 import { SettingsIcon } from "~/components/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { useLocation } from "@tanstack/react-router";
-import { proxyToUrl } from "~/utils/proxy";
-import { DebugProvider, useDebug } from "~/contexts/DebugContext";
+import { SettingsModal } from "~/components/firefox/SettingsModal";
+import { DebugProvider } from "~/contexts/DebugContext";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -52,56 +50,20 @@ export const Route = createRootRoute({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }): React.ReactElement {
-  const [accessKey, setAccessKey] = React.useState("");
   const [settingsOpen, setSettingsOpen] = React.useState(false);
-  const [statesOpen, setStatesOpen] = React.useState(false);
-  const location = useLocation();
-  const { debugInfo } = useDebug();
 
   React.useEffect(() => {
-    // First check URL parameters
+    // Check URL parameters for initial access key
     const urlParams = new URLSearchParams(window.location.search);
     const urlAccessKey = urlParams.get("accessKey") || urlParams.get("access-key");
 
     if (urlAccessKey) {
-      setAccessKey(urlAccessKey);
       localStorage.setItem("infer-access-key", urlAccessKey);
-    } else {
-      // Then check localStorage
-      const stored = localStorage.getItem("infer-access-key");
-      if (stored) {
-        setAccessKey(stored);
-      } else if (import.meta.env.VITE_INFER_ACCESS_KEY) {
-        // If no stored value, use env variable in development
-        const envKey = import.meta.env.VITE_INFER_ACCESS_KEY;
-        setAccessKey(envKey);
-        localStorage.setItem("infer-access-key", envKey);
-      }
+    } else if (!localStorage.getItem("infer-access-key") && import.meta.env.VITE_INFER_ACCESS_KEY) {
+      // If no stored value, use env variable in development
+      localStorage.setItem("infer-access-key", import.meta.env.VITE_INFER_ACCESS_KEY);
     }
   }, []);
-
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Alt+? (Alt+Shift+/)
-      if (e.altKey && e.shiftKey && e.key === "?") {
-        e.preventDefault();
-        setSettingsOpen((prev) => !prev);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const handleAccessKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setAccessKey(value);
-    if (value) {
-      localStorage.setItem("infer-access-key", value);
-    } else {
-      localStorage.removeItem("infer-access-key");
-    }
-  };
 
   return (
     <html>
@@ -116,146 +78,18 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
           <img src="/firefox.svg" alt="Firefox" width="20" height="20" className="sm:w-6 sm:h-6" />
           <span className="font-semibold text-gray-700 text-sm sm:text-lg">Firefox Mockup</span>
           <div className="ml-auto flex items-center gap-2">
-            <Popover open={statesOpen} onOpenChange={setStatesOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  className="px-1.5 py-1 sm:px-2 sm:py-1.5 hover:bg-gray-100 rounded-md text-xs sm:text-sm"
-                  title="Switch View"
-                >
-                  States
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-48">
-                <div className="space-y-1">
-                  <Link
-                    to="/"
-                    className="block px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    activeProps={{
-                      className: "block px-3 py-2 text-sm rounded-md bg-gray-100 font-semibold",
-                    }}
-                    activeOptions={{ exact: true }}
-                    onClick={() => setStatesOpen(false)}
-                  >
-                    Browser
-                  </Link>
-                  <Link
-                    to="/split-view"
-                    className="block px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    activeProps={{
-                      className: "block px-3 py-2 text-sm rounded-md bg-gray-100 font-semibold",
-                    }}
-                    onClick={() => setStatesOpen(false)}
-                  >
-                    Split View
-                  </Link>
-                  <Link
-                    to="/infer-test"
-                    className="block px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    activeProps={{
-                      className: "block px-3 py-2 text-sm rounded-md bg-gray-100 font-semibold",
-                    }}
-                    onClick={() => setStatesOpen(false)}
-                  >
-                    Infer Test
-                  </Link>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  className="p-1 sm:p-2 hover:bg-gray-100 rounded-md"
-                  title="Settings (Alt+?)"
-                >
-                  <SettingsIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-96">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-sm">Settings & Debug Info</h3>
-                    <span className="text-xs text-gray-500">Alt+?</span>
-                  </div>
-
-                  {/* Debug Info Section */}
-                  <div className="space-y-2 p-3 bg-gray-50 rounded-md">
-                    <h4 className="text-xs font-medium text-gray-700">Debug Information</h4>
-                    <div className="space-y-2">
-                      <div className="text-xs">
-                        <span className="font-medium text-gray-600">Current Route:</span>{" "}
-                        <code className="bg-gray-200 px-1 rounded">{location.pathname}</code>
-                      </div>
-
-                      {debugInfo.currentTab && (
-                        <>
-                          <div className="text-xs">
-                            <span className="font-medium text-gray-600">Tab Type:</span>{" "}
-                            <code className="bg-gray-200 px-1 rounded">
-                              {debugInfo.currentTab.type || "none"}
-                            </code>
-                          </div>
-
-                          <div className="text-xs">
-                            <span className="font-medium text-gray-600">Tab URL:</span>{" "}
-                            <code className="bg-gray-200 px-1 rounded text-xs break-all">
-                              {debugInfo.currentTab.url || "about:blank"}
-                            </code>
-                          </div>
-
-                          {debugInfo.currentTab.type === "proxy" &&
-                            debugInfo.currentTab.url !== "about:blank" && (
-                              <>
-                                <div className="text-xs">
-                                  <span className="font-medium text-gray-600">Proxy URL:</span>{" "}
-                                  <code className="bg-gray-200 px-1 rounded text-xs break-all">
-                                    {debugInfo.currentTab.proxyUrl}
-                                  </code>
-                                </div>
-
-                                <div className="text-xs">
-                                  <span className="font-medium text-gray-600">Real URL:</span>{" "}
-                                  <code className="bg-gray-200 px-1 rounded text-xs break-all">
-                                    {proxyToUrl(debugInfo.currentTab.proxyUrl || "")}
-                                  </code>
-                                </div>
-                              </>
-                            )}
-                        </>
-                      )}
-
-                      {!debugInfo.currentTab && (
-                        <div className="text-xs text-gray-500">
-                          <p className="italic">Navigate to a page to see debug info</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="space-y-2">
-                      <label htmlFor="access-key" className="text-sm font-medium">
-                        Infer Access Key
-                      </label>
-                      <input
-                        id="access-key"
-                        type="password"
-                        value={accessKey}
-                        onChange={handleAccessKeyChange}
-                        placeholder="Enter your access key..."
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <p className="text-xs text-gray-500">
-                        Used for authentication with the Infer proxy
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-1 sm:p-2 hover:bg-gray-100 rounded-md"
+              title="Settings (⌘?)"
+            >
+              <SettingsIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
           </div>
         </div>
         <hr />
         <div id="firefox-mockup-container">{children}</div>
+        <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <Scripts />
       </body>
     </html>

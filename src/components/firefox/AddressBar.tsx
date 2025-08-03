@@ -169,8 +169,8 @@ export const AddressBar = forwardRef<AddressBarHandle, AddressBarProps>(function
         >
           {url && url !== 'about:blank' ? (
             <div className="flex items-center min-w-0">
-              <span className="text-gray-900 flex-shrink-0">{domain}</span>
-              <span className="text-gray-500 truncate">{path}</span>
+              <span className="text-gray-900 flex-shrink-0 url-domain">{domain}</span>
+              <span className="text-gray-500 truncate url-path">{path}</span>
             </div>
           ) : (
             <span className="text-gray-400">Search or enter address</span>

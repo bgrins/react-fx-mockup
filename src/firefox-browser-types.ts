@@ -520,6 +520,9 @@ export const firefoxKeyboardShortcuts: Record<string, Omit<KeyboardShortcut, "ac
   zoomIn: { id: "zoom-in", name: "Zoom In", key: "+", modifiers: ["ctrl"] },
   zoomOut: { id: "zoom-out", name: "Zoom Out", key: "-", modifiers: ["ctrl"] },
   resetZoom: { id: "reset-zoom", name: "Reset Zoom", key: "0", modifiers: ["ctrl"] },
+
+  // Settings
+  toggleSettings: { id: "toggle-settings", name: "Toggle Settings", key: "/", modifiers: ["ctrl"] },
 };
 
 /**
@@ -625,6 +628,7 @@ export function formatShortcut(
     Escape: "Esc",
     Delete: "Del",
     " ": "Space",
+    "/": "?", // Display ? for / key since ? requires Shift
   };
 
   result += keyDisplay[shortcut.key] || shortcut.key.toUpperCase();
@@ -637,6 +641,15 @@ export function formatShortcut(
  * Converts Ctrl/Cmd shortcuts to Alt to avoid browser conflicts
  */
 export function getMockupShortcuts(): Record<string, Omit<KeyboardShortcut, "action">> {
+  // First get platform-specific shortcuts
+  const platform: Platform = navigator.platform.toLowerCase().includes("mac")
+    ? "macOS"
+    : navigator.platform.toLowerCase().includes("win")
+      ? "windows"
+      : "linux";
+
+  const platformShortcuts = getPlatformShortcuts(platform);
+
   // List of shortcuts that should be remapped from Ctrl/Cmd to Alt in the mockup
   const browserReservedShortcuts = [
     "newTab",
@@ -654,7 +667,7 @@ export function getMockupShortcuts(): Record<string, Omit<KeyboardShortcut, "act
 
   const mockupShortcuts: Record<string, Omit<KeyboardShortcut, "action">> = {};
 
-  for (const [key, shortcut] of Object.entries(firefoxKeyboardShortcuts)) {
+  for (const [key, shortcut] of Object.entries(platformShortcuts)) {
     if (browserReservedShortcuts.includes(key) && shortcut.modifiers) {
       // Replace ctrl/meta with alt for browser-reserved shortcuts
       mockupShortcuts[key] = {
