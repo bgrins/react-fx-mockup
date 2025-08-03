@@ -51,7 +51,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     "Find": ["find", "findNext", "findPrevious"],
     "Bookmarks": ["bookmarkPage", "showBookmarksSidebar"],
     "History": ["showHistorySidebar"],
-    "UI": ["focusAddressBar", "toggleSidebar"],
+    "UI": ["focusAddressBar", "toggleSidebar", "pageInfo"],
     "Zoom": ["zoomIn", "zoomOut", "resetZoom"],
     "Settings": ["toggleSettings"],
   };

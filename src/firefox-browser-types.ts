@@ -523,6 +523,9 @@ export const firefoxKeyboardShortcuts: Record<string, Omit<KeyboardShortcut, "ac
 
   // Settings
   toggleSettings: { id: "toggle-settings", name: "Toggle Settings", key: "/", modifiers: ["ctrl"] },
+
+  // Page Info
+  pageInfo: { id: "page-info", name: "Page Info", key: "i", modifiers: ["ctrl"] },
 };
 
 /**

@@ -318,6 +318,7 @@ function Browser(): React.ReactElement {
     focusAddressBar: () => addressBarRef.current?.focus(),
     toggleSidebar: () => setSidebarOpen(!sidebarOpen),
     toggleSettings: () => setShowHelp((prev) => !prev),
+    pageInfo: () => setSidebarOpen((prev) => !prev),
   });
 
   return (
