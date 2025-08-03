@@ -119,23 +119,6 @@ describe("useTabManager", () => {
     expect(result.current.activeTab?.historyIndex).toBe(1);
   });
 
-  it("should handle local file navigation", () => {
-    const { result } = renderHook(() => useTabManager());
-
-    act(() => {
-      result.current.navigateActiveTab({
-        url: "local:/pages/test.html#https://example.com",
-        isLocalFile: true,
-        displayUrl: "https://example.com",
-        localPath: "/pages/test.html",
-      });
-    });
-
-    expect(result.current.activeTab?.url).toBe("https://example.com");
-    expect(result.current.activeTab?.localPath).toBe("/pages/test.html");
-    expect(result.current.activeTab?.type).toBe(TabType.LOCAL);
-  });
-
   it("should handle popstate navigation", () => {
     const { result } = renderHook(() => useTabManager());
 

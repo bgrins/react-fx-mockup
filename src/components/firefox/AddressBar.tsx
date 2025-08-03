@@ -98,7 +98,7 @@ export const AddressBar = forwardRef<AddressBarHandle, AddressBarProps>(function
   const getDomain = (url: string) => {
     try {
       const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
-      return urlObj.hostname.replace('www.', '')
+      return urlObj.hostname
     } catch {
       return url
     }
@@ -169,7 +169,6 @@ export const AddressBar = forwardRef<AddressBarHandle, AddressBarProps>(function
         >
           {url && url !== 'about:blank' ? (
             <div className="flex items-center min-w-0">
-              <span className="text-gray-500 flex-shrink-0">www.</span>
               <span className="text-gray-900 flex-shrink-0">{domain}</span>
               <span className="text-gray-500 truncate">{path}</span>
             </div>

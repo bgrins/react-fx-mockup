@@ -131,9 +131,9 @@ export function TabStrip({
               </div>
               
               <span className={cn(
-                "flex-1 text-[13px] text-[#15141a] truncate font-sans font-normal",
+                "flex-1 text-[13px] text-[#15141a] truncate font-sans font-normal tab-title",
                 !tab.isActive && "opacity-90"
-              )}>
+              )} data-tab-active={tab.isActive ? "true" : "false"}>
                 {tab.title}
               </span>
               

@@ -68,36 +68,7 @@ describe("Navigation Integration Tests", () => {
       expect(nextUrl?.url).toBe("https://another.com");
     });
 
-    it("should handle local file navigation correctly", () => {
-      const { result } = renderHook(() => useTabManager());
-
-      // Navigate to a local file with display URL
-      const localUrl = "local:/pages/test.html#https://wikipedia.org";
-      const parsed = parseNavigationUrl(localUrl);
-
-      act(() => {
-        result.current.navigateActiveTab({
-          url: localUrl,
-          isLocalFile: parsed.isLocalFile,
-          displayUrl: parsed.displayUrl,
-          localPath: parsed.localPath,
-        });
-      });
-
-      expect(result.current.activeTab?.url).toBe("https://wikipedia.org");
-      expect(result.current.activeTab?.type).toBe(TabType.LOCAL);
-      expect(result.current.activeTab?.localPath).toBe("/pages/test.html");
-      // Local tabs are not proxy tabs, so external navigation is handled locally
-      expect(shouldHandleNavigationLocally(result.current.activeTab, "https://other.com")).toBe(
-        true,
-      );
-
-      // Verify history contains the original local: URL format
-      const history = result.current.activeTab?.history || [];
-      expect(history[history.length - 1]).toBe(localUrl);
-    });
-
-    it("should handle mixed navigation between local and proxy tabs", () => {
+    it("should handle mixed navigation between proxy tabs", () => {
       const { result } = renderHook(() => useTabManager());
 
       // Navigate to regular website
@@ -107,14 +78,10 @@ describe("Navigation Integration Tests", () => {
         });
       });
 
-      // Navigate to local file
+      // Navigate to another website
       act(() => {
-        const parsed = parseNavigationUrl("local:/pages/wiki.html#https://wiki.com");
         result.current.navigateActiveTab({
-          url: "local:/pages/wiki.html#https://wiki.com",
-          isLocalFile: true,
-          displayUrl: parsed.displayUrl,
-          localPath: parsed.localPath,
+          url: "https://wiki.com",
         });
       });
 
@@ -127,14 +94,13 @@ describe("Navigation Integration Tests", () => {
 
       // Verify history
       const tab = result.current.activeTab!;
-      expect(tab.history).toHaveLength(4); // blank, example, local, another
+      expect(tab.history).toHaveLength(4); // blank, example, wiki, another
       expect(tab.history![1]).toBe("https://example.com");
-      expect(tab.history![2]).toBe("local:/pages/wiki.html#https://wiki.com");
+      expect(tab.history![2]).toBe("https://wiki.com");
       expect(tab.history![3]).toBe("https://another.com");
 
       // Test navigation decisions
       expect(shouldHandleNavigationLocally(tab, ABOUT_PAGES.BLANK)).toBe(true);
-      expect(shouldHandleNavigationLocally(tab, "local:/other.html")).toBe(true);
       expect(shouldHandleNavigationLocally(tab, "https://external.com")).toBe(false);
     });
 
@@ -230,7 +196,6 @@ describe("Navigation Integration Tests", () => {
       const proxyTab = result.current.activeTab;
       expect(shouldHandleNavigationLocally(proxyTab, "https://other.com")).toBe(false);
       expect(shouldHandleNavigationLocally(proxyTab, ABOUT_PAGES.BLANK)).toBe(true);
-      expect(shouldHandleNavigationLocally(proxyTab, "local:/file.html")).toBe(true);
     });
 
     it("should parse various URL formats correctly", () => {
@@ -243,18 +208,28 @@ describe("Navigation Integration Tests", () => {
       // Test URLs with protocol
       const withProtocol = parseNavigationUrl("http://example.com");
       expect(withProtocol.fullUrl).toBe("http://example.com");
+    });
 
-      // Test local files with display URL
-      const localWithDisplay = parseNavigationUrl("local:/pages/test.html#https://display.com");
-      expect(localWithDisplay.fullUrl).toBe("/pages/test.html");
-      expect(localWithDisplay.displayUrl).toBe("https://display.com");
-      expect(localWithDisplay.localPath).toBe("/pages/test.html");
-      expect(localWithDisplay.isLocalFile).toBe(true);
+    it("should handle navigation to local paths with URL mapping", () => {
+      const { result } = renderHook(() => useTabManager());
 
-      // Test local files without display URL
-      const localOnly = parseNavigationUrl("local:/pages/test.html");
-      expect(localOnly.displayUrl).toBe("local:/pages/test.html");
-      expect(localOnly.isLocalFile).toBe(true);
+      // Navigate to a local path (simulating clicking Firefox Wiki from New Tab page)
+      act(() => {
+        result.current.navigateActiveTab({
+          url: "/pages/firefox-wiki.html",
+          displayUrl: "https://en.wikipedia.org/wiki/Firefox",
+        });
+      });
+
+      const tab = result.current.activeTab!;
+      expect(tab.url).toBe("/pages/firefox-wiki.html"); // Actual URL is stored
+      expect(tab.displayUrl).toBe("https://en.wikipedia.org/wiki/Firefox"); // Display URL stored separately
+      expect(tab.type).toBe(TabType.STUB); // Local paths are STUB type
+      expect(shouldHandleNavigationLocally(tab, "https://other.com")).toBe(true);
+
+      // Verify history contains the actual URL
+      const history = tab.history || [];
+      expect(history[history.length - 1]).toBe("/pages/firefox-wiki.html");
     });
   });
 });

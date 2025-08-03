@@ -1,6 +1,7 @@
 import React from "react";
 import { Tab, TabType, ABOUT_PAGES } from "~/constants/browser";
 import { FirefoxFavicon, FirefoxViewIcon, DynamicFavicon } from "~/components/firefox/Favicons";
+import { getTabTypeForUrl } from "~/utils/navigation";
 
 interface UseTabManagerOptions {
   initialTabs?: Tab[];
@@ -9,9 +10,7 @@ interface UseTabManagerOptions {
 interface TabNavigationOptions {
   url: string;
   navigationType?: string;
-  isLocalFile?: boolean;
   displayUrl?: string;
-  localPath?: string;
 }
 
 export function useTabManager(options: UseTabManagerOptions = {}) {
@@ -66,6 +65,8 @@ export function useTabManager(options: UseTabManagerOptions = {}) {
   );
 
   const navigateTab = React.useCallback((tabId: string, options: TabNavigationOptions) => {
+    console.log("[navigateTab] Navigating tab:", tabId, "with options:", options);
+
     setTabs((currentTabs) =>
       currentTabs.map((tab) => {
         if (tab.id !== tabId) return tab;
@@ -88,19 +89,24 @@ export function useTabManager(options: UseTabManagerOptions = {}) {
         }
 
         // For new navigation, add to history
-        const historyUrl = options.isLocalFile
-          ? `local:${options.localPath}#${options.displayUrl}`
-          : options.url;
-        const newHistory = [...history.slice(0, historyIndex + 1), historyUrl];
+        const newHistory = [...history.slice(0, historyIndex + 1), options.url];
         const newHistoryIndex = newHistory.length - 1;
+        const newType = getTabTypeForUrl(options.url);
+
+        console.log("[navigateTab] New tab state:", {
+          url: options.url,
+          displayUrl: options.displayUrl,
+          type: newType,
+          history: newHistory,
+        });
 
         return {
           ...tab,
-          url: options.displayUrl || options.url,
+          url: options.url, // Always use the actual URL
+          displayUrl: options.displayUrl, // Store display URL separately if provided
           title: `Loading...`,
           favicon: <DynamicFavicon url={options.displayUrl || options.url} />,
-          type: options.isLocalFile ? TabType.LOCAL : TabType.PROXY,
-          localPath: options.isLocalFile ? options.localPath : undefined,
+          type: newType, // Determine type based on actual URL
           history: newHistory,
           historyIndex: newHistoryIndex,
         };

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page - Proxy Tunnel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Page - Proxy Tunnel</h1>
+    
+    <div class="status info">
+        This is a simple test page to verify proxy tunnel messaging works correctly.
+    </div>
+
+    <h2>Page Information</h2>
+    <div id="page-info" class="info">
+        <p><strong>Title:</strong> <span id="current-title">Test Page - Proxy Tunnel</span></p>
+        <p><strong>URL:</strong> <span id="current-url"></span></p>
+        <p><strong>Ready State:</strong> <span id="ready-state"></span></p>
+    </div>
+
+    <h2>Test Actions</h2>
+    <div>
+        <button onclick="changeTitle()">Change Page Title</button>
+        <button onclick="sendTestMessage()">Send Test Message</button>
+        <button onclick="navigateTest()">Test Navigation</button>
+    </div>
+
+    <h2>Message Log</h2>
+    <div id="message-log" class="log">
+        <div>Waiting for messages...</div>
+    </div>
+
+    <!-- Load the proxy tunnel script -->
+    <script 
+        src="/proxy-tunnel.js" 
+        data-proxy-domain="arewexblstill.com"
+        data-allowed-origins="*"
+    ></script>
+
+    <script>
+        // Update page info
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('ready-state').textContent = document.readyState;
+
+        // Log helper
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('message-log');
+            const entry = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            entry.style.color = type === 'sent' ? '#0066cc' : 
+                               type === 'received' ? '#009900' : '#333';
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Listen for messages from parent
+        window.addEventListener('message', (event) => {
+            log(`Received message: ${JSON.stringify(event.data)}`, 'received');
+        });
+
+        // Test functions
+        function changeTitle() {
+            const newTitle = `Test Page - ${new Date().toLocaleTimeString()}`;
+            document.title = newTitle;
+            document.getElementById('current-title').textContent = newTitle;
+            log(`Changed title to: ${newTitle}`);
+            
+            // Manually send a navigation event to notify parent
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'PROXY_TUNNEL_NAVIGATION',
+                    url: window.location.href,
+                    navigationType: 'titlechange',
+                    pageInfo: {
+                        title: document.title,
+                        url: window.location.href,
+                        readyState: document.readyState
+                    }
+                }, '*');
+                log('Sent title change notification to parent', 'sent');
+            }
+        }
+
+        function sendTestMessage() {
+            if (window.parent !== window) {
+                const testMessage = {
+                    type: 'TEST_MESSAGE',
+                    timestamp: Date.now(),
+                    data: 'Hello from test page!'
+                };
+                window.parent.postMessage(testMessage, '*');
+                log(`Sent test message: ${JSON.stringify(testMessage)}`, 'sent');
+            } else {
+                log('Not in iframe - cannot send message to parent');
+            }
+        }
+
+        function navigateTest() {
+            // Simulate a navigation by changing the hash
+            window.location.hash = `test-${Date.now()}`;
+            log(`Changed hash to: ${window.location.hash}`);
+        }
+
+        // Log initial ready state
+        log('Page loaded, proxy tunnel script included');
+        log(`Document ready state: ${document.readyState}`);
+        log(`Is in iframe: ${window.parent !== window}`);
+
+        // Update ready state
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('ready-state').textContent = document.readyState;
+            log('DOM Content Loaded');
+        });
+
+        window.addEventListener('load', () => {
+            document.getElementById('ready-state').textContent = document.readyState;
+            log('Window fully loaded');
+        });
+    </script>
+</body>
+</html>

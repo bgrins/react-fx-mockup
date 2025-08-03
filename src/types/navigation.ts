@@ -23,8 +23,6 @@ export type NavigationType =
 export interface ParsedUrl {
   fullUrl: string;
   displayUrl: string;
-  isLocalFile: boolean;
-  localPath?: string;
   hostname?: string;
 }
 

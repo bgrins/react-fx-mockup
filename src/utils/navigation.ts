@@ -1,24 +1,13 @@
 import { Tab, TabType, ABOUT_PAGES } from "~/constants/browser";
 import { ParsedUrl } from "~/types/navigation";
+import { isLocalPath } from "~/constants/urlShortcuts";
 
 /**
- * Parse a URL and determine if it's a local file with a display URL
+ * Parse a URL and ensure it has a protocol
  */
 export function parseNavigationUrl(url: string): ParsedUrl {
   if (!url) {
     throw new Error("URL cannot be empty");
-  }
-
-  // Check if this is a local file with a display URL
-  if (url.startsWith("local:")) {
-    const [localPath, hashUrl] = url.substring(6).split("#");
-    return {
-      fullUrl: localPath || "",
-      displayUrl: hashUrl || url,
-      isLocalFile: true,
-      localPath: localPath || "",
-      hostname: hashUrl ? new URL(hashUrl).hostname : undefined,
-    };
   }
 
   // Ensure URL has a protocol
@@ -32,7 +21,6 @@ export function parseNavigationUrl(url: string): ParsedUrl {
     return {
       fullUrl,
       displayUrl: fullUrl,
-      isLocalFile: false,
       hostname: urlObj.hostname,
     };
   } catch {
@@ -40,7 +28,6 @@ export function parseNavigationUrl(url: string): ParsedUrl {
     return {
       fullUrl: url,
       displayUrl: url,
-      isLocalFile: false,
     };
   }
 }
@@ -56,11 +43,6 @@ export function shouldHandleNavigationLocally(tab: Tab | undefined, targetUrl: s
     return true;
   }
 
-  // Handle local files locally
-  if (targetUrl.startsWith("local:")) {
-    return true;
-  }
-
   // Non-proxy tabs are always handled locally
   if (tab.type !== TabType.PROXY) {
     return true;
@@ -72,12 +54,8 @@ export function shouldHandleNavigationLocally(tab: Tab | undefined, targetUrl: s
 /**
  * Get the URL to use for a tab's history entry
  */
-export function getHistoryUrl(parsedUrl: ParsedUrl, originalUrl: string): string {
-  // For local files, store the original format (with local: prefix)
-  if (parsedUrl.isLocalFile) {
-    return originalUrl;
-  }
-  // For regular URLs, store the full URL
+export function getHistoryUrl(parsedUrl: ParsedUrl): string {
+  // Always store the full URL
   return parsedUrl.fullUrl;
 }
 
@@ -89,8 +67,9 @@ export function getTabTypeForUrl(url: string): TabType {
     return TabType.STUB;
   }
 
-  if (url.startsWith("local:")) {
-    return TabType.LOCAL;
+  // Local paths should be treated as STUB type (not proxy)
+  if (isLocalPath(url)) {
+    return TabType.STUB;
   }
 
   return TabType.PROXY;

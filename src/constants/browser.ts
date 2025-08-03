@@ -3,18 +3,17 @@ import React from "react";
 export enum TabType {
   PROXY = "proxy",
   STUB = "stub",
-  LOCAL = "local",
 }
 
 export interface Tab {
   id: string;
   title: string;
   url: string;
+  displayUrl?: string; // Optional URL to display in the address bar (different from actual URL)
   favicon?: React.ReactNode;
   isPinned?: boolean;
   isActive?: boolean;
   type?: TabType;
-  localPath?: string;
   history?: string[];
   historyIndex?: number;
 }

@@ -21,6 +21,7 @@ import {
   getNextUrl,
   getTabTypeForUrl,
 } from "~/utils/navigation";
+import { isLocalPath, getUrlForLocalPath } from "~/constants/urlShortcuts";
 
 export const Route = createFileRoute("/")({
   component: Browser,
@@ -62,15 +63,30 @@ function Browser(): React.ReactElement {
     (url: string, navigationType?: string) => {
       if (!url || !activeTab) return;
 
+      console.log("[handleNavigate] Navigating to:", url);
+      console.log("[handleNavigate] isLocalPath:", isLocalPath(url));
+
       try {
-        const parsedUrl = parseNavigationUrl(url);
-        navigateActiveTab({
-          url,
-          navigationType,
-          isLocalFile: parsedUrl.isLocalFile,
-          displayUrl: parsedUrl.displayUrl,
-          localPath: parsedUrl.localPath,
-        });
+        // Check if this is a local path that needs to be served locally
+        if (isLocalPath(url)) {
+          // For local paths, we need to navigate to the actual local file
+          // but show the corresponding real URL in the address bar
+          const realUrl = getUrlForLocalPath(url);
+          console.log("[handleNavigate] Local path detected, real URL:", realUrl);
+          navigateActiveTab({
+            url: url, // Navigate to the local file
+            navigationType,
+            displayUrl: realUrl || url, // Show the real URL in the address bar
+          });
+        } else {
+          const parsedUrl = parseNavigationUrl(url);
+          console.log("[handleNavigate] Parsed URL:", parsedUrl);
+          navigateActiveTab({
+            url: parsedUrl.fullUrl,
+            navigationType,
+            displayUrl: parsedUrl.displayUrl,
+          });
+        }
       } catch (error) {
         console.error("Navigation error:", error);
       }
@@ -116,10 +132,10 @@ function Browser(): React.ReactElement {
     onNavigationStateChange: setProxyNavigationState,
     activeTabUrl: activeTab?.url,
     iframeRef: currentIframeRef,
-    // Enable for both proxy AND local tabs to capture navigation from local files
+    // Enable for proxy tabs and local files (stub tabs with local paths)
     enabled:
-      (activeTab?.type === TabType.PROXY || activeTab?.type === TabType.LOCAL) &&
-      activeTab?.url !== ABOUT_PAGES.BLANK,
+      (activeTab?.type === TabType.PROXY && activeTab?.url !== ABOUT_PAGES.BLANK) ||
+      (activeTab?.type === TabType.STUB && isLocalPath(activeTab?.url || "")),
   });
 
   // Request page content when sidebar is opened or tab changes
@@ -167,7 +183,6 @@ function Browser(): React.ReactElement {
             <DynamicFavicon url={parsedUrl.displayUrl} />
           ),
         type: getTabTypeForUrl(previous.url),
-        localPath: parsedUrl.localPath,
       });
     }
   };
@@ -203,7 +218,6 @@ function Browser(): React.ReactElement {
             <DynamicFavicon url={parsedUrl.displayUrl} />
           ),
         type: getTabTypeForUrl(next.url),
-        localPath: parsedUrl.localPath,
       });
     }
   };
@@ -260,7 +274,7 @@ function Browser(): React.ReactElement {
             ref={addressBarRef}
             tabs={tabs}
             activeTabId={activeTabId}
-            currentUrl={activeTab?.url ?? ""}
+            currentUrl={activeTab?.displayUrl ?? activeTab?.url ?? ""}
             onTabClick={(tabId) => {
               switchTab(tabId);
 
@@ -299,7 +313,7 @@ function Browser(): React.ReactElement {
             <div className="flex-1 h-full bg-white overflow-auto relative">
               {/* Render all proxy iframes but only show the active one */}
               {tabs.map((tab) => {
-                if (tab.type === TabType.PROXY || tab.type === TabType.LOCAL) {
+                if (tab.type === TabType.PROXY) {
                   return (
                     <iframe
                       key={tab.id}
@@ -308,12 +322,32 @@ function Browser(): React.ReactElement {
                           iframeRefs.current[tab.id] = el;
                         }
                       }}
-                      src={tab.type === TabType.LOCAL ? tab.localPath : urlToProxy(tab.url)}
+                      src={urlToProxy(tab.url)}
                       className={cn(
                         "w-full h-full absolute inset-0",
                         tab.id === activeTabId && tab.url !== ABOUT_PAGES.BLANK
                           ? "block"
                           : "hidden",
+                      )}
+                      title={tab.title}
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                    />
+                  );
+                }
+                // Handle local files (STUB type with local path)
+                if (tab.type === TabType.STUB && isLocalPath(tab.url)) {
+                  return (
+                    <iframe
+                      key={tab.id}
+                      ref={(el) => {
+                        if (el) {
+                          iframeRefs.current[tab.id] = el;
+                        }
+                      }}
+                      src={tab.url} // Serve local file directly
+                      className={cn(
+                        "w-full h-full absolute inset-0",
+                        tab.id === activeTabId ? "block" : "hidden",
                       )}
                       title={tab.title}
                       sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"

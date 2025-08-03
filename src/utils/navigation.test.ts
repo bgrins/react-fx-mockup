@@ -16,7 +16,6 @@ describe("parseNavigationUrl", () => {
     expect(result).toEqual({
       fullUrl: "https://example.com/path",
       displayUrl: "https://example.com/path",
-      isLocalFile: false,
       hostname: "example.com",
     });
   });
@@ -26,30 +25,7 @@ describe("parseNavigationUrl", () => {
     expect(result).toEqual({
       fullUrl: "https://example.com",
       displayUrl: "https://example.com",
-      isLocalFile: false,
       hostname: "example.com",
-    });
-  });
-
-  it("should parse local file URLs correctly", () => {
-    const result = parseNavigationUrl("local:/pages/test.html#https://example.com");
-    expect(result).toEqual({
-      fullUrl: "/pages/test.html",
-      displayUrl: "https://example.com",
-      isLocalFile: true,
-      localPath: "/pages/test.html",
-      hostname: "example.com",
-    });
-  });
-
-  it("should handle local file URLs without display URL", () => {
-    const result = parseNavigationUrl("local:/pages/test.html");
-    expect(result).toEqual({
-      fullUrl: "/pages/test.html",
-      displayUrl: "local:/pages/test.html",
-      isLocalFile: true,
-      localPath: "/pages/test.html",
-      hostname: undefined,
     });
   });
 
@@ -72,16 +48,6 @@ describe("shouldHandleNavigationLocally", () => {
     };
     expect(shouldHandleNavigationLocally(tab, ABOUT_PAGES.BLANK)).toBe(true);
     expect(shouldHandleNavigationLocally(tab, ABOUT_PAGES.FIREFOX_VIEW)).toBe(true);
-  });
-
-  it("should return true for local files", () => {
-    const tab: Tab = {
-      id: "1",
-      title: "Test",
-      url: "https://example.com",
-      type: TabType.PROXY,
-    };
-    expect(shouldHandleNavigationLocally(tab, "local:/pages/test.html")).toBe(true);
   });
 
   it("should return true for non-proxy tabs", () => {
@@ -114,8 +80,9 @@ describe("getTabTypeForUrl", () => {
     expect(getTabTypeForUrl(ABOUT_PAGES.FIREFOX_VIEW)).toBe(TabType.STUB);
   });
 
-  it("should return LOCAL for local: URLs", () => {
-    expect(getTabTypeForUrl("local:/pages/test.html")).toBe(TabType.LOCAL);
+  it("should return STUB for local paths", () => {
+    expect(getTabTypeForUrl("/pages/firefox-wiki.html")).toBe(TabType.STUB);
+    expect(getTabTypeForUrl("/pages/test.html")).toBe(TabType.STUB);
   });
 
   it("should return PROXY for regular URLs", () => {

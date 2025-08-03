@@ -1,5 +1,6 @@
 import React from 'react'
 import { cn } from '~/lib/utils'
+import { resolveUrlShortcut } from '~/constants/urlShortcuts'
 
 interface Tile {
   id: string
@@ -17,50 +18,56 @@ const defaultTiles: Tile[] = [
   {
     id: 'example',
     title: 'Example',
-    url: 'https://example.com',
+    url: 'example',
     favicon: '/default-favicon.svg'
   },
   {
     id: 'npr',
     title: 'NPR Text',
-    url: 'https://text.npr.org',
+    url: 'npr-text',
     favicon: 'https://text.npr.org/favicon.ico'
   },
   {
     id: 'espn',
     title: 'ESPN',
-    url: 'https://espn.com',
+    url: 'espn',
     favicon: 'https://a.espncdn.com/favicon.ico'
   },
   {
     id: 'wikipedia',
     title: 'Wikipedia',
-    url: 'https://en.wikipedia.org/wiki/Main_Page',
+    url: 'wikipedia',
     favicon: 'https://en.wikipedia.org/static/favicon/wikipedia.ico'
   },
   {
     id: 'mozilla',
     title: 'Mozilla',
-    url: 'https://mozilla.org',
+    url: 'mozilla',
     favicon: 'https://www.mozilla.org/media/img/favicons/mozilla/favicon-196x196.png'
   },
   {
     id: 'firefox',
     title: 'Firefox',
-    url: 'https://firefox.com',
+    url: 'firefox',
     favicon: 'https://www.mozilla.org/media/img/favicons/firefox/browser/favicon-196x196.png'
   },
   {
     id: 'firefox-wiki',
     title: 'Firefox Wiki',
-    url: 'local:/pages/firefox-wiki.html#https://en.wikipedia.org/wiki/Firefox',
+    url: 'firefox-wiki',
     favicon: 'https://en.wikipedia.org/static/favicon/wikipedia.ico'
+  },
+  {
+    id: 'test-page',
+    title: 'Test Page',
+    url: 'test-page',
+    favicon: '/default-favicon.svg'
   }
 ]
 
 export function NewTabPage({ onNavigate }: NewTabPageProps) {
   const handleTileClick = (url: string) => {
-    onNavigate?.(url)
+    onNavigate?.(resolveUrlShortcut(url))
   }
 
   return (

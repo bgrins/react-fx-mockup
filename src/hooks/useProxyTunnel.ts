@@ -85,7 +85,7 @@ export function useProxyTunnel({
           }
         }
 
-        // Handle page info if provided
+        // Handle page info if provided (from any source, not just proxy)
         if (event.data.pageInfo) {
           console.log("[PROXY] Page info from ready event:", event.data.pageInfo);
           onPageInfo?.(event.data.pageInfo);
@@ -151,7 +151,7 @@ export function useProxyTunnel({
           onNavigationStateChange?.(newState);
         }
 
-        // Handle page info if provided
+        // Handle page info if provided (from any source, not just proxy)
         if (event.data.pageInfo) {
           console.log("[PROXY] Page info from navigation event:", event.data.pageInfo);
           onPageInfo?.(event.data.pageInfo);
