@@ -5,6 +5,8 @@
 export const LOCAL_PATH_TO_URL: Record<string, string> = {
   "/pages/firefox-wiki.html": "https://en.wikipedia.org/wiki/Firefox",
   "/test-page.html": "https://example.com/test-page.html",
+  "/pages/villa-il-vecchio.html": "https://www.airbnb.com/rooms/36332874",
+  "/pages/st-george.html": "https://www.airbnb.com/rooms/1370154278151273293",
 } as const;
 
 /**

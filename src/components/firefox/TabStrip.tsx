@@ -18,9 +18,25 @@ export function TabStrip({
 }: TabStripProps) {
   const [draggedTab, setDraggedTab] = React.useState<string | null>(null)
   const [dropTargetTab, setDropTargetTab] = React.useState<{ id: string; before: boolean } | null>(null)
+  const [isOverflowing, setIsOverflowing] = React.useState(false)
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null)
+  
+  // Check for overflow on mount and when tabs change
+  React.useEffect(() => {
+    const checkOverflow = () => {
+      if (scrollContainerRef.current) {
+        const hasOverflow = scrollContainerRef.current.scrollWidth > scrollContainerRef.current.clientWidth
+        setIsOverflowing(hasOverflow)
+      }
+    }
+    
+    checkOverflow()
+    window.addEventListener('resize', checkOverflow)
+    return () => window.removeEventListener('resize', checkOverflow)
+  }, [tabs.length])
   return (
-    <div className="bg-[#f0f0f4] h-11 flex items-center px-0">
-      <div className="flex-1 flex items-center gap-1 px-2">
+    <div className="bg-[#f0f0f4] h-11 flex items-center px-0 min-w-0">
+      <div ref={scrollContainerRef} className="flex-1 flex items-center gap-1 px-2 min-w-0 overflow-x-auto scrollbar-none max-w-full">
         {/* Firefox View and other pinned tabs */}
         {tabs.filter(tab => tab.isPinned).map((tab) => {
           return (
@@ -139,15 +155,26 @@ export function TabStrip({
           )
         })}
         
+        {!isOverflowing && (
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] shrink-0"
+            onClick={onNewTab}
+          >
+            <PlusIcon />
+          </button>
+        )}
+      </div>
+      
+      {isOverflowing && (
         <button
-          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]"
+          className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] shrink-0"
           onClick={onNewTab}
         >
           <PlusIcon />
         </button>
-      </div>
+      )}
       
-      <button className="w-8 h-8 mr-6 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]">
+      <button className="w-8 h-8 mr-6 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] shrink-0">
         <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
           <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>

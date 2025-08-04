@@ -1,16 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
-import { SplitView } from "~/components/airbnb/SplitView";
 import {
-  AirbnbFavicon,
   SkyscannerFavicon,
   YouTubeFavicon,
   FirefoxViewIcon,
   DynamicFavicon,
 } from "~/components/firefox/Favicons";
-import { mockProperties } from "~/data/mockProperties";
 import { urlToProxy } from "~/utils/proxy";
 import { useDebug } from "~/contexts/useDebug";
+import { useBrowserScale } from "~/hooks/useBrowserScale";
 import React from "react";
 import type { Tab } from "~/types/browser";
 import { TabType } from "~/types/browser";
@@ -40,15 +38,15 @@ function SplitViewPage(): React.ReactElement {
     {
       id: "airbnb-1",
       title: 'Villa il Vecchio courtyard "pergola" - Villas for Rent in Rodos, Greece - Airbnb',
-      url: "https://www.airbnb.com/rooms/1370154278151273293",
-      favicon: <AirbnbFavicon />,
+      url: "/pages/villa-il-vecchio.html",
+      favicon: <DynamicFavicon url="https://www.airbnb.com" />,
       type: TabType.STUB,
     },
     {
       id: "airbnb-2",
       title: "Saint George Studio - Cottages for Rent in Psinthos, Greece - Airbnb",
-      url: "https://www.airbnb.com/rooms/1370154278151273293",
-      favicon: <AirbnbFavicon />,
+      url: "/pages/st-george.html",
+      favicon: <DynamicFavicon url="https://www.airbnb.com" />,
       isActive: true,
       type: TabType.STUB,
     },
@@ -56,7 +54,7 @@ function SplitViewPage(): React.ReactElement {
       id: "airbnb-3",
       title: "Airbnb | Vacation rentals, cabins, beach houses, unique homes & experiences",
       url: "https://www.airbnb.com",
-      favicon: <DynamicFavicon url="https://www.airbnb.com" fallback={<AirbnbFavicon />} />,
+      favicon: <DynamicFavicon url="https://www.airbnb.com" />,
       type: TabType.PROXY,
     },
     {
@@ -102,89 +100,110 @@ function SplitViewPage(): React.ReactElement {
     }
   }, [activeTab, setDebugInfo]);
 
+  // Calculate scale for mobile
+  const { containerStyle, browserStyle } = useBrowserScale();
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
   return (
-    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-6 md:p-8 lg:p-12 overflow-hidden">
-      <div className="h-full max-w-[1600px] mx-auto flex flex-col">
-        <BrowserShell
-          tabs={tabs}
-          activeTabId={activeTabId}
-          currentUrl={activeTab?.url ?? ""}
-          onTabClick={setActiveTabId}
-          onTabClose={(id) => {
-            // Don't close pinned tabs
-            const tabToClose = tabs.find((t) => t.id === id);
-            if (tabToClose?.isPinned) return;
+    <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-5 flex items-start justify-center overflow-hidden">
+      <div className="relative" style={containerStyle}>
+        <div ref={containerRef} className="flex flex-col absolute" style={browserStyle}>
+          <BrowserShell
+            tabs={tabs}
+            activeTabId={activeTabId}
+            currentUrl={activeTab?.url ?? ""}
+            onTabClick={setActiveTabId}
+            onTabClose={(id) => {
+              // Don't close pinned tabs
+              const tabToClose = tabs.find((t) => t.id === id);
+              if (tabToClose?.isPinned) return;
 
-            // Remove the tab
-            const newTabs = tabs.filter((t) => t.id !== id);
-            setTabs(newTabs);
+              // Remove the tab
+              const newTabs = tabs.filter((t) => t.id !== id);
+              setTabs(newTabs);
 
-            // If we closed the active tab, switch to another tab
-            if (id === activeTabId && newTabs.length > 0) {
-              const closedIndex = tabs.findIndex((t) => t.id === id);
-              const newActiveIndex = Math.min(closedIndex, newTabs.length - 1);
-              const newActiveTab = newTabs[newActiveIndex];
-              if (newActiveTab) {
-                setActiveTabId(newActiveTab.id);
+              // If we closed the active tab, switch to another tab
+              if (id === activeTabId && newTabs.length > 0) {
+                const closedIndex = tabs.findIndex((t) => t.id === id);
+                const newActiveIndex = Math.min(closedIndex, newTabs.length - 1);
+                const newActiveTab = newTabs[newActiveIndex];
+                if (newActiveTab) {
+                  setActiveTabId(newActiveTab.id);
+                }
               }
-            }
-          }}
-          onNewTab={() => {
-            const newTabId = `tab-${Date.now()}`;
-            const newTab: Tab = {
-              id: newTabId,
-              title: "New Tab",
-              url: "about:blank",
-            };
-            setTabs([...tabs, newTab]);
-            setActiveTabId(newTabId);
-          }}
-          onNavigate={(url) => {
-            console.log("Navigate to:", url);
-          }}
-          onNewTabBelow={() => {
-            console.log("New tab below");
-          }}
-          onCompareTabs={() => {
-            console.log("Compare tabs");
-          }}
-          onCloseBothTabs={() => {
-            console.log("Close both tabs");
-          }}
-          showSplitView={activeTabId.startsWith("airbnb")}
-          className="flex-1 min-h-0"
-        >
-          {activeTabId.startsWith("airbnb") && activeTab?.type === "stub" && (
-            <SplitView
-              leftProperty={mockProperties.villaRodos}
-              rightProperty={mockProperties.saintGeorgeStudio}
-            />
-          )}
-          {activeTabId.startsWith("airbnb") && activeTab?.type === "proxy" && (
-            <iframe src={urlToProxy(activeTab.url)} className="w-full h-full" />
-          )}
-          {!activeTabId.startsWith("airbnb") && activeTab?.type === "proxy" && (
-            <iframe src={urlToProxy(activeTab.url)} className="w-full h-full" />
-          )}
-          {activeTabId === "youtube" && !activeTab?.type && (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <p>YouTube content would go here</p>
-            </div>
-          )}
-          {activeTabId === "firefox" && (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <p>Firefox View content would go here</p>
-            </div>
-          )}
-          {activeTabId.startsWith("tab-") && (
-            <div className="flex items-center justify-center h-full bg-white">
-              <div className="text-center">
-                <h1 className="text-2xl font-light text-gray-700 mb-4">New Tab</h1>
-                <p className="text-gray-500">Start browsing or enter a URL in the address bar</p>
+            }}
+            onNewTab={() => {
+              const newTabId = `tab-${Date.now()}`;
+              const newTab: Tab = {
+                id: newTabId,
+                title: "New Tab",
+                url: "about:blank",
+              };
+              setTabs([...tabs, newTab]);
+              setActiveTabId(newTabId);
+            }}
+            onNavigate={(url) => {
+              console.log("Navigate to:", url);
+            }}
+            onNewTabBelow={() => {
+              console.log("New tab below");
+            }}
+            onCompareTabs={() => {
+              console.log("Compare tabs");
+            }}
+            onCloseBothTabs={() => {
+              console.log("Close both tabs");
+            }}
+            showSplitView={activeTabId === "airbnb-1" || activeTabId === "airbnb-2"}
+            className="flex-1 min-h-0"
+          >
+            {/* Split view for Airbnb tabs */}
+            {(activeTabId === "airbnb-1" || activeTabId === "airbnb-2") && (
+              <div className="flex h-full w-full gap-1 p-1 bg-gray-100">
+                <div className="flex-1 bg-white rounded-lg overflow-hidden">
+                  <iframe
+                    src="/pages/villa-il-vecchio.html"
+                    className="w-full h-full border-0"
+                    title="Villa il Vecchio"
+                  />
+                </div>
+                <div className="flex-1 bg-white rounded-lg overflow-hidden relative">
+                  <iframe
+                    src="/pages/st-george.html"
+                    className="w-full h-full border-0"
+                    title="Saint George Studio"
+                  />
+                </div>
               </div>
-            </div>
-          )}
-        </BrowserShell>
+            )}
+
+            {/* Regular views for other tabs */}
+            {activeTabId.startsWith("airbnb") && activeTab?.type === "proxy" && (
+              <iframe src={urlToProxy(activeTab.url)} className="w-full h-full" />
+            )}
+            {!activeTabId.startsWith("airbnb") && activeTab?.type === "proxy" && (
+              <iframe src={urlToProxy(activeTab.url)} className="w-full h-full" />
+            )}
+            {activeTabId === "youtube" && !activeTab?.type && (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <p>YouTube content would go here</p>
+              </div>
+            )}
+            {activeTabId === "firefox" && (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <p>Firefox View content would go here</p>
+              </div>
+            )}
+            {activeTabId.startsWith("tab-") && (
+              <div className="flex items-center justify-center h-full bg-white">
+                <div className="text-center">
+                  <h1 className="text-2xl font-light text-gray-700 mb-4">New Tab</h1>
+                  <p className="text-gray-500">Start browsing or enter a URL in the address bar</p>
+                </div>
+              </div>
+            )}
+          </BrowserShell>
+        </div>
       </div>
     </div>
   );
