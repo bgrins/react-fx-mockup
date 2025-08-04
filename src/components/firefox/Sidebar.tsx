@@ -30,10 +30,11 @@ export function Sidebar({
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [input, setInput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
-  const [width, setWidth] = React.useState(320);
+  const [width, setWidth] = React.useState(360);
   const [isResizing, setIsResizing] = React.useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Load saved width from localStorage
   React.useEffect(() => {
@@ -51,6 +52,16 @@ export function Sidebar({
       localStorage.setItem("sidebar-width", width.toString());
     }
   }, [width]);
+
+  // Auto-focus input when sidebar opens
+  React.useEffect(() => {
+    if (isOpen && inputRef.current) {
+      // Small delay to ensure the sidebar is fully rendered
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -152,7 +163,7 @@ export function Sidebar({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -169,7 +180,8 @@ export function Sidebar({
       if (!isResizing) return;
       
       const newWidth = e.clientX - (sidebarRef.current?.getBoundingClientRect().left || 0);
-      if (newWidth >= 200 && newWidth <= 600) {
+      // Increase minimum width to prevent layout breaking
+      if (newWidth >= 280 && newWidth <= 600) {
         setWidth(newWidth);
       }
     };
@@ -200,10 +212,7 @@ export function Sidebar({
       <div className="flex flex-col h-full bg-white">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
-          <h2 className={cn(
-            "font-semibold truncate",
-            width < 280 ? "text-base" : "text-lg"
-          )}>
+          <h2 className="font-semibold text-lg truncate">
             Chat with Page
           </h2>
           <button
@@ -223,13 +232,10 @@ export function Sidebar({
         </div>
 
         {/* Messages */}
-        <div className={cn(
-          "flex-1 overflow-y-auto space-y-3",
-          width < 280 ? "p-2" : "p-4"
-        )}>
+        <div className="flex-1 overflow-y-auto space-y-3 p-3">
           {messages.length === 0 && (
             <div className="text-center text-gray-500 mt-8">
-              <p className={width < 280 ? "text-sm" : ""}>Ask questions about the current page!</p>
+              <p className="text-sm">Ask questions about the current page!</p>
               {!accessKey && (
                 <p className="text-xs text-red-500 mt-2">
                   Please set your API key in settings (Alt+?)
@@ -248,27 +254,21 @@ export function Sidebar({
             >
               <div
                 className={cn(
-                  "max-w-[85%] rounded-lg",
-                  width < 280 ? "px-2 py-1.5" : "px-3 py-2",
+                  "max-w-[85%] rounded-lg px-3 py-2",
                   message.role === "user"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-100 text-gray-800"
                 )}
               >
-                <p className={cn(
-                  "whitespace-pre-wrap break-words",
-                  width < 280 ? "text-xs" : "text-sm"
-                )}>{message.content}</p>
-                {width >= 250 && (
-                  <p
-                    className={cn(
-                      "text-xs mt-1",
-                      message.role === "user" ? "text-blue-100" : "text-gray-500"
-                    )}
-                  >
-                    {message.timestamp.toLocaleTimeString()}
-                  </p>
-                )}
+                <p className="whitespace-pre-wrap break-words text-sm">{message.content}</p>
+                <p
+                  className={cn(
+                    "text-xs mt-1",
+                    message.role === "user" ? "text-blue-100" : "text-gray-500"
+                  )}
+                >
+                  {message.timestamp.toLocaleTimeString()}
+                </p>
               </div>
             </div>
           ))}
@@ -289,36 +289,24 @@ export function Sidebar({
         </div>
 
         {/* Input */}
-        <div className={cn(
-          "border-t",
-          width < 280 ? "p-2" : "p-4"
-        )}>
-          <div className={cn(
-            "flex",
-            width < 260 ? "flex-col gap-2" : "flex-row gap-2"
-          )}>
+        <div className="border-t p-3">
+          <div className="flex flex-col gap-2">
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={width < 280 ? "Ask..." : "Ask about this page..."}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask about this page..."
               disabled={!accessKey || isLoading}
-              className={cn(
-                "flex-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100",
-                width < 280 ? "px-2 py-1.5 text-sm" : "px-3 py-2"
-              )}
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
             <button
               onClick={sendMessage}
               disabled={!accessKey || isLoading || !input.trim()}
-              className={cn(
-                "bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium",
-                width < 280 ? "px-3 py-1.5 text-sm" : "px-4 py-2",
-                width < 260 ? "w-full" : ""
-              )}
+              className="w-full bg-blue-500 text-white rounded-lg px-4 py-2 text-sm hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
             >
-              {width < 280 ? "Send" : "Send"}
+              Send
             </button>
           </div>
         </div>

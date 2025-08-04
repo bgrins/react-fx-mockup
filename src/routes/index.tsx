@@ -144,11 +144,18 @@ function Browser(): React.ReactElement {
 
   // Request page content when sidebar is opened or tab changes
   React.useEffect(() => {
-    if (sidebarOpen && activeTab?.type === TabType.PROXY) {
-      requestPageInfo();
-      requestPageContent();
+    if (sidebarOpen && activeTab) {
+      const shouldRequestContent =
+        (activeTab.type === TabType.PROXY && activeTab.url !== ABOUT_PAGES.BLANK) ||
+        (activeTab.type === TabType.STUB && isLocalPath(activeTab.url || ""));
+
+      if (shouldRequestContent) {
+        requestPageInfo();
+        requestPageContent();
+      }
     }
-  }, [sidebarOpen, activeTabId, activeTab?.type, requestPageInfo, requestPageContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sidebarOpen, activeTabId, activeTab?.type, activeTab?.url]);
 
   // Reset proxy navigation state when switching tabs
   React.useEffect(() => {
