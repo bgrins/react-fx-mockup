@@ -231,7 +231,13 @@
     // Navigate back
     goBack: () => {
       try {
-        window.history.back();
+        // Prevent the back navigation from propagating to parent window in Firefox
+        if (window.history.length > 1) {
+          console.log('[PROXY] Going back');
+          window.history.back();
+        } else {
+          console.warn('[PROXY] Cannot go back - no history');
+        }
         return true;
       } catch (e) {
         console.error('[PROXY] Failed to go back:', e);
@@ -242,6 +248,7 @@
     // Navigate forward
     goForward: () => {
       try {
+        console.log('[PROXY] Going forward');
         window.history.forward();
         return true;
       } catch (e) {

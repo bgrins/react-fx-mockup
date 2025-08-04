@@ -9,13 +9,6 @@ export default {
 
     // Configuration - use environment variables when available
     const CONFIG = {
-      // CORS settings
-      ALLOWED_ORIGINS: env.ALLOWED_ORIGINS
-        ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-        : ["*"],
-      ALLOWED_METHODS: "GET, POST, PUT, DELETE, OPTIONS, HEAD",
-      ALLOWED_HEADERS: "*",
-
       // Proxy settings
       PROXY_DOMAIN: env.PROXY_DOMAIN,
       DEBUG_PATH: "/THROW_LOGS",
@@ -42,10 +35,6 @@ export default {
 
     // console.log("Request:", clientInfo);
 
-    // Handle CORS preflight
-    if (request.method === "OPTIONS") {
-      return handleCorsOptions(request, CONFIG);
-    }
     const url = new URL(request.url);
     const hostname = url.hostname;
 
@@ -77,7 +66,6 @@ export default {
         headers: {
           "Content-Type": "text/plain",
           "Cache-Control": "public, max-age=86400", // Cache for 24 hours
-          "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
         },
       });
     }
@@ -125,7 +113,6 @@ export default {
         status: 500,
         headers: {
           "Content-Type": "text/plain",
-          "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
         },
       });
     }
@@ -133,23 +120,6 @@ export default {
 };
 
 // Helper functions
-
-function getAllowedOrigin(request, CONFIG) {
-  const origin = request.headers.get("origin");
-
-  // If wildcard is allowed, return it
-  if (CONFIG.ALLOWED_ORIGINS.includes("*")) {
-    return "*";
-  }
-
-  // Check if the request origin is in the allowed list
-  if (origin && CONFIG.ALLOWED_ORIGINS.includes(origin)) {
-    return origin;
-  }
-
-  // Default to the first allowed origin or null
-  return CONFIG.ALLOWED_ORIGINS[0] || null;
-}
 
 function createDebugResponse(request, targetUrl, targetDomain, CONFIG) {
   const debugInfo = {
@@ -167,22 +137,8 @@ function createDebugResponse(request, targetUrl, targetDomain, CONFIG) {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
     },
   });
-}
-
-function handleCorsOptions(request, CONFIG) {
-  const headers = new Headers({
-    "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
-    "Access-Control-Allow-Methods": CONFIG.ALLOWED_METHODS,
-    "Access-Control-Max-Age": "86400",
-  });
-
-  const requestHeaders = request.headers.get("Access-Control-Request-Headers");
-  headers.set("Access-Control-Allow-Headers", requestHeaders || CONFIG.ALLOWED_HEADERS);
-
-  return new Response(null, { status: 204, headers });
 }
 
 function prepareRequestHeaders(originalHeaders, CONFIG) {
@@ -233,8 +189,6 @@ function handleRedirect(response, targetUrl, CONFIG, request) {
     status: response.status,
     headers: {
       Location: proxyRedirect,
-      "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
-      "Access-Control-Expose-Headers": "Location, x-redirect-status, x-redirect-location",
       "x-redirect-status": response.status.toString(),
       "x-redirect-location": location,
     },
@@ -268,30 +222,7 @@ function createProxiedResponse(response, targetUrl, CONFIG, request) {
   const modifiedResponse = new Response(body, response);
   const headers = modifiedResponse.headers;
 
-  // Add CORS headers
-  headers.set("Access-Control-Allow-Origin", getAllowedOrigin(request, CONFIG));
-  headers.set("Access-Control-Allow-Methods", CONFIG.ALLOWED_METHODS);
-  headers.set("Access-Control-Allow-Headers", CONFIG.ALLOWED_HEADERS);
-  headers.set("Access-Control-Allow-Credentials", "true");
-
-  // Expose useful headers
-  const exposeHeaders = [
-    "Content-Length",
-    "Content-Type",
-    "Content-Range",
-    "Accept-Ranges",
-    "ETag",
-    "Last-Modified",
-    "Content-Encoding",
-    "Content-Language",
-    "Cache-Control",
-    "Expires",
-    "Pragma",
-  ].filter((header) => response.headers.has(header));
-
-  if (exposeHeaders.length > 0) {
-    headers.set("Access-Control-Expose-Headers", exposeHeaders.join(", "));
-  }
+  // No CORS headers needed for iframe content
 
   // Remove security headers that might interfere with embedding
   const securityHeaders = [
@@ -341,7 +272,6 @@ function createErrorResponse(response, targetUrl, CONFIG) {
     statusText: response.statusText,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
     },
   });
 }

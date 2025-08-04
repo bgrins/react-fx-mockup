@@ -181,7 +181,10 @@ function Browser(): React.ReactElement {
 
     if (!shouldHandleLocally) {
       // For proxy tabs going to non-about:blank URLs, send the goBack command
-      sendCommand("goBack");
+      // Use setTimeout to ensure the command is sent after any event propagation
+      setTimeout(() => {
+        sendCommand("goBack");
+      }, 0);
 
       // Update the local history index to track that we went back
       updateActiveTab({
