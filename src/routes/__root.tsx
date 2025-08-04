@@ -8,6 +8,7 @@ import { seo } from "~/utils/seo";
 import { SettingsIcon } from "~/components/icons";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { DebugProvider } from "~/contexts/DebugContext";
+import { Toaster } from "~/components/ui/sonner";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -90,6 +91,7 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
         <hr />
         <div id="firefox-mockup-container">{children}</div>
         <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <Toaster position="bottom-center" />
         <Scripts />
       </body>
     </html>

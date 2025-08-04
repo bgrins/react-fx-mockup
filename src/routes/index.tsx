@@ -15,6 +15,7 @@ import type { AddressBarHandle } from "~/components/firefox/AddressBar";
 import type { ShortcutHandlers } from "~/types/browser";
 import { ABOUT_PAGES, TabType } from "~/constants/browser";
 import { cn } from "~/lib/utils";
+import { toast } from "sonner";
 import {
   parseNavigationUrl,
   shouldHandleNavigationLocally,
@@ -286,7 +287,12 @@ function Browser(): React.ReactElement {
     // Navigation
     back: handleBack,
     forward: handleForward,
+    home: () => {
+      handleNavigate(ABOUT_PAGES.BLANK);
+      toast("Home");
+    },
     reload: handleRefresh,
+    stop: () => toast("Stop"),
 
     // Tabs
     newTab: handleNewTab,
@@ -303,6 +309,12 @@ function Browser(): React.ReactElement {
         switchTab(tabs[currentIndex - 1]!.id);
       }
     },
+    moveTabLeft: () => toast("Move Tab Left"),
+    moveTabRight: () => toast("Move Tab Right"),
+    moveTabStart: () => toast("Move Tab to Start"),
+    moveTabEnd: () => toast("Move Tab to End"),
+    pinTab: () => toast("Pin Tab"),
+    duplicateTab: () => toast("Duplicate Tab"),
 
     // Tab selection by number
     selectTab1: () => tabs[0] && switchTab(tabs[0].id),
@@ -315,11 +327,28 @@ function Browser(): React.ReactElement {
     selectTab8: () => tabs[7] && switchTab(tabs[7].id),
     selectLastTab: () => tabs.length > 0 && switchTab(tabs[tabs.length - 1]!.id),
 
+    // Find
+    find: () => toast("Find in Page"),
+    findNext: () => toast("Find Next"),
+    findPrevious: () => toast("Find Previous"),
+
+    // Bookmarks
+    bookmarkPage: () => toast("Bookmark Page"),
+    showBookmarksSidebar: () => toast("Show Bookmarks Sidebar"),
+
+    // History
+    showHistorySidebar: () => toast("Show History Sidebar"),
+
     // UI
     focusAddressBar: () => addressBarRef.current?.focus(),
     toggleSidebar: () => setSidebarOpen(!sidebarOpen),
     toggleSettings: () => setShowHelp((prev) => !prev),
     pageInfo: () => setSidebarOpen((prev) => !prev),
+
+    // Zoom
+    zoomIn: () => toast("Zoom In"),
+    zoomOut: () => toast("Zoom Out"),
+    resetZoom: () => toast("Reset Zoom"),
   };
 
   const { showHelp, setShowHelp } = useKeyboardShortcuts(shortcutHandlers);

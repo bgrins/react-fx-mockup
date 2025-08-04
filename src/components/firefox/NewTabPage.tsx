@@ -70,7 +70,7 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
   }
 
   return (
-    <div className="flex items-center justify-center h-full bg-[#f9f9fb] p-8">
+    <div className="flex items-center justify-center h-full bg-[#f9f9fb] p-8" data-testid="new-tab-page">
       <div className="max-w-4xl w-full">
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-8 max-w-5xl mx-auto">
           {defaultTiles.map((tile) => (

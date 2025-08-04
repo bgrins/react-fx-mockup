@@ -153,8 +153,9 @@ export const AddressBar = forwardRef<AddressBarHandle, AddressBarProps>(function
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onBlur={() => setIsFocused(false)}
-          className="flex-1 bg-transparent outline-none text-[15px] font-sans px-2 text-[#15141a]"
+          className="firefox-address-bar__input flex-1 bg-transparent outline-none text-[15px] font-sans px-2 text-[#15141a]"
           placeholder="Search or enter address"
+          data-testid="address-bar-input"
           autoFocus
         />
       ) : (
