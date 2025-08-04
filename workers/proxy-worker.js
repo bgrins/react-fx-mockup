@@ -23,6 +23,19 @@ const CONFIG = {
 
 export default {
   async fetch(request) {
+    // const clientInfo = {
+    //   url: request.url,
+    //   method: request.method,
+    //   userAgent: request.headers.get("user-agent") || "unknown",
+    //   origin: request.headers.get("origin") || "no-origin",
+    //   referer: request.headers.get("referer") || "no-referer",
+    //   cfConnectingIP: request.headers.get("cf-connecting-ip") || "unknown",
+    //   cfCountry: request.headers.get("cf-ipcountry") || "unknown",
+    //   timestamp: new Date().toISOString()
+    // };
+
+    // console.log("Request:", clientInfo);
+
     const url = new URL(request.url);
     const hostname = url.hostname;
 

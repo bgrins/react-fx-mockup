@@ -1,9 +1,10 @@
 import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { ShortcutHandlers } from "~/types/browser";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 
 describe("useKeyboardShortcuts", () => {
-  let mockHandlers: Record<string, Mock>;
+  let mockHandlers: ShortcutHandlers;
   let originalPlatform: string;
 
   beforeEach(() => {

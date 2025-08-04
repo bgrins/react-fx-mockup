@@ -1,22 +1,7 @@
-import React from "react";
-
-export enum TabType {
-  PROXY = "proxy",
-  STUB = "stub",
-}
-
-export interface Tab {
-  id: string;
-  title: string;
-  url: string;
-  displayUrl?: string; // Optional URL to display in the address bar (different from actual URL)
-  favicon?: React.ReactNode;
-  isPinned?: boolean;
-  isActive?: boolean;
-  type?: TabType;
-  history?: string[];
-  historyIndex?: number;
-}
+/**
+ * Browser-related constants
+ * Import types from ~/types/browser for type definitions
+ */
 
 export const ABOUT_PAGES = {
   BLANK: "about:blank",
@@ -31,3 +16,6 @@ export const PROXY_MESSAGE_TYPES = {
   RESPONSE: "PROXY_TUNNEL_RESPONSE",
   NAVIGATION: "PROXY_TUNNEL_NAVIGATION",
 } as const;
+
+// Re-export types from the new location for backward compatibility
+export { TabType, type Tab } from "~/types/browser";

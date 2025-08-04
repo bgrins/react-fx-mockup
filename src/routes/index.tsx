@@ -5,13 +5,14 @@ import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { urlToProxy } from "~/utils/proxy";
-import { useDebug } from "~/contexts/DebugContext";
+import { useDebug } from "~/contexts/useDebug";
 import { useProxyTunnel } from "~/hooks/useProxyTunnel";
 import { useBrowserScale } from "~/hooks/useBrowserScale";
 import { useTabManager } from "~/hooks/useTabManager";
 import { useKeyboardShortcuts } from "~/hooks/useKeyboardShortcuts";
 import React from "react";
 import type { AddressBarHandle } from "~/components/firefox/AddressBar";
+import type { ShortcutHandlers } from "~/types/browser";
 import { ABOUT_PAGES, TabType } from "~/constants/browser";
 import { cn } from "~/lib/utils";
 import {
@@ -280,8 +281,8 @@ function Browser(): React.ReactElement {
   const { containerStyle, browserStyle } = useBrowserScale();
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Setup keyboard shortcuts
-  const { showHelp, setShowHelp } = useKeyboardShortcuts({
+  // Setup keyboard shortcuts with proper typing
+  const shortcutHandlers: ShortcutHandlers = {
     // Navigation
     back: handleBack,
     forward: handleForward,
@@ -319,7 +320,9 @@ function Browser(): React.ReactElement {
     toggleSidebar: () => setSidebarOpen(!sidebarOpen),
     toggleSettings: () => setShowHelp((prev) => !prev),
     pageInfo: () => setSidebarOpen((prev) => !prev),
-  });
+  };
+
+  const { showHelp, setShowHelp } = useKeyboardShortcuts(shortcutHandlers);
 
   return (
     <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-5 flex items-start justify-center overflow-hidden">

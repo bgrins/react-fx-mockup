@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  KeyboardShortcut,
-  getMockupShortcuts,
-  formatShortcut,
-  Platform,
-} from "../firefox-browser-types";
-
-type ShortcutHandler = () => void;
+import type { ShortcutHandlers, ShortcutId } from "~/types/browser";
+import { getMockupShortcuts } from "~/lib/keyboard-shortcuts";
 
 interface UseKeyboardShortcutsOptions {
   enabled?: boolean;
@@ -14,7 +8,7 @@ interface UseKeyboardShortcutsOptions {
 }
 
 export function useKeyboardShortcuts(
-  shortcuts: Record<string, ShortcutHandler>,
+  handlers: ShortcutHandlers,
   options: UseKeyboardShortcutsOptions = {},
 ) {
   const { enabled = true, preventDefault = true } = options;
@@ -28,78 +22,50 @@ export function useKeyboardShortcuts(
       const mockupShortcuts = getMockupShortcuts();
 
       // Check each shortcut
-      for (const [shortcutId, handler] of Object.entries(shortcuts)) {
-        const shortcutDef = mockupShortcuts[shortcutId];
-        if (!shortcutDef) {
-          continue;
-        }
+      (Object.entries(handlers) as Array<[ShortcutId, (() => void) | undefined]>).forEach(
+        ([shortcutId, handler]) => {
+          if (!handler) return;
 
-        // Check if the key matches
-        if (
-          event.key.toLowerCase() !== shortcutDef.key.toLowerCase() &&
-          event.key !== shortcutDef.key
-        ) {
-          continue;
-        }
+          const shortcutDef = mockupShortcuts[shortcutId];
+          if (!shortcutDef) return;
 
-        // Check modifiers
-        const requiredModifiers = shortcutDef.modifiers || [];
-        const hasCtrl = requiredModifiers.includes("ctrl");
-        const hasAlt = requiredModifiers.includes("alt");
-        const hasShift = requiredModifiers.includes("shift");
-        const hasMeta = requiredModifiers.includes("meta");
-
-        const modifiersMatch =
-          event.ctrlKey === hasCtrl &&
-          event.altKey === hasAlt &&
-          event.shiftKey === hasShift &&
-          event.metaKey === hasMeta;
-
-        if (modifiersMatch) {
-          if (preventDefault) {
-            event.preventDefault();
+          // Check if the key matches
+          if (
+            event.key.toLowerCase() !== shortcutDef.key.toLowerCase() &&
+            event.key !== shortcutDef.key
+          ) {
+            return;
           }
-          handler();
-          break;
-        }
-      }
+
+          // Check modifiers
+          const requiredModifiers = shortcutDef.modifiers || [];
+          const hasCtrl = requiredModifiers.includes("ctrl");
+          const hasAlt = requiredModifiers.includes("alt");
+          const hasShift = requiredModifiers.includes("shift");
+          const hasMeta = requiredModifiers.includes("meta");
+
+          const modifiersMatch =
+            event.ctrlKey === hasCtrl &&
+            event.altKey === hasAlt &&
+            event.shiftKey === hasShift &&
+            event.metaKey === hasMeta;
+
+          if (modifiersMatch) {
+            if (preventDefault) {
+              event.preventDefault();
+            }
+            handler();
+          }
+        },
+      );
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [shortcuts, enabled, preventDefault]);
+  }, [handlers, enabled, preventDefault]);
 
   return { showHelp, setShowHelp };
 }
 
-// Hook to get all registered shortcuts for display
-export function useRegisteredShortcuts(): KeyboardShortcut[] {
-  const mockupShortcuts = getMockupShortcuts();
-  const registeredShortcuts: KeyboardShortcut[] = [];
-
-  // Convert to array with formatted display
-  for (const [, shortcut] of Object.entries(mockupShortcuts)) {
-    registeredShortcuts.push({
-      ...shortcut,
-      action: () => {}, // Placeholder, actual actions are provided by components
-    });
-  }
-
-  return registeredShortcuts;
-}
-
-// Get formatted shortcut display string
-export function useFormattedShortcut(shortcutId: string): string {
-  const mockupShortcuts = getMockupShortcuts();
-  const shortcut = mockupShortcuts[shortcutId];
-
-  if (!shortcut) return "";
-
-  const platform: Platform = navigator.platform.toLowerCase().includes("mac")
-    ? "macOS"
-    : navigator.platform.toLowerCase().includes("win")
-      ? "windows"
-      : "linux";
-
-  return formatShortcut(shortcut, platform);
-}
+// Re-export commonly used functions for convenience
+export { formatShortcut, getMockupShortcuts } from "~/lib/keyboard-shortcuts";

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { getMockupShortcuts, formatShortcut, Platform } from "../../firefox-browser-types";
-import { useDebug } from "../../contexts/DebugContext";
+import type { Platform } from "~/types/browser";
+import { getMockupShortcuts, formatShortcut, shortcutCategories } from "~/lib/keyboard-shortcuts";
+import { useDebug } from "~/contexts/useDebug";
 import { Link } from "@tanstack/react-router";
 
 interface SettingsModalProps {
@@ -41,20 +42,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                            navigator.platform.toLowerCase().includes("win") ? "windows" : "linux";
 
   const shortcuts = getMockupShortcuts();
-
-  // Group shortcuts by category
-  const shortcutCategories = {
-    "Navigation": ["back", "forward", "home", "reload", "stop"],
-    "Tabs": ["newTab", "closeTab", "nextTab", "previousTab", "pinTab", "duplicateTab"],
-    "Tab Selection": ["selectTab1", "selectTab2", "selectTab3", "selectTab4", "selectTab5", "selectTab6", "selectTab7", "selectTab8", "selectLastTab"],
-    "Tab Movement": ["moveTabLeft", "moveTabRight", "moveTabStart", "moveTabEnd"],
-    "Find": ["find", "findNext", "findPrevious"],
-    "Bookmarks": ["bookmarkPage", "showBookmarksSidebar"],
-    "History": ["showHistorySidebar"],
-    "UI": ["focusAddressBar", "toggleSidebar", "pageInfo"],
-    "Zoom": ["zoomIn", "zoomOut", "resetZoom"],
-    "Settings": ["toggleSettings"],
-  };
 
   const handleAccessKeySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,11 +168,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 {expandedSections.shortcuts && (
                   <div className="mt-4 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {Object.entries(shortcutCategories).slice(0, 4).map(([category, shortcutIds]) => (
-                        <div key={category}>
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">{category}</h4>
+                      {shortcutCategories.slice(0, 4).map((category) => (
+                        <div key={category.name}>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">{category.name}</h4>
                           <div className="bg-gray-50 rounded-lg p-3 space-y-1">
-                            {shortcutIds.map(id => {
+                            {category.shortcuts.map((id) => {
                               const shortcut = shortcuts[id];
                               if (!shortcut) return null;
                               
@@ -204,11 +191,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {Object.entries(shortcutCategories).slice(4).map(([category, shortcutIds]) => (
-                        <div key={category}>
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">{category}</h4>
+                      {shortcutCategories.slice(4).map((category) => (
+                        <div key={category.name}>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">{category.name}</h4>
                           <div className="bg-gray-50 rounded-lg p-3 space-y-1">
-                            {shortcutIds.map(id => {
+                            {category.shortcuts.map((id) => {
                               const shortcut = shortcuts[id];
                               if (!shortcut) return null;
                               

@@ -6,12 +6,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import type { AddressBarProps as BaseAddressBarProps } from '~/types/browser'
 
-interface AddressBarProps {
-  url?: string | undefined
-  onNavigate?: ((url: string) => void) | undefined
+interface AddressBarProps extends BaseAddressBarProps {
   showSecurity?: boolean | undefined
-  className?: string | undefined
   onNewTabBelow?: () => void
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void

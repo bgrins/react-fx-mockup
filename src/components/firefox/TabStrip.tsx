@@ -1,24 +1,7 @@
 import React from 'react'
 import { CloseIcon, PlusIcon } from '~/components/icons'
 import { cn } from '~/lib/utils'
-
-interface Tab {
-  id: string
-  title: string
-  url: string
-  favicon?: React.ReactNode
-  isActive?: boolean
-  isPinned?: boolean
-}
-
-interface TabStripProps {
-  tabs: Tab[]
-  activeTabId?: string | undefined
-  onTabClick?: ((tabId: string) => void) | undefined
-  onTabClose?: ((tabId: string) => void) | undefined
-  onNewTab?: (() => void) | undefined
-  onTabReorder?: ((draggedTabId: string, targetTabId: string, dropBefore: boolean) => void) | undefined
-}
+import type { TabStripProps } from '~/types/browser'
 
 const TAB_WIDTH = {
   REGULAR: `w-[224px]`,

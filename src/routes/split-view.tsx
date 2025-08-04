@@ -10,18 +10,10 @@ import {
 } from "~/components/firefox/Favicons";
 import { mockProperties } from "~/data/mockProperties";
 import { urlToProxy } from "~/utils/proxy";
-import { useDebug } from "~/contexts/DebugContext";
+import { useDebug } from "~/contexts/useDebug";
 import React from "react";
-
-interface Tab {
-  id: string;
-  title: string;
-  url: string;
-  favicon?: React.ReactNode;
-  isPinned?: boolean;
-  isActive?: boolean;
-  type?: "proxy" | "stub";
-}
+import type { Tab } from "~/types/browser";
+import { TabType } from "~/types/browser";
 
 export const Route = createFileRoute("/split-view")({
   component: SplitViewPage,
@@ -43,14 +35,14 @@ function SplitViewPage(): React.ReactElement {
       title: "Skyscanner: Compare Cheap Flights & Book Airline Tickets to ...",
       url: "https://www.skyscanner.com",
       favicon: <DynamicFavicon url="https://www.skyscanner.com" fallback={<SkyscannerFavicon />} />,
-      type: "proxy",
+      type: TabType.PROXY,
     },
     {
       id: "airbnb-1",
       title: 'Villa il Vecchio courtyard "pergola" - Villas for Rent in Rodos, Greece - Airbnb',
       url: "https://www.airbnb.com/rooms/1370154278151273293",
       favicon: <AirbnbFavicon />,
-      type: "stub",
+      type: TabType.STUB,
     },
     {
       id: "airbnb-2",
@@ -58,14 +50,14 @@ function SplitViewPage(): React.ReactElement {
       url: "https://www.airbnb.com/rooms/1370154278151273293",
       favicon: <AirbnbFavicon />,
       isActive: true,
-      type: "stub",
+      type: TabType.STUB,
     },
     {
       id: "airbnb-3",
       title: "Airbnb | Vacation rentals, cabins, beach houses, unique homes & experiences",
       url: "https://www.airbnb.com",
       favicon: <DynamicFavicon url="https://www.airbnb.com" fallback={<AirbnbFavicon />} />,
-      type: "proxy",
+      type: TabType.PROXY,
     },
     {
       id: "youtube",
@@ -78,14 +70,14 @@ function SplitViewPage(): React.ReactElement {
       title: "GitHub: Let's build from here",
       url: "https://github.com",
       favicon: <DynamicFavicon url="https://github.com" />,
-      type: "proxy",
+      type: TabType.PROXY,
     },
     {
       id: "stackoverflow",
       title: "Stack Overflow - Where Developers Learn, Share, & Build Careers",
       url: "https://stackoverflow.com",
       favicon: <DynamicFavicon url="https://stackoverflow.com" />,
-      type: "proxy",
+      type: TabType.PROXY,
     },
   ]);
 

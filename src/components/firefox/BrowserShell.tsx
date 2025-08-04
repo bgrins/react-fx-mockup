@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react'
+import { forwardRef } from 'react'
 import { cn } from '~/lib/utils'
 import { TabStrip } from './TabStrip'
 import { Toolbar } from './Toolbar'
@@ -6,35 +6,13 @@ import { type AddressBarHandle } from './AddressBar'
 import { WindowControls } from './WindowControls'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu'
 import { PlusIcon } from '~/components/icons'
+import type { BrowserShellProps as BaseBrowserShellProps } from '~/types/browser'
 
-interface BrowserShellProps {
-  children: React.ReactNode
-  tabs?: Array<{
-    id: string
-    title: string
-    url: string
-    favicon?: React.ReactNode
-    isActive?: boolean
-    isPinned?: boolean
-  }>
-  activeTabId?: string
-  currentUrl?: string
-  onTabClick?: (tabId: string) => void
-  onTabClose?: (tabId: string) => void
-  onNewTab?: () => void
-  onTabReorder?: (draggedTabId: string, targetTabId: string, dropBefore: boolean) => void
-  onNavigate?: (url: string) => void
-  onBack?: () => void
-  onForward?: () => void
-  onRefresh?: () => void
-  canGoBack?: boolean
-  canGoForward?: boolean
-  className?: string
+interface BrowserShellProps extends BaseBrowserShellProps {
   onNewTabBelow?: () => void
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void
   showSplitView?: boolean
-  onSidebarToggle?: () => void
 }
 
 export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(function BrowserShell({

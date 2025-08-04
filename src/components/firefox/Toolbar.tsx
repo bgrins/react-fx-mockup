@@ -8,22 +8,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
+import type { ToolbarProps as BaseToolbarProps } from '~/types/browser'
 
-interface ToolbarProps {
-  url?: string | undefined
-  onBack?: (() => void) | undefined
-  onForward?: (() => void) | undefined
-  onRefresh?: (() => void) | undefined
-  onNavigate?: ((url: string) => void) | undefined
-  onNewTab?: (() => void) | undefined
-  canGoBack?: boolean | undefined
-  canGoForward?: boolean | undefined
-  className?: string | undefined
+interface ToolbarProps extends BaseToolbarProps {
   onNewTabBelow?: () => void
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void
   showSplitView?: boolean
-  onSidebarToggle?: () => void
 }
 
 export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolbar({
