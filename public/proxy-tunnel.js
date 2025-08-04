@@ -407,5 +407,31 @@
         pageInfo: getPageInfo()
       }, '*');
     };
+    
+    // Forward keyboard events to parent for shortcuts
+    document.addEventListener('keydown', (event) => {
+      // Only forward keyboard shortcuts with modifiers
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        console.log('[PROXY WORKER] Forwarding keyboard event to parent:', {
+          key: event.key,
+          code: event.code,
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey,
+          metaKey: event.metaKey
+        });
+        
+        window.parent.postMessage({
+          type: 'PROXY_TUNNEL_KEYBOARD',
+          key: event.key,
+          code: event.code,
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey,
+          metaKey: event.metaKey,
+          timestamp: Date.now()
+        }, '*');
+      }
+    }, true); // Use capture phase to get events before they're handled
   }
 })();

@@ -61,6 +61,18 @@ const defaultTiles: Tile[] = [
     title: 'Test Page',
     url: '/test-page.html',
     favicon: '/default-favicon.svg'
+  },
+  {
+    id: 'villa-il-vecchio',
+    title: 'Villa Il Vecchio',
+    url: '/pages/villa-il-vecchio.html',
+    favicon: 'https://www.airbnb.com/favicon.ico'
+  },
+  {
+    id: 'st-george',
+    title: 'St. George',
+    url: '/pages/st-george.html',
+    favicon: 'https://www.airbnb.com/favicon.ico'
   }
 ]
 

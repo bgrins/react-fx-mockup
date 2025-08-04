@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Keyboard Shortcuts", () => {
-  test("Page Info shortcut (Cmd+I) should toggle sidebar", async ({ page }) => {
+  test("Page Info shortcut (Alt+I) should toggle sidebar", async ({ page }) => {
     await page.goto("http://localhost:3000");
 
     // Wait for page to be ready
@@ -11,15 +11,15 @@ test.describe("Keyboard Shortcuts", () => {
     // Verify sidebar is not visible initially
     await expect(page.locator('text="Chat with Page"')).not.toBeVisible();
 
-    // Press Cmd+I (Meta+i on Mac) to open sidebar
-    await page.keyboard.press("Meta+i");
+    // Press Alt+I to open sidebar
+    await page.keyboard.press("Alt+i");
 
     // Verify sidebar is now visible
     await expect(page.locator('text="Chat with Page"')).toBeVisible();
     await expect(page.locator('[aria-label="Close sidebar"]')).toBeVisible();
 
-    // Press Cmd+I again to close sidebar
-    await page.keyboard.press("Meta+i");
+    // Press Alt+I again to close sidebar
+    await page.keyboard.press("Alt+i");
 
     // Verify sidebar is closed
     await expect(page.locator('text="Chat with Page"')).not.toBeVisible();
@@ -42,7 +42,7 @@ test.describe("Keyboard Shortcuts", () => {
     await expect(page.locator('text="Settings & Help"')).toBeVisible();
     await expect(page.locator('text="Starting States"')).toBeVisible();
     await expect(page.locator('text="Page Info"')).toBeVisible();
-    await expect(page.locator('text="⌘I"')).toBeVisible();
+    await expect(page.locator('text="⌥I"')).toBeVisible();
 
     // Press Cmd+/ again to close modal
     await page.keyboard.press("Meta+/");
@@ -66,7 +66,7 @@ test.describe("Keyboard Shortcuts", () => {
 
     // Verify Page Info shortcut is listed
     await expect(page.locator('text="Page Info"')).toBeVisible();
-    await expect(page.locator('text="⌘I"')).toBeVisible();
+    await expect(page.locator('text="⌥I"')).toBeVisible();
   });
 
   test("Multiple shortcuts should work in sequence", async ({ page }) => {
@@ -76,8 +76,8 @@ test.describe("Keyboard Shortcuts", () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(500);
 
-    // Open sidebar with Cmd+I
-    await page.keyboard.press("Meta+i");
+    // Open sidebar with Alt+I
+    await page.keyboard.press("Alt+i");
     await expect(page.locator('text="Chat with Page"')).toBeVisible();
 
     // Open settings with Cmd+/
@@ -91,8 +91,8 @@ test.describe("Keyboard Shortcuts", () => {
     // Sidebar should still be visible
     await expect(page.locator('text="Chat with Page"')).toBeVisible();
 
-    // Close sidebar with Cmd+I
-    await page.keyboard.press("Meta+i");
+    // Close sidebar with Alt+I
+    await page.keyboard.press("Alt+i");
     await expect(page.locator('text="Chat with Page"')).not.toBeVisible();
   });
 

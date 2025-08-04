@@ -105,7 +105,7 @@ export const firefoxKeyboardShortcuts: Record<ShortcutId, KeyboardShortcutDefini
     modifiers: ["ctrl"],
   },
   toggleSidebar: { id: "toggle-sidebar", name: "Toggle Sidebar", key: "b", modifiers: ["ctrl"] },
-  pageInfo: { id: "page-info", name: "Page Info", key: "i", modifiers: ["ctrl"] },
+  pageInfo: { id: "page-info", name: "Page Info", key: "i", modifiers: ["alt"] },
 
   // Zoom
   zoomIn: { id: "zoom-in", name: "Zoom In", key: "+", modifiers: ["ctrl"] },

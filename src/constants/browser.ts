@@ -15,6 +15,7 @@ export const PROXY_MESSAGE_TYPES = {
   COMMAND: "PROXY_TUNNEL_COMMAND",
   RESPONSE: "PROXY_TUNNEL_RESPONSE",
   NAVIGATION: "PROXY_TUNNEL_NAVIGATION",
+  KEYBOARD: "PROXY_TUNNEL_KEYBOARD",
 } as const;
 
 // Re-export types from the new location for backward compatibility

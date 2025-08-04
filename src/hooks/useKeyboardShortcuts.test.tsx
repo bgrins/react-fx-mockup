@@ -42,13 +42,13 @@ describe("useKeyboardShortcuts", () => {
     });
   });
 
-  it("should call pageInfo handler when Cmd+I is pressed", () => {
+  it("should call pageInfo handler when Alt+I is pressed", () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
-    // Simulate Cmd+I keypress
+    // Simulate Alt+I keypress
     const event = new KeyboardEvent("keydown", {
       key: "i",
-      metaKey: true,
+      altKey: true,
       bubbles: true,
     });
 
@@ -59,7 +59,7 @@ describe("useKeyboardShortcuts", () => {
     expect(mockHandlers.pageInfo).toHaveBeenCalledTimes(1);
   });
 
-  it("should call pageInfo handler when Ctrl+I is pressed on non-Mac", () => {
+  it("should call pageInfo handler when Alt+I is pressed on non-Mac", () => {
     // Mock non-Mac platform
     Object.defineProperty(navigator, "platform", {
       value: "Win32",
@@ -69,10 +69,10 @@ describe("useKeyboardShortcuts", () => {
 
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
-    // Simulate Ctrl+I keypress
+    // Simulate Alt+I keypress
     const event = new KeyboardEvent("keydown", {
       key: "i",
-      ctrlKey: true,
+      altKey: true,
       bubbles: true,
     });
 
@@ -103,7 +103,7 @@ describe("useKeyboardShortcuts", () => {
   it("should not call handlers when modifiers don't match", () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
-    // Simulate just 'i' without Cmd/Ctrl
+    // Simulate just 'i' without Alt
     const event = new KeyboardEvent("keydown", {
       key: "i",
       bubbles: true,
@@ -121,7 +121,7 @@ describe("useKeyboardShortcuts", () => {
 
     const event = new KeyboardEvent("keydown", {
       key: "i",
-      metaKey: true,
+      altKey: true,
       bubbles: true,
     });
 
@@ -140,7 +140,7 @@ describe("useKeyboardShortcuts", () => {
 
     const event = new KeyboardEvent("keydown", {
       key: "i",
-      metaKey: true,
+      altKey: true,
       bubbles: true,
     });
 
@@ -154,10 +154,10 @@ describe("useKeyboardShortcuts", () => {
   it("should handle multiple shortcuts in sequence", () => {
     renderHook(() => useKeyboardShortcuts(mockHandlers));
 
-    // Press Cmd+I
+    // Press Alt+I
     const pageInfoEvent = new KeyboardEvent("keydown", {
       key: "i",
-      metaKey: true,
+      altKey: true,
       bubbles: true,
     });
 
