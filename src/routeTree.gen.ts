@@ -22,6 +22,7 @@ import { ServerRoute as CustomScriptDotjsServerRouteImport } from './routes/cust
 import { ServerRoute as ApiUsersServerRouteImport } from './routes/api/users'
 import { ServerRoute as ApiProxyServerRouteImport } from './routes/api/proxy'
 import { ServerRoute as ApiUsersUserIdServerRouteImport } from './routes/api/users.$userId'
+import { ServerRoute as ApiInferV1ChatCompletionsServerRouteImport } from './routes/api/infer/v1/chat/completions'
 
 const InferTestRouteImport = createFileRoute('/infer-test')()
 const rootServerRouteImport = createServerRootRoute()
@@ -79,6 +80,12 @@ const ApiUsersUserIdServerRoute = ApiUsersUserIdServerRouteImport.update({
   path: '/$userId',
   getParentRoute: () => ApiUsersServerRoute,
 } as any)
+const ApiInferV1ChatCompletionsServerRoute =
+  ApiInferV1ChatCompletionsServerRouteImport.update({
+    id: '/api/infer/v1/chat/completions',
+    path: '/api/infer/v1/chat/completions',
+    getParentRoute: () => rootServerRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,12 +138,14 @@ export interface FileServerRoutesByFullPath {
   '/api/proxy': typeof ApiProxyServerRoute
   '/api/users': typeof ApiUsersServerRouteWithChildren
   '/api/users/$userId': typeof ApiUsersUserIdServerRoute
+  '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesByTo {
   '/customScript.js': typeof CustomScriptDotjsServerRoute
   '/api/proxy': typeof ApiProxyServerRoute
   '/api/users': typeof ApiUsersServerRouteWithChildren
   '/api/users/$userId': typeof ApiUsersUserIdServerRoute
+  '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
@@ -144,6 +153,7 @@ export interface FileServerRoutesById {
   '/api/proxy': typeof ApiProxyServerRoute
   '/api/users': typeof ApiUsersServerRouteWithChildren
   '/api/users/$userId': typeof ApiUsersUserIdServerRoute
+  '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
@@ -152,20 +162,28 @@ export interface FileServerRouteTypes {
     | '/api/proxy'
     | '/api/users'
     | '/api/users/$userId'
+    | '/api/infer/v1/chat/completions'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/customScript.js' | '/api/proxy' | '/api/users' | '/api/users/$userId'
+  to:
+    | '/customScript.js'
+    | '/api/proxy'
+    | '/api/users'
+    | '/api/users/$userId'
+    | '/api/infer/v1/chat/completions'
   id:
     | '__root__'
     | '/customScript.js'
     | '/api/proxy'
     | '/api/users'
     | '/api/users/$userId'
+    | '/api/infer/v1/chat/completions'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
   CustomScriptDotjsServerRoute: typeof CustomScriptDotjsServerRoute
   ApiProxyServerRoute: typeof ApiProxyServerRoute
   ApiUsersServerRoute: typeof ApiUsersServerRouteWithChildren
+  ApiInferV1ChatCompletionsServerRoute: typeof ApiInferV1ChatCompletionsServerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -251,6 +269,13 @@ declare module '@tanstack/react-start/server' {
       preLoaderRoute: typeof ApiUsersUserIdServerRouteImport
       parentRoute: typeof ApiUsersServerRoute
     }
+    '/api/infer/v1/chat/completions': {
+      id: '/api/infer/v1/chat/completions'
+      path: '/api/infer/v1/chat/completions'
+      fullPath: '/api/infer/v1/chat/completions'
+      preLoaderRoute: typeof ApiInferV1ChatCompletionsServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
   }
 }
 
@@ -294,6 +319,7 @@ const rootServerRouteChildren: RootServerRouteChildren = {
   CustomScriptDotjsServerRoute: CustomScriptDotjsServerRoute,
   ApiProxyServerRoute: ApiProxyServerRoute,
   ApiUsersServerRoute: ApiUsersServerRouteWithChildren,
+  ApiInferV1ChatCompletionsServerRoute: ApiInferV1ChatCompletionsServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport
   ._addFileChildren(rootServerRouteChildren)
