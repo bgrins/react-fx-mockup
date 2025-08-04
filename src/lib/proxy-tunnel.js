@@ -5,13 +5,18 @@
  */
 
 // Default configuration
+// In environments with no proxy domain configured, it must be provided explicitly
 export const DEFAULT_CONFIG = {
-  PROXY_DOMAIN: "arewexblstill.com",
+  PROXY_DOMAIN: null, // Must be provided by the environment or caller
   ALLOWED_ORIGINS: ["*"],
 };
 
 // URL conversion utilities
 export function realToProxyUrl(url, proxyDomain = DEFAULT_CONFIG.PROXY_DOMAIN) {
+  if (!proxyDomain) {
+    throw new Error("PROXY_DOMAIN is required. Please provide it as a parameter.");
+  }
+
   try {
     const urlObj = new URL(url, window.location.href);
 
@@ -40,6 +45,10 @@ export function realToProxyUrl(url, proxyDomain = DEFAULT_CONFIG.PROXY_DOMAIN) {
 }
 
 export function proxyToRealUrl(url, proxyDomain = DEFAULT_CONFIG.PROXY_DOMAIN) {
+  if (!proxyDomain) {
+    throw new Error("PROXY_DOMAIN is required. Please provide it as a parameter.");
+  }
+
   try {
     const urlObj = new URL(url);
 

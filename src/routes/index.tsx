@@ -436,6 +436,30 @@ function Browser(): React.ReactElement {
                       ref={(el) => {
                         if (el) {
                           iframeRefs.current[tab.id] = el;
+
+                          // Inject proxy-tunnel.js after iframe loads
+                          el.addEventListener(
+                            "load",
+                            () => {
+                              const iframeDoc = el.contentDocument;
+                              const iframeWin = el.contentWindow;
+
+                              if (iframeDoc && iframeWin) {
+                                // Set configuration on the iframe's window
+                                (iframeWin as any).PROXY_TUNNEL_CONFIG = {
+                                  PROXY_DOMAIN: import.meta.env.VITE_PROXY_DOMAIN,
+                                  ALLOWED_ORIGINS: ["*"],
+                                };
+
+                                // Create and inject the script tag
+                                const script = iframeDoc.createElement("script");
+                                script.src = "/proxy-tunnel.js";
+                                script.async = true;
+                                iframeDoc.body.appendChild(script);
+                              }
+                            },
+                            { once: true },
+                          );
                         }
                       }}
                       src={tab.url} // Serve local file directly

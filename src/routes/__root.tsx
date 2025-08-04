@@ -34,12 +34,6 @@ export const Route = createRootRoute({
         href: "/firefox.svg",
       },
     ],
-    scripts: [
-      {
-        src: "/customScript.js",
-        type: "text/javascript",
-      },
-    ],
   }),
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
@@ -60,8 +54,12 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
 
     if (urlAccessKey) {
       localStorage.setItem("infer-access-key", urlAccessKey);
-    } else if (!localStorage.getItem("infer-access-key") && import.meta.env.VITE_INFER_ACCESS_KEY) {
-      // If no stored value, use env variable in development
+    } else if (
+      !localStorage.getItem("infer-access-key") &&
+      import.meta.env.DEV &&
+      import.meta.env.VITE_INFER_ACCESS_KEY
+    ) {
+      // If no stored value, use env variable in development only
       localStorage.setItem("infer-access-key", import.meta.env.VITE_INFER_ACCESS_KEY);
     }
   }, []);

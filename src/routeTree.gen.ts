@@ -16,7 +16,6 @@ import { Route as SplitViewRouteImport } from './routes/split-view'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InferTestIndexRouteImport } from './routes/infer-test/index'
 import { Route as InferTestInferTestRouteImport } from './routes/infer-test/_infer-test'
-import { ServerRoute as CustomScriptDotjsServerRouteImport } from './routes/customScript[.]js'
 import { ServerRoute as ApiInferV1ChatCompletionsServerRouteImport } from './routes/api/infer/v1/chat/completions'
 
 const InferTestRouteImport = createFileRoute('/infer-test')()
@@ -45,11 +44,6 @@ const InferTestIndexRoute = InferTestIndexRouteImport.update({
 const InferTestInferTestRoute = InferTestInferTestRouteImport.update({
   id: '/_infer-test',
   getParentRoute: () => InferTestRoute,
-} as any)
-const CustomScriptDotjsServerRoute = CustomScriptDotjsServerRouteImport.update({
-  id: '/customScript.js',
-  path: '/customScript.js',
-  getParentRoute: () => rootServerRouteImport,
 } as any)
 const ApiInferV1ChatCompletionsServerRoute =
   ApiInferV1ChatCompletionsServerRouteImport.update({
@@ -97,28 +91,24 @@ export interface RootRouteChildren {
   InferTestRoute: typeof InferTestRouteWithChildren
 }
 export interface FileServerRoutesByFullPath {
-  '/customScript.js': typeof CustomScriptDotjsServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesByTo {
-  '/customScript.js': typeof CustomScriptDotjsServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
-  '/customScript.js': typeof CustomScriptDotjsServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/customScript.js' | '/api/infer/v1/chat/completions'
+  fullPaths: '/api/infer/v1/chat/completions'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/customScript.js' | '/api/infer/v1/chat/completions'
-  id: '__root__' | '/customScript.js' | '/api/infer/v1/chat/completions'
+  to: '/api/infer/v1/chat/completions'
+  id: '__root__' | '/api/infer/v1/chat/completions'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
-  CustomScriptDotjsServerRoute: typeof CustomScriptDotjsServerRoute
   ApiInferV1ChatCompletionsServerRoute: typeof ApiInferV1ChatCompletionsServerRoute
 }
 
@@ -163,13 +153,6 @@ declare module '@tanstack/react-router' {
 }
 declare module '@tanstack/react-start/server' {
   interface ServerFileRoutesByPath {
-    '/customScript.js': {
-      id: '/customScript.js'
-      path: '/customScript.js'
-      fullPath: '/customScript.js'
-      preLoaderRoute: typeof CustomScriptDotjsServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
     '/api/infer/v1/chat/completions': {
       id: '/api/infer/v1/chat/completions'
       path: '/api/infer/v1/chat/completions'
@@ -203,7 +186,6 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
-  CustomScriptDotjsServerRoute: CustomScriptDotjsServerRoute,
   ApiInferV1ChatCompletionsServerRoute: ApiInferV1ChatCompletionsServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport

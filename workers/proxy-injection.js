@@ -7,7 +7,11 @@ export const INJECTION_JS = `(function() {
   const config = window.PROXY_TUNNEL_CONFIG || {};
   
   // PostMessage tunnel for cross-origin communication
-  const PROXY_DOMAIN = config.PROXY_DOMAIN || currentScript?.getAttribute('data-proxy-domain') || 'arewexblstill.com';
+  const PROXY_DOMAIN = config.PROXY_DOMAIN || currentScript?.getAttribute('data-proxy-domain');
+  
+  if (!PROXY_DOMAIN) {
+    throw new Error('PROXY_DOMAIN is required. Please set it via window.PROXY_TUNNEL_CONFIG.PROXY_DOMAIN or data-proxy-domain attribute on the script tag.');
+  }
   const TARGET_ORIGIN = window.location.origin;
   const ALLOWED_ORIGINS = config.ALLOWED_ORIGINS || (currentScript?.getAttribute('data-allowed-origins')?.split(',') || ['*']);
   

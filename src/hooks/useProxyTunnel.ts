@@ -2,6 +2,8 @@ import { useEffect, useCallback, RefObject } from "react";
 import { proxyToUrl } from "~/utils/proxy";
 import { PROXY_MESSAGE_TYPES } from "~/constants/browser";
 
+const PROXY_DOMAIN = import.meta.env.VITE_PROXY_DOMAIN;
+
 interface ProxyTunnelOptions {
   onNavigate?: (url: string, navigationType?: string) => void;
   onPageInfo?: (info: { title?: string; content?: string; text?: string }) => void;
@@ -79,7 +81,7 @@ export function useProxyTunnel({
 
           // Update tab URL if it changed (navigation within iframe)
           // For local files, activeTabUrl might be a display URL, so also check if it's a proxy URL
-          const isProxyUrl = event.data.url.includes(".arewexblstill.com");
+          const isProxyUrl = PROXY_DOMAIN && event.data.url.includes(`.${PROXY_DOMAIN}`);
           if (isProxyUrl && realUrl !== activeTabUrl) {
             onNavigate?.(realUrl);
           }
@@ -161,7 +163,7 @@ export function useProxyTunnel({
         if (event.data.url) {
           // Only process navigation if it's a proxied URL
           // This prevents local files from overriding their display URL
-          const isProxyUrl = event.data.url.includes(".arewexblstill.com");
+          const isProxyUrl = PROXY_DOMAIN && event.data.url.includes(`.${PROXY_DOMAIN}`);
 
           if (isProxyUrl) {
             const realUrl = proxyToUrl(event.data.url);

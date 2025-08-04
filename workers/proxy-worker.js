@@ -1,28 +1,34 @@
 import { INJECTION_JS } from "./proxy-injection.js";
 
-// Configuration
-const CONFIG = {
-  // CORS settings
-  ALLOWED_ORIGIN: "*", // Use "*" for all origins, or specify like "https://example.com"
-  ALLOWED_METHODS: "GET, POST, PUT, DELETE, OPTIONS, HEAD",
-  ALLOWED_HEADERS: "*",
-
-  // Proxy settings
-  PROXY_DOMAIN: "arewexblstill.com",
-  DEBUG_PATH: "/THROW_LOGS",
-
-  // User agent handling
-  // Set to "forward" to use the browser's user agent, or provide a specific string
-  USER_AGENT: "forward", // Options: "forward" or a specific user agent string
-  // Example fixed user agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-
-  // PostMessage tunnel injection
-  INJECT_POSTMESSAGE_TUNNEL: true, // Enable/disable postMessage tunnel injection
-  TUNNEL_ORIGIN_WHITELIST: ["*"], // Array of allowed origins for postMessage, use ["*"] for all
-};
-
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
+    // Validate required environment variables
+    if (!env.PROXY_DOMAIN) {
+      throw new Error("PROXY_DOMAIN environment variable is required");
+    }
+
+    // Configuration - use environment variables when available
+    const CONFIG = {
+      // CORS settings
+      ALLOWED_ORIGINS: env.ALLOWED_ORIGINS
+        ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+        : ["*"],
+      ALLOWED_METHODS: "GET, POST, PUT, DELETE, OPTIONS, HEAD",
+      ALLOWED_HEADERS: "*",
+
+      // Proxy settings
+      PROXY_DOMAIN: env.PROXY_DOMAIN,
+      DEBUG_PATH: "/THROW_LOGS",
+
+      // User agent handling
+      // Set to "forward" to use the browser's user agent, or provide a specific string
+      USER_AGENT: "forward", // Options: "forward" or a specific user agent string
+      // Example fixed user agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+
+      // PostMessage tunnel injection
+      INJECT_POSTMESSAGE_TUNNEL: true, // Enable/disable postMessage tunnel injection
+      TUNNEL_ORIGIN_WHITELIST: ["*"], // Array of allowed origins for postMessage, use ["*"] for all
+    };
     // const clientInfo = {
     //   url: request.url,
     //   method: request.method,
@@ -36,8 +42,33 @@ export default {
 
     // console.log("Request:", clientInfo);
 
+    // Handle CORS preflight
+    if (request.method === "OPTIONS") {
+      return handleCorsOptions(request, CONFIG);
+    }
     const url = new URL(request.url);
     const hostname = url.hostname;
+
+    // Extract subdomain from *.{PROXY_DOMAIN}
+    const domainPattern = new RegExp(`^([^.]+)\\.${CONFIG.PROXY_DOMAIN.replace(/\./g, "\\.")}$`);
+    const subdomainMatch = hostname.match(domainPattern);
+    if (!subdomainMatch) {
+      return new Response("", { status: 400 });
+    }
+
+    // Extract the raw subdomain
+    const rawSubdomain = subdomainMatch[1];
+
+    // Check if it's just "www" and redirect
+    if (rawSubdomain === "www") {
+      return Response.redirect(`https://${CONFIG.PROXY_DOMAIN}`, 301);
+    }
+
+    // Check if there's no "-" (which would become "." after conversion)
+    // This means it's a single word with no dots, return empty error
+    if (!rawSubdomain.includes("-")) {
+      return new Response("", { status: 404 });
+    }
 
     // Handle robots.txt requests - deny all crawling
     if (url.pathname === "/robots.txt") {
@@ -46,58 +77,28 @@ export default {
         headers: {
           "Content-Type": "text/plain",
           "Cache-Control": "public, max-age=86400", // Cache for 24 hours
-          "Access-Control-Allow-Origin": CONFIG.ALLOWED_ORIGIN,
+          "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
         },
       });
     }
-
-    // Handle script subdomain - serve from root
-    if (hostname === `script.${CONFIG.PROXY_DOMAIN}`) {
-      return new Response(INJECTION_JS, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/javascript",
-          "Cache-Control": "public, max-age=300", // Cache for 5 minutes
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
-    // Extract subdomain from *.{PROXY_DOMAIN}
-    const domainPattern = new RegExp(`^([^.]+)\\.${CONFIG.PROXY_DOMAIN.replace(/\./g, "\\.")}$`);
-    const subdomainMatch = hostname.match(domainPattern);
-    if (!subdomainMatch) {
-      return new Response("Invalid proxy URL format", { status: 400 });
-    }
-
     // Convert subdomain format to target domain
     // Double dashes (--) become single dashes (-), single dashes (-) become dots (.)
     // Example: www-airbnb-co-uk → www.airbnb.co.uk
-    const targetDomain = subdomainMatch[1]
+    const targetDomain = rawSubdomain
       .replace(/--/g, "___TEMP___")
       .replace(/-/g, ".")
       .replace(/___TEMP___/g, "-");
-
-    // Special case: redirect bare www to main site
-    if (targetDomain === "www") {
-      return Response.redirect(`https://${CONFIG.PROXY_DOMAIN}`, 301);
-    }
 
     const targetUrl = `https://${targetDomain}${url.pathname}${url.search}`;
 
     // Debug endpoint
     if (url.pathname.startsWith(CONFIG.DEBUG_PATH)) {
-      return createDebugResponse(request, targetUrl, targetDomain);
-    }
-
-    // Handle CORS preflight
-    if (request.method === "OPTIONS") {
-      return handleCorsOptions(request);
+      return createDebugResponse(request, targetUrl, targetDomain, CONFIG);
     }
 
     try {
       // Prepare headers for target request
-      const headers = prepareRequestHeaders(request.headers);
+      const headers = prepareRequestHeaders(request.headers, CONFIG);
 
       // Fetch from target
       const response = await fetch(targetUrl, {
@@ -109,22 +110,22 @@ export default {
 
       // Handle redirects by converting them to proxy format
       if (response.status >= 301 && response.status <= 308) {
-        return handleRedirect(response, targetUrl);
+        return handleRedirect(response, targetUrl, CONFIG, request);
       }
 
       // Handle error responses with custom page
       if (response.status >= 400) {
-        return createErrorResponse(response, targetUrl);
+        return createErrorResponse(response, targetUrl, CONFIG);
       }
 
       // Return proxied response with CORS headers
-      return createProxiedResponse(response, targetUrl);
+      return createProxiedResponse(response, targetUrl, CONFIG, request);
     } catch (error) {
       return new Response(`Proxy error: ${error.message}`, {
         status: 500,
         headers: {
           "Content-Type": "text/plain",
-          "Access-Control-Allow-Origin": CONFIG.ALLOWED_ORIGIN,
+          "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
         },
       });
     }
@@ -133,7 +134,24 @@ export default {
 
 // Helper functions
 
-function createDebugResponse(request, targetUrl, targetDomain) {
+function getAllowedOrigin(request, CONFIG) {
+  const origin = request.headers.get("origin");
+
+  // If wildcard is allowed, return it
+  if (CONFIG.ALLOWED_ORIGINS.includes("*")) {
+    return "*";
+  }
+
+  // Check if the request origin is in the allowed list
+  if (origin && CONFIG.ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+
+  // Default to the first allowed origin or null
+  return CONFIG.ALLOWED_ORIGINS[0] || null;
+}
+
+function createDebugResponse(request, targetUrl, targetDomain, CONFIG) {
   const debugInfo = {
     originalUrl: request.url,
     targetUrl,
@@ -149,14 +167,14 @@ function createDebugResponse(request, targetUrl, targetDomain) {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": CONFIG.ALLOWED_ORIGIN,
+      "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
     },
   });
 }
 
-function handleCorsOptions(request) {
+function handleCorsOptions(request, CONFIG) {
   const headers = new Headers({
-    "Access-Control-Allow-Origin": CONFIG.ALLOWED_ORIGIN,
+    "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
     "Access-Control-Allow-Methods": CONFIG.ALLOWED_METHODS,
     "Access-Control-Max-Age": "86400",
   });
@@ -167,7 +185,7 @@ function handleCorsOptions(request) {
   return new Response(null, { status: 204, headers });
 }
 
-function prepareRequestHeaders(originalHeaders) {
+function prepareRequestHeaders(originalHeaders, CONFIG) {
   const filtered = new Headers();
   const skipHeaders = new Set([
     "cf-connecting-ip",
@@ -203,7 +221,7 @@ function prepareRequestHeaders(originalHeaders) {
   return filtered;
 }
 
-function handleRedirect(response, targetUrl) {
+function handleRedirect(response, targetUrl, CONFIG, request) {
   const location = response.headers.get("location");
   if (!location) return response;
 
@@ -215,7 +233,7 @@ function handleRedirect(response, targetUrl) {
     status: response.status,
     headers: {
       Location: proxyRedirect,
-      "Access-Control-Allow-Origin": CONFIG.ALLOWED_ORIGIN,
+      "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
       "Access-Control-Expose-Headers": "Location, x-redirect-status, x-redirect-location",
       "x-redirect-status": response.status.toString(),
       "x-redirect-location": location,
@@ -223,7 +241,7 @@ function handleRedirect(response, targetUrl) {
   });
 }
 
-function createProxiedResponse(response, targetUrl) {
+function createProxiedResponse(response, targetUrl, CONFIG, request) {
   // Check if we should inject postMessage tunnel
   const contentType = response.headers.get("content-type") || "";
   const shouldInject =
@@ -239,7 +257,7 @@ function createProxiedResponse(response, targetUrl) {
     const writer = writable.getWriter();
 
     // Create the injection script
-    const injectionScript = createInjectionScript(targetUrl);
+    const injectionScript = createInjectionScript(targetUrl, CONFIG);
 
     // Stream the response and inject before </body>
     streamHTMLWithInjection(response.body, writer, injectionScript);
@@ -251,7 +269,7 @@ function createProxiedResponse(response, targetUrl) {
   const headers = modifiedResponse.headers;
 
   // Add CORS headers
-  headers.set("Access-Control-Allow-Origin", CONFIG.ALLOWED_ORIGIN);
+  headers.set("Access-Control-Allow-Origin", getAllowedOrigin(request, CONFIG));
   headers.set("Access-Control-Allow-Methods", CONFIG.ALLOWED_METHODS);
   headers.set("Access-Control-Allow-Headers", CONFIG.ALLOWED_HEADERS);
   headers.set("Access-Control-Allow-Credentials", "true");
@@ -293,7 +311,7 @@ function createProxiedResponse(response, targetUrl) {
   return modifiedResponse;
 }
 
-function createErrorResponse(response, targetUrl) {
+function createErrorResponse(response, targetUrl, CONFIG) {
   const errorBody = `
 <!DOCTYPE html>
 <html>
@@ -323,7 +341,7 @@ function createErrorResponse(response, targetUrl) {
     statusText: response.statusText,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Access-Control-Allow-Origin": CONFIG.ALLOWED_ORIGIN,
+      "Access-Control-Allow-Origin": getAllowedOrigin(request, CONFIG),
     },
   });
 }
@@ -378,7 +396,7 @@ async function streamHTMLWithInjection(readable, writer, injectionScript) {
 }
 
 // Create the postMessage tunnel injection script
-function createInjectionScript(targetUrl) {
+function createInjectionScript(targetUrl, CONFIG) {
   const targetOrigin = new URL(targetUrl).origin;
 
   // When injecting into proxied pages, inline the script directly
