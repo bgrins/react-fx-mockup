@@ -13,15 +13,10 @@ import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SplitViewRouteImport } from './routes/split-view'
-import { Route as RedirectRouteImport } from './routes/redirect'
-import { Route as PathlessLayoutRouteImport } from './routes/_pathlessLayout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InferTestIndexRouteImport } from './routes/infer-test/index'
 import { Route as InferTestInferTestRouteImport } from './routes/infer-test/_infer-test'
 import { ServerRoute as CustomScriptDotjsServerRouteImport } from './routes/customScript[.]js'
-import { ServerRoute as ApiUsersServerRouteImport } from './routes/api/users'
-import { ServerRoute as ApiProxyServerRouteImport } from './routes/api/proxy'
-import { ServerRoute as ApiUsersUserIdServerRouteImport } from './routes/api/users.$userId'
 import { ServerRoute as ApiInferV1ChatCompletionsServerRouteImport } from './routes/api/infer/v1/chat/completions'
 
 const InferTestRouteImport = createFileRoute('/infer-test')()
@@ -35,15 +30,6 @@ const InferTestRoute = InferTestRouteImport.update({
 const SplitViewRoute = SplitViewRouteImport.update({
   id: '/split-view',
   path: '/split-view',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RedirectRoute = RedirectRouteImport.update({
-  id: '/redirect',
-  path: '/redirect',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PathlessLayoutRoute = PathlessLayoutRouteImport.update({
-  id: '/_pathlessLayout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -65,21 +51,6 @@ const CustomScriptDotjsServerRoute = CustomScriptDotjsServerRouteImport.update({
   path: '/customScript.js',
   getParentRoute: () => rootServerRouteImport,
 } as any)
-const ApiUsersServerRoute = ApiUsersServerRouteImport.update({
-  id: '/api/users',
-  path: '/api/users',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiProxyServerRoute = ApiProxyServerRouteImport.update({
-  id: '/api/proxy',
-  path: '/api/proxy',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiUsersUserIdServerRoute = ApiUsersUserIdServerRouteImport.update({
-  id: '/$userId',
-  path: '/$userId',
-  getParentRoute: () => ApiUsersServerRoute,
-} as any)
 const ApiInferV1ChatCompletionsServerRoute =
   ApiInferV1ChatCompletionsServerRouteImport.update({
     id: '/api/infer/v1/chat/completions',
@@ -89,22 +60,18 @@ const ApiInferV1ChatCompletionsServerRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/redirect': typeof RedirectRoute
   '/split-view': typeof SplitViewRoute
   '/infer-test': typeof InferTestInferTestRoute
   '/infer-test/': typeof InferTestIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/redirect': typeof RedirectRoute
   '/split-view': typeof SplitViewRoute
   '/infer-test': typeof InferTestIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_pathlessLayout': typeof PathlessLayoutRoute
-  '/redirect': typeof RedirectRoute
   '/split-view': typeof SplitViewRoute
   '/infer-test': typeof InferTestRouteWithChildren
   '/infer-test/_infer-test': typeof InferTestInferTestRoute
@@ -112,14 +79,12 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/redirect' | '/split-view' | '/infer-test' | '/infer-test/'
+  fullPaths: '/' | '/split-view' | '/infer-test' | '/infer-test/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/redirect' | '/split-view' | '/infer-test'
+  to: '/' | '/split-view' | '/infer-test'
   id:
     | '__root__'
     | '/'
-    | '/_pathlessLayout'
-    | '/redirect'
     | '/split-view'
     | '/infer-test'
     | '/infer-test/_infer-test'
@@ -128,61 +93,32 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PathlessLayoutRoute: typeof PathlessLayoutRoute
-  RedirectRoute: typeof RedirectRoute
   SplitViewRoute: typeof SplitViewRoute
   InferTestRoute: typeof InferTestRouteWithChildren
 }
 export interface FileServerRoutesByFullPath {
   '/customScript.js': typeof CustomScriptDotjsServerRoute
-  '/api/proxy': typeof ApiProxyServerRoute
-  '/api/users': typeof ApiUsersServerRouteWithChildren
-  '/api/users/$userId': typeof ApiUsersUserIdServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesByTo {
   '/customScript.js': typeof CustomScriptDotjsServerRoute
-  '/api/proxy': typeof ApiProxyServerRoute
-  '/api/users': typeof ApiUsersServerRouteWithChildren
-  '/api/users/$userId': typeof ApiUsersUserIdServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
   '/customScript.js': typeof CustomScriptDotjsServerRoute
-  '/api/proxy': typeof ApiProxyServerRoute
-  '/api/users': typeof ApiUsersServerRouteWithChildren
-  '/api/users/$userId': typeof ApiUsersUserIdServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths:
-    | '/customScript.js'
-    | '/api/proxy'
-    | '/api/users'
-    | '/api/users/$userId'
-    | '/api/infer/v1/chat/completions'
+  fullPaths: '/customScript.js' | '/api/infer/v1/chat/completions'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to:
-    | '/customScript.js'
-    | '/api/proxy'
-    | '/api/users'
-    | '/api/users/$userId'
-    | '/api/infer/v1/chat/completions'
-  id:
-    | '__root__'
-    | '/customScript.js'
-    | '/api/proxy'
-    | '/api/users'
-    | '/api/users/$userId'
-    | '/api/infer/v1/chat/completions'
+  to: '/customScript.js' | '/api/infer/v1/chat/completions'
+  id: '__root__' | '/customScript.js' | '/api/infer/v1/chat/completions'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
   CustomScriptDotjsServerRoute: typeof CustomScriptDotjsServerRoute
-  ApiProxyServerRoute: typeof ApiProxyServerRoute
-  ApiUsersServerRoute: typeof ApiUsersServerRouteWithChildren
   ApiInferV1ChatCompletionsServerRoute: typeof ApiInferV1ChatCompletionsServerRoute
 }
 
@@ -200,20 +136,6 @@ declare module '@tanstack/react-router' {
       path: '/split-view'
       fullPath: '/split-view'
       preLoaderRoute: typeof SplitViewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/redirect': {
-      id: '/redirect'
-      path: '/redirect'
-      fullPath: '/redirect'
-      preLoaderRoute: typeof RedirectRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_pathlessLayout': {
-      id: '/_pathlessLayout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof PathlessLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -248,27 +170,6 @@ declare module '@tanstack/react-start/server' {
       preLoaderRoute: typeof CustomScriptDotjsServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
-    '/api/users': {
-      id: '/api/users'
-      path: '/api/users'
-      fullPath: '/api/users'
-      preLoaderRoute: typeof ApiUsersServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/proxy': {
-      id: '/api/proxy'
-      path: '/api/proxy'
-      fullPath: '/api/proxy'
-      preLoaderRoute: typeof ApiProxyServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/users/$userId': {
-      id: '/api/users/$userId'
-      path: '/$userId'
-      fullPath: '/api/users/$userId'
-      preLoaderRoute: typeof ApiUsersUserIdServerRouteImport
-      parentRoute: typeof ApiUsersServerRoute
-    }
     '/api/infer/v1/chat/completions': {
       id: '/api/infer/v1/chat/completions'
       path: '/api/infer/v1/chat/completions'
@@ -293,22 +194,8 @@ const InferTestRouteWithChildren = InferTestRoute._addFileChildren(
   InferTestRouteChildren,
 )
 
-interface ApiUsersServerRouteChildren {
-  ApiUsersUserIdServerRoute: typeof ApiUsersUserIdServerRoute
-}
-
-const ApiUsersServerRouteChildren: ApiUsersServerRouteChildren = {
-  ApiUsersUserIdServerRoute: ApiUsersUserIdServerRoute,
-}
-
-const ApiUsersServerRouteWithChildren = ApiUsersServerRoute._addFileChildren(
-  ApiUsersServerRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PathlessLayoutRoute: PathlessLayoutRoute,
-  RedirectRoute: RedirectRoute,
   SplitViewRoute: SplitViewRoute,
   InferTestRoute: InferTestRouteWithChildren,
 }
@@ -317,8 +204,6 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
   CustomScriptDotjsServerRoute: CustomScriptDotjsServerRoute,
-  ApiProxyServerRoute: ApiProxyServerRoute,
-  ApiUsersServerRoute: ApiUsersServerRouteWithChildren,
   ApiInferV1ChatCompletionsServerRoute: ApiInferV1ChatCompletionsServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport

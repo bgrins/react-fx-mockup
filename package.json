@@ -26,9 +26,7 @@
     "test:watch": "vitest",
     "build:proxy": "node workers/build-proxy-injection.js",
     "dev:proxy": "npm run build:proxy && wrangler dev --config workers/wrangler.jsonc",
-    "dev:infer": "wrangler dev --env infer --config workers/wrangler.jsonc",
-    "deploy:proxy": "npm run build:proxy && wrangler deploy --env '' --config workers/wrangler.jsonc",
-    "deploy:infer": "wrangler deploy --env infer --config workers/wrangler.jsonc"
+    "deploy:proxy": "npm run build:proxy && wrangler deploy --config workers/wrangler.jsonc"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

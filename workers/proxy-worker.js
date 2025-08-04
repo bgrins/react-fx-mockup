@@ -39,6 +39,18 @@ export default {
     const url = new URL(request.url);
     const hostname = url.hostname;
 
+    // Handle robots.txt requests - deny all crawling
+    if (url.pathname === "/robots.txt") {
+      return new Response("User-agent: *\nDisallow: /\n", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain",
+          "Cache-Control": "public, max-age=86400", // Cache for 24 hours
+          "Access-Control-Allow-Origin": CONFIG.ALLOWED_ORIGIN,
+        },
+      });
+    }
+
     // Handle script subdomain - serve from root
     if (hostname === `script.${CONFIG.PROXY_DOMAIN}`) {
       return new Response(INJECTION_JS, {
