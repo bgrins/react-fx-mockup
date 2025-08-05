@@ -432,101 +432,117 @@ function Browser(): React.ReactElement {
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
               className="flex-1 min-h-0"
             >
-              <Sidebar
-                isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-                pageContent={pageContent}
-                pageTitle={activeTab?.title}
-                pageUrl={activeTab?.url}
-                accessKey={
-                  typeof window !== "undefined"
-                    ? localStorage.getItem("infer-access-key") || undefined
-                    : undefined
-                }
-              />
-              <div className="flex-1 h-full bg-white overflow-auto relative">
-                {/* Render all proxy iframes but only show the active one */}
-                {tabs.map((tab) => {
-                  if (tab.type === TabType.PROXY) {
-                    return (
-                      <iframe
-                        key={tab.id}
-                        ref={(el) => {
-                          if (el) {
-                            iframeRefs.current[tab.id] = el;
-                          }
-                        }}
-                        src={urlToProxy(tab.url)}
-                        className={cn(
-                          "w-full h-full absolute inset-0",
-                          tab.id === activeTabId && tab.url !== ABOUT_PAGES.BLANK
-                            ? "block"
-                            : "hidden",
-                        )}
-                        title={tab.title}
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                      />
-                    );
-                  }
-                  // Handle local files (STUB type with local path)
-                  if (tab.type === TabType.STUB && isLocalPath(tab.url)) {
-                    return (
-                      <iframe
-                        key={tab.id}
-                        ref={(el) => {
-                          if (el) {
-                            iframeRefs.current[tab.id] = el;
+              <div className="flex h-full overflow-hidden">
+                <div
+                  className={cn(
+                    "transition-all duration-200 ease-in-out",
+                    sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
+                  )}
+                >
+                  <Sidebar
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    pageContent={pageContent}
+                    pageTitle={activeTab?.title}
+                    pageUrl={activeTab?.url}
+                    accessKey={
+                      typeof window !== "undefined"
+                        ? localStorage.getItem("infer-access-key") || undefined
+                        : undefined
+                    }
+                  />
+                </div>
+                <div
+                  className={cn(
+                    "flex-1 h-full bg-white overflow-auto relative transition-all duration-200 ease-in-out",
+                    sidebarOpen && "rounded-tl-lg",
+                  )}
+                >
+                  {/* Render all proxy iframes but only show the active one */}
+                  {tabs.map((tab) => {
+                    if (tab.type === TabType.PROXY) {
+                      return (
+                        <iframe
+                          key={tab.id}
+                          ref={(el) => {
+                            if (el) {
+                              iframeRefs.current[tab.id] = el;
+                            }
+                          }}
+                          src={urlToProxy(tab.url)}
+                          className={cn(
+                            "w-full h-full absolute inset-0",
+                            tab.id === activeTabId && tab.url !== ABOUT_PAGES.BLANK
+                              ? "block"
+                              : "hidden",
+                          )}
+                          title={tab.title}
+                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                        />
+                      );
+                    }
+                    // Handle local files (STUB type with local path)
+                    if (tab.type === TabType.STUB && isLocalPath(tab.url)) {
+                      return (
+                        <iframe
+                          key={tab.id}
+                          ref={(el) => {
+                            if (el) {
+                              iframeRefs.current[tab.id] = el;
 
-                            // Inject proxy-tunnel.js after iframe loads
-                            el.addEventListener(
-                              "load",
-                              () => {
-                                const iframeDoc = el.contentDocument;
-                                const iframeWin = el.contentWindow;
+                              // Inject proxy-tunnel.js after iframe loads
+                              el.addEventListener(
+                                "load",
+                                () => {
+                                  const iframeDoc = el.contentDocument;
+                                  const iframeWin = el.contentWindow;
 
-                                if (iframeDoc && iframeWin) {
-                                  // Set configuration on the iframe's window
-                                  (iframeWin as any).PROXY_TUNNEL_CONFIG = {
-                                    PROXY_DOMAIN: import.meta.env.VITE_PROXY_DOMAIN,
-                                    ALLOWED_ORIGINS: ["*"],
-                                  };
+                                  if (iframeDoc && iframeWin) {
+                                    // Set configuration on the iframe's window
+                                    (iframeWin as any).PROXY_TUNNEL_CONFIG = {
+                                      PROXY_DOMAIN: import.meta.env.VITE_PROXY_DOMAIN,
+                                      ALLOWED_ORIGINS: ["*"],
+                                    };
 
-                                  // Create and inject the script tag
-                                  const script = iframeDoc.createElement("script");
-                                  script.src = "/proxy-tunnel.js";
-                                  script.async = true;
-                                  iframeDoc.body.appendChild(script);
-                                }
-                              },
-                              { once: true },
-                            );
-                          }
-                        }}
-                        src={tab.url} // Serve local file directly
-                        className={cn(
-                          "w-full h-full absolute inset-0",
-                          tab.id === activeTabId ? "block" : "hidden",
-                        )}
-                        title={tab.title}
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                      />
-                    );
-                  }
-                  return null;
-                })}
+                                    // Create and inject the script tag
+                                    const script = iframeDoc.createElement("script");
+                                    script.src = "/proxy-tunnel.js";
+                                    script.async = true;
+                                    iframeDoc.body.appendChild(script);
+                                  }
+                                },
+                                { once: true },
+                              );
+                            }
+                          }}
+                          src={tab.url} // Serve local file directly
+                          className={cn(
+                            "w-full h-full absolute inset-0",
+                            tab.id === activeTabId ? "block" : "hidden",
+                          )}
+                          title={tab.title}
+                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                        />
+                      );
+                    }
+                    return null;
+                  })}
 
-                {/* Show special pages for active tab */}
-                {activeTab?.url === ABOUT_PAGES.BLANK && <NewTabPage onNavigate={handleNavigate} />}
-                {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
-                  <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
-                    <div className="text-center">
-                      <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
-                      <p className="text-gray-500">
-                        Recently closed tabs and synced tabs would appear here
-                      </p>
+                  {/* Show special pages for active tab */}
+                  {activeTab?.url === ABOUT_PAGES.BLANK && (
+                    <NewTabPage onNavigate={handleNavigate} />
+                  )}
+                  {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
+                    <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
+                      <div className="text-center">
+                        <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
+                        <p className="text-gray-500">
+                          Recently closed tabs and synced tabs would appear here
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </BrowserShell>
           ) : null}

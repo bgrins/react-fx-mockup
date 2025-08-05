@@ -148,7 +148,7 @@ export function TabStrip({
               
               {!tab.isPinned && (
                 <button
-                  className="shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-[rgba(0,0,0,0.08)] opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-[rgba(0,0,0,0.08)]"
                   onClick={(e) => {
                     e.stopPropagation()
                     onTabClose?.(tab.id)

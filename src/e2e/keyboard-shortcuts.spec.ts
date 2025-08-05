@@ -9,20 +9,20 @@ test.describe("Keyboard Shortcuts", () => {
     await page.waitForTimeout(500); // Small delay to ensure event listeners are attached
 
     // Verify sidebar is not visible initially
-    await expect(page.locator('text="Chat with Page"')).not.toBeVisible();
+    await expect(page.locator('[title="Page Info"]')).not.toBeVisible();
 
     // Press Alt+I to open sidebar
     await page.keyboard.press("Alt+i");
 
-    // Verify sidebar is now visible
-    await expect(page.locator('text="Chat with Page"')).toBeVisible();
+    // Verify sidebar is now visible - check for the icon strip
+    await expect(page.locator('[title="Page Info"]')).toBeVisible();
     await expect(page.locator('[aria-label="Close sidebar"]')).toBeVisible();
 
     // Press Alt+I again to close sidebar
     await page.keyboard.press("Alt+i");
 
     // Verify sidebar is closed
-    await expect(page.locator('text="Chat with Page"')).not.toBeVisible();
+    await expect(page.locator('[title="Page Info"]')).not.toBeVisible();
   });
 
   test("Settings shortcut (Cmd+?) should toggle settings modal", async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe("Keyboard Shortcuts", () => {
 
     // Open sidebar with Alt+I
     await page.keyboard.press("Alt+i");
-    await expect(page.locator('text="Chat with Page"')).toBeVisible();
+    await expect(page.locator('[title="Page Info"]')).toBeVisible();
 
     // Open settings with Cmd+/
     await page.keyboard.press("Meta+/");
@@ -89,11 +89,11 @@ test.describe("Keyboard Shortcuts", () => {
     await expect(page.locator('text="Settings & Help"')).not.toBeVisible();
 
     // Sidebar should still be visible
-    await expect(page.locator('text="Chat with Page"')).toBeVisible();
+    await expect(page.locator('[title="Page Info"]')).toBeVisible();
 
     // Close sidebar with Alt+I
     await page.keyboard.press("Alt+i");
-    await expect(page.locator('text="Chat with Page"')).not.toBeVisible();
+    await expect(page.locator('[title="Page Info"]')).not.toBeVisible();
   });
 
   test("Tab management shortcuts (Alt+T, Alt+W) should work", async ({ page }) => {

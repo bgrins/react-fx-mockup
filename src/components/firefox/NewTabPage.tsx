@@ -83,14 +83,14 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
 
   return (
     <div className="flex items-center justify-center h-full bg-[#f9f9fb] p-8" data-testid="new-tab-page">
-      <div className="max-w-4xl w-full">
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-8 max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto w-full">
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
           {defaultTiles.map((tile) => (
             <button
               key={tile.id}
               onClick={() => handleTileClick(tile.url)}
               className={cn(
-                "group relative flex flex-col items-center justify-center p-3 h-[110px]",
+                "group relative flex flex-col items-center justify-center p-3 w-[110px] h-[110px]",
                 "bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-200",
                 "border border-gray-200 hover:border-gray-400",
                 "cursor-pointer"
