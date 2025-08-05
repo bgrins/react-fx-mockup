@@ -176,8 +176,13 @@ function Browser(): React.ReactElement {
     const previous = getPreviousUrl(activeTab);
     if (!previous) return;
 
+    console.log("[handleBack] Previous URL:", previous.url);
+    console.log("[handleBack] Current tab:", activeTab);
+    console.log("[handleBack] Tab history:", activeTab.history);
+    console.log("[handleBack] History index:", activeTab.historyIndex);
     const parsedUrl = parseNavigationUrl(previous.url);
     const shouldHandleLocally = shouldHandleNavigationLocally(activeTab, previous.url);
+    console.log("[handleBack] Should handle locally:", shouldHandleLocally);
 
     if (!shouldHandleLocally) {
       // For proxy tabs going to non-about:blank URLs, send the goBack command

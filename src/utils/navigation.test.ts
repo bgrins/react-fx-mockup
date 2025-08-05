@@ -69,6 +69,28 @@ describe("shouldHandleNavigationLocally", () => {
     };
     expect(shouldHandleNavigationLocally(tab, "https://other.com")).toBe(false);
   });
+
+  it("should return true for proxy tabs navigating to about: pages", () => {
+    const tab: Tab = {
+      id: "1",
+      title: "Test",
+      url: "https://example.com",
+      type: TabType.PROXY,
+    };
+    expect(shouldHandleNavigationLocally(tab, "about:blank")).toBe(true);
+    expect(shouldHandleNavigationLocally(tab, "about:newtab")).toBe(true);
+  });
+
+  it("should return true for proxy tabs navigating to local files", () => {
+    const tab: Tab = {
+      id: "1",
+      title: "Test",
+      url: "https://example.com",
+      type: TabType.PROXY,
+    };
+    expect(shouldHandleNavigationLocally(tab, "/pages/test.html")).toBe(true);
+    expect(shouldHandleNavigationLocally(tab, "file:///Users/test/doc.html")).toBe(true);
+  });
 });
 
 describe("getTabTypeForUrl", () => {

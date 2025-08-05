@@ -190,4 +190,67 @@ describe("useTabManager", () => {
     expect(result.current.tabs[0]?.id).toBe("custom-1");
     expect(result.current.activeTabId).toBe("custom-1");
   });
+
+  it("should prevent duplicate history entries for the same URL", () => {
+    const { result } = renderHook(() => useTabManager());
+
+    // Navigate to a URL
+    act(() => {
+      result.current.navigateActiveTab({ url: "https://example.com" });
+    });
+
+    const historyAfterFirst = result.current.activeTab?.history;
+    const historyIndexAfterFirst = result.current.activeTab?.historyIndex;
+
+    // Navigate to the same URL again
+    act(() => {
+      result.current.navigateActiveTab({ url: "https://example.com" });
+    });
+
+    // History should not have changed
+    expect(result.current.activeTab?.history).toEqual(historyAfterFirst);
+    expect(result.current.activeTab?.historyIndex).toBe(historyIndexAfterFirst);
+  });
+
+  it("should normalize URLs to prevent duplicates with trailing slashes", () => {
+    const { result } = renderHook(() => useTabManager());
+
+    // Navigate to URL without trailing slash
+    act(() => {
+      result.current.navigateActiveTab({ url: "https://example.com" });
+    });
+
+    const historyAfterFirst = result.current.activeTab?.history;
+    const historyIndexAfterFirst = result.current.activeTab?.historyIndex;
+
+    // Navigate to same URL with trailing slash
+    act(() => {
+      result.current.navigateActiveTab({ url: "https://example.com/" });
+    });
+
+    // History should not have changed because URLs are normalized
+    expect(result.current.activeTab?.history).toEqual(historyAfterFirst);
+    expect(result.current.activeTab?.historyIndex).toBe(historyIndexAfterFirst);
+  });
+
+  it("should maintain correct history when navigating from about:blank to a URL and back", () => {
+    const { result } = renderHook(() => useTabManager());
+
+    // Initial state should be about:blank
+    expect(result.current.activeTab?.url).toBe("about:blank");
+    expect(result.current.activeTab?.history).toEqual(["about:blank"]);
+    expect(result.current.activeTab?.historyIndex).toBe(0);
+
+    // Navigate to example.com
+    act(() => {
+      result.current.navigateActiveTab({ url: "https://example.com" });
+    });
+
+    expect(result.current.activeTab?.url).toBe("https://example.com");
+    expect(result.current.activeTab?.history).toEqual(["about:blank", "https://example.com"]);
+    expect(result.current.activeTab?.historyIndex).toBe(1);
+
+    // Should be able to go back
+    expect(result.current.activeTab?.history?.[0]).toBe("about:blank");
+  });
 });

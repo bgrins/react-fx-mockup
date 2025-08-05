@@ -48,6 +48,15 @@ export function shouldHandleNavigationLocally(tab: Tab | undefined, targetUrl: s
     return true;
   }
 
+  // For proxy tabs, check if we're navigating TO an about: page or local file
+  // This handles the case where we're going back from a proxy page to about:blank
+  if (
+    targetUrl &&
+    (targetUrl.startsWith("about:") || targetUrl.startsWith("/") || targetUrl.startsWith("file:"))
+  ) {
+    return true;
+  }
+
   return false;
 }
 

@@ -88,7 +88,37 @@ export function useTabManager(options: UseTabManagerOptions = {}) {
           }
         }
 
-        // For new navigation, add to history
+        // For new navigation, add to history (but avoid duplicates)
+        // Normalize URLs to avoid duplicates like example.com vs example.com/
+        const normalizeUrl = (url: string) => {
+          try {
+            const u = new URL(url);
+            // Remove trailing slash from pathname if it's just "/"
+            if (u.pathname === "/") {
+              return u.origin;
+            }
+            return url;
+          } catch {
+            return url;
+          }
+        };
+
+        // Check if we're navigating to the same URL that's already at the current position
+        const currentUrl = history[historyIndex];
+        const normalizedNewUrl = normalizeUrl(options.url);
+        const normalizedCurrentUrl = currentUrl ? normalizeUrl(currentUrl) : null;
+
+        if (normalizedCurrentUrl === normalizedNewUrl) {
+          // Don't add duplicate entry, just update other properties
+          return {
+            ...tab,
+            title: `Loading...`,
+            favicon: <DynamicFavicon url={options.displayUrl || options.url} />,
+            displayUrl: options.displayUrl,
+          };
+        }
+
+        // Add to history
         const newHistory = [...history.slice(0, historyIndex + 1), options.url];
         const newHistoryIndex = newHistory.length - 1;
         const newType = getTabTypeForUrl(options.url);
