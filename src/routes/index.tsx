@@ -436,10 +436,10 @@ function Browser(): React.ReactElement {
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
               className="flex-1 min-h-0"
             >
-              <div className="flex h-full overflow-hidden">
+              <div className="flex w-full h-full overflow-hidden">
                 <div
                   className={cn(
-                    "transition-all duration-200 ease-in-out",
+                    "flex-shrink-0 transition-all duration-200 ease-in-out",
                     sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
                   )}
                 >
@@ -458,7 +458,7 @@ function Browser(): React.ReactElement {
                 </div>
                 <div
                   className={cn(
-                    "flex-1 h-full bg-white overflow-auto relative transition-all duration-200 ease-in-out",
+                    "flex-1 min-w-0 h-full bg-white overflow-hidden relative transition-all duration-200 ease-in-out",
                     sidebarOpen && "rounded-tl-lg",
                   )}
                 >
