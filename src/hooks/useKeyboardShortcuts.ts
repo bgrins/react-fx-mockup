@@ -101,6 +101,7 @@ export function useKeyboardShortcuts(
           if (modifiersMatch) {
             if (preventDefault) {
               event.preventDefault();
+              event.stopPropagation();
             }
             handler();
           }

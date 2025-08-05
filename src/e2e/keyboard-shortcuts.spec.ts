@@ -14,9 +14,9 @@ test.describe("Keyboard Shortcuts", () => {
     // Press Alt+I to open sidebar
     await page.keyboard.press("Alt+i");
 
-    // Verify sidebar is now visible - check for the icon strip
+    // Verify sidebar is now visible - check for the icon strip and Page Info section
     await expect(page.locator('[title="Page Info"]')).toBeVisible();
-    await expect(page.locator('[aria-label="Close sidebar"]')).toBeVisible();
+    await expect(page.locator('text="Page Info"').first()).toBeVisible();
 
     // Press Alt+I again to close sidebar
     await page.keyboard.press("Alt+i");

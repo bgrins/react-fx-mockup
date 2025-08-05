@@ -17,9 +17,10 @@ interface SidebarProps {
   pageTitle?: string;
   pageUrl?: string;
   accessKey?: string;
+  defaultSection?: SidebarSection;
 }
 
-type SidebarSection = "pageInfo" | "bookmarks" | "history" | "synced" | null;
+type SidebarSection = "pageInfo" | "bookmarks" | "history" | "synced" | "settings" | null;
 
 const sectionIcons = {
   pageInfo: (
@@ -65,6 +66,7 @@ export function Sidebar({
   pageTitle,
   pageUrl,
   accessKey,
+  defaultSection = "pageInfo",
 }: SidebarProps) {
   const [activeSection, setActiveSection] = React.useState<SidebarSection>(null);
   const [previousSection, setPreviousSection] = React.useState<SidebarSection>(null);
@@ -105,16 +107,21 @@ export function Sidebar({
 
   // Handle sidebar open/close - restore previous section when reopening
   React.useEffect(() => {
-    if (isOpen && previousSection && !activeSection) {
-      // When opening, restore the previous section
-      setActiveSection(previousSection);
-      setPreviousSection(null);
+    if (isOpen && !activeSection) {
+      // When opening, restore the previous section or use default
+      if (previousSection) {
+        setActiveSection(previousSection);
+        setPreviousSection(null);
+      } else {
+        // Use default section when opening for the first time
+        setActiveSection(defaultSection);
+      }
     } else if (!isOpen && activeSection) {
       // When closing, save the current section and clear it
       setPreviousSection(activeSection);
       setActiveSection(null);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultSection]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -444,6 +451,44 @@ export function Sidebar({
           </>
         );
       
+      case "settings":
+        return (
+          <>
+            <div className="flex items-center justify-between p-3 border-b">
+              <h2 className="font-semibold text-lg">Settings</h2>
+              <button
+                onClick={() => setActiveSection(null)}
+                className="p-1 hover:bg-gray-100 rounded"
+                aria-label="Close section"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M12 4L4 12M4 4l8 8"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <h3 className="font-medium mb-2">Sidebar Width</h3>
+                <p className="text-sm text-gray-600">Current width: {width}px</p>
+              </div>
+              <div>
+                <h3 className="font-medium mb-2">Quick Actions</h3>
+                <button
+                  onClick={onClose}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Close Sidebar
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      
       default:
         return null;
     }
@@ -457,7 +502,7 @@ export function Sidebar({
     )}>
       {/* Icon strip */}
       <div className={cn(
-        "w-12 flex flex-col bg-[#f0f0f4]",
+        "w-12 flex flex-col",
         !isResizing && "transition-all duration-200 ease-in-out",
         !isOpen && "w-0 overflow-hidden"
       )}>
@@ -478,17 +523,23 @@ export function Sidebar({
         </div>
         
         <button
-          onClick={onClose}
-          className="w-full h-10 flex items-center justify-center hover:bg-[#e0e0e4] transition-colors"
-          aria-label="Close sidebar"
+          onClick={() => handleSectionClick("settings")}
+          className={cn(
+            "w-full h-10 flex items-center justify-center hover:bg-[#e0e0e4] transition-colors",
+            activeSection === "settings" && "bg-[#dadae0]"
+          )}
+          title="Settings"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
-              d="M4 8H12M4 8L7 5M4 8L7 11"
+              d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z"
               stroke="currentColor"
               strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            />
+            <path
+              d="M13.5 8C13.5 8.3 13.48 8.59 13.45 8.88L14.94 10.07C15.08 10.18 15.12 10.38 15.04 10.55L13.64 12.95C13.55 13.11 13.36 13.17 13.19 13.11L11.43 12.38C11.05 12.67 10.63 12.9 10.17 13.05L9.9 14.94C9.87 15.12 9.71 15.25 9.52 15.25H6.72C6.53 15.25 6.37 15.12 6.35 14.94L6.08 13.05C5.62 12.9 5.2 12.66 4.82 12.38L3.06 13.11C2.89 13.17 2.7 13.11 2.61 12.95L1.21 10.55C1.12 10.39 1.17 10.19 1.31 10.07L2.8 8.88C2.77 8.59 2.75 8.3 2.75 8C2.75 7.7 2.77 7.41 2.8 7.12L1.31 5.93C1.17 5.82 1.13 5.62 1.21 5.45L2.61 3.05C2.7 2.89 2.89 2.83 3.06 2.89L4.82 3.62C5.2 3.33 5.62 3.1 6.08 2.95L6.35 1.06C6.37 0.88 6.53 0.75 6.72 0.75H9.52C9.71 0.75 9.87 0.88 9.89 1.06L10.16 2.95C10.62 3.1 11.04 3.34 11.42 3.62L13.18 2.89C13.35 2.83 13.54 2.89 13.63 3.05L15.03 5.45C15.12 5.61 15.07 5.81 14.93 5.93L13.44 7.12C13.47 7.41 13.49 7.7 13.49 8L13.5 8Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
             />
           </svg>
         </button>

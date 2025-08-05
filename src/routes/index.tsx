@@ -364,7 +364,11 @@ function Browser(): React.ReactElement {
     focusAddressBar: () => addressBarRef.current?.focus(),
     toggleSidebar: () => setSidebarOpen(!sidebarOpen),
     toggleSettings: () => setShowHelp((prev) => !prev),
-    pageInfo: () => setSidebarOpen((prev) => !prev),
+    pageInfo: () => {
+      setSidebarOpen((prev) => !prev);
+      // If opening sidebar, we'll need to trigger the Page Info section
+      // This will be handled by the Sidebar component's effect
+    },
 
     // Zoom
     zoomIn: () => toast("Zoom In"),
