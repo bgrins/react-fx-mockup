@@ -14,6 +14,8 @@ interface BrowserShellProps extends BaseBrowserShellProps {
   onCloseBothTabs?: () => void
   showSplitView?: boolean
   hideToolbar?: boolean
+  smartWindowMode?: boolean
+  isFirefoxViewActive?: boolean
 }
 
 export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(function BrowserShell({
@@ -37,7 +39,9 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
   onCloseBothTabs,
   showSplitView,
   onSidebarToggle,
-  hideToolbar = false
+  hideToolbar = false,
+  smartWindowMode = false,
+  isFirefoxViewActive = false
 }, ref) {
   return (
     <div className={cn(
@@ -58,12 +62,14 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
                 onTabClose={onTabClose}
                 onNewTab={onNewTab}
                 onTabReorder={onTabReorder}
+                smartWindowMode={smartWindowMode}
+                isFirefoxViewActive={isFirefoxViewActive}
               />
             </div>
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={onNewTab}>
+          <ContextMenuItem onClick={() => onNewTab?.()}>
             <PlusIcon />
             <span className="ml-2">New Tab</span>
           </ContextMenuItem>
@@ -95,7 +101,7 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
             </div>
           </ContextMenuTrigger>
           <ContextMenuContent>
-            <ContextMenuItem onClick={onNewTab}>
+            <ContextMenuItem onClick={() => onNewTab?.()}>
               <PlusIcon />
               <span className="ml-2">New Tab</span>
             </ContextMenuItem>

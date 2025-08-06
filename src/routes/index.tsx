@@ -302,12 +302,14 @@ function Browser(): React.ReactElement {
     }
   };
 
-  const handleNewTab = () => {
-    createTab();
-    // Focus the address bar for the new tab
-    setTimeout(() => {
-      addressBarRef.current?.focus();
-    }, 0);
+  const handleNewTab = (url?: string) => {
+    createTab(url);
+    // Focus the address bar for the new tab only if no URL provided
+    if (!url) {
+      setTimeout(() => {
+        addressBarRef.current?.focus();
+      }, 0);
+    }
   };
 
   const handleSmartWindowToggle = () => {
@@ -359,7 +361,20 @@ function Browser(): React.ReactElement {
     stop: () => toast("Stop"),
 
     // Tabs
-    newTab: handleNewTab,
+    newTab: () => {
+      // If in Firefox View Smart Window mode, focus search instead of creating new tab
+      if (activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && smartWindowMode) {
+        // Find the search input and focus it
+        const searchInput = document.querySelector(
+          'input[placeholder="Search or enter address"]',
+        ) as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      } else {
+        handleNewTab();
+      }
+    },
     closeTab: () => activeTabId && handleTabClose(activeTabId),
     nextTab: () => {
       const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
@@ -478,6 +493,8 @@ function Browser(): React.ReactElement {
               canGoForward={canGoForward}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
               hideToolbar={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && smartWindowMode}
+              smartWindowMode={smartWindowMode}
+              isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
               className={cn("flex-1 min-h-0", smartWindowMode && "smart-window-mode")}
             >
               <div className="flex w-full h-full overflow-hidden">
@@ -645,6 +662,7 @@ function Browser(): React.ReactElement {
                       iframeRefs={iframeRefs}
                       smartWindowMode={smartWindowMode}
                       onSmartWindowToggle={handleSmartWindowToggle}
+                      onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
                     />
                   )}
                 </div>

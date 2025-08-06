@@ -89,25 +89,25 @@ export function NewTabPage({ onNavigate, onSmartWindowToggle }: NewTabPageProps)
   }
 
   return (
-    <div className="flex items-center justify-center h-full bg-[#f9f9fb] p-8" data-testid="new-tab-page">
+    <div className="flex items-center justify-center h-full bg-[#f9f9fb] p-8 relative" data-testid="new-tab-page">
+      {onSmartWindowToggle && (
+        <div className="absolute top-8 right-8">
+          <button
+            onClick={onSmartWindowToggle}
+            className={cn(
+              "px-6 py-3 bg-[#0060df] hover:bg-[#0050bb] text-white",
+              "rounded-lg shadow-sm hover:shadow-md transition-all duration-200",
+              "font-medium text-sm flex items-center gap-2"
+            )}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
+              <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2H2V3zm0 4h12v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7zm9 2a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
+            </svg>
+            Switch to Smart Window
+          </button>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto w-full">
-        {onSmartWindowToggle && (
-          <div className="flex justify-center mb-8">
-            <button
-              onClick={onSmartWindowToggle}
-              className={cn(
-                "px-6 py-3 bg-[#0060df] hover:bg-[#0050bb] text-white",
-                "rounded-lg shadow-sm hover:shadow-md transition-all duration-200",
-                "font-medium text-sm flex items-center gap-2"
-              )}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
-                <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2H2V3zm0 4h12v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7zm9 2a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
-              </svg>
-              Switch to Smart Window
-            </button>
-          </div>
-        )}
         
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           {defaultTiles.map((tile) => (

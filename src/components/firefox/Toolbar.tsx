@@ -97,7 +97,7 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onNewTab}>
+            <DropdownMenuItem onClick={() => onNewTab?.()}>
               <PlusIcon />
               <span className="ml-2">New Tab</span>
             </DropdownMenuItem>

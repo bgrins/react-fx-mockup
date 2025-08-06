@@ -14,12 +14,17 @@ export function TabStrip({
   onTabClick, 
   onTabClose,
   onNewTab,
-  onTabReorder
+  onTabReorder,
+  smartWindowMode = false,
+  isFirefoxViewActive = false
 }: TabStripProps) {
   const [draggedTab, setDraggedTab] = React.useState<string | null>(null)
   const [dropTargetTab, setDropTargetTab] = React.useState<{ id: string; before: boolean } | null>(null)
   const [isOverflowing, setIsOverflowing] = React.useState(false)
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
+  
+  // Hide new tab button when in Smart Window mode AND Firefox View is active
+  const shouldHideNewTabButton = smartWindowMode && isFirefoxViewActive
   
   // Check for overflow on mount and when tabs change
   React.useEffect(() => {
@@ -165,20 +170,20 @@ export function TabStrip({
           )
         })}
         
-        {!isOverflowing && (
+        {!isOverflowing && !shouldHideNewTabButton && (
           <button
             className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] shrink-0"
-            onClick={onNewTab}
+            onClick={() => onNewTab?.()}
           >
             <PlusIcon />
           </button>
         )}
       </div>
       
-      {isOverflowing && (
+      {isOverflowing && !shouldHideNewTabButton && (
         <button
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] shrink-0"
-          onClick={onNewTab}
+          onClick={() => onNewTab?.()}
         >
           <PlusIcon />
         </button>

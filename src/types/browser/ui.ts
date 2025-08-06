@@ -8,7 +8,7 @@ export interface BrowserShellProps {
   currentUrl?: string;
   onTabClick?: (tabId: string) => void;
   onTabClose?: (tabId: string) => void;
-  onNewTab?: () => void;
+  onNewTab?: (url?: string) => void;
   onNavigate?: (url: string) => void;
   onTabReorder?: (draggedTabId: string, targetTabId: string, dropBefore: boolean) => void;
   onBack?: () => void;
@@ -26,8 +26,10 @@ export interface TabStripProps {
   activeTabId?: string;
   onTabClick?: (tabId: string) => void;
   onTabClose?: (tabId: string) => void;
-  onNewTab?: () => void;
+  onNewTab?: (url?: string) => void;
   onTabReorder?: (draggedTabId: string, targetTabId: string, dropBefore: boolean) => void;
+  smartWindowMode?: boolean;
+  isFirefoxViewActive?: boolean;
 }
 
 export interface ToolbarProps {
@@ -36,7 +38,7 @@ export interface ToolbarProps {
   onForward?: () => void;
   onRefresh?: () => void;
   onNavigate?: (url: string) => void;
-  onNewTab?: () => void;
+  onNewTab?: (url?: string) => void;
   canGoBack?: boolean;
   canGoForward?: boolean;
   onSidebarToggle?: () => void;
