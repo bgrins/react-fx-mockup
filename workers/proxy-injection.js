@@ -237,7 +237,7 @@ export const INJECTION_JS = `(function() {
         // Prevent the back navigation from propagating to parent window in Firefox
         if (window.history.length > 1) {
           console.log('[PROXY] Going back');
-          // window.history.back();
+          window.history.back();
         } else {
           console.warn('[PROXY] Cannot go back - no history');
         }
@@ -251,6 +251,7 @@ export const INJECTION_JS = `(function() {
     // Navigate forward
     goForward: () => {
       try {
+        console.log('[PROXY] Going forward');
         window.history.forward();
         return true;
       } catch (e) {

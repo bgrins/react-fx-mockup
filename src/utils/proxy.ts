@@ -4,7 +4,7 @@ if (!PROXY_DOMAIN) {
   throw new Error("VITE_PROXY_DOMAIN environment variable is required");
 }
 
-export function urlToProxy(url: string): string {
+export function urlToProxy(url: string, isOpenGraph = false): string {
   try {
     const urlObj = new URL(url);
     // Convert hostname: www.example.com -> www-example-com
@@ -12,7 +12,10 @@ export function urlToProxy(url: string): string {
       .replace(/-/g, "--") // First escape existing dashes
       .replace(/\./g, "-"); // Then replace dots with dashes
 
-    return `https://${proxySubdomain}.${PROXY_DOMAIN}${urlObj.pathname}${urlObj.search}`;
+    // Add ograph- prefix for OpenGraph requests to enable CORS
+    const finalSubdomain = isOpenGraph ? `ograph-${proxySubdomain}` : proxySubdomain;
+
+    return `https://${finalSubdomain}.${PROXY_DOMAIN}${urlObj.pathname}${urlObj.search}`;
   } catch {
     return url;
   }
@@ -28,7 +31,12 @@ export function proxyToUrl(url: string): string {
     }
 
     // Extract subdomain
-    const subdomain = urlObj.hostname.replace(`.${PROXY_DOMAIN}`, "");
+    let subdomain = urlObj.hostname.replace(`.${PROXY_DOMAIN}`, "");
+
+    // Remove ograph- prefix if present
+    if (subdomain.startsWith("ograph-")) {
+      subdomain = subdomain.substring(7);
+    }
 
     // Convert back: www-example-com -> www.example.com
     const realHostname = subdomain

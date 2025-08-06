@@ -53,9 +53,13 @@ export default {
       return Response.redirect(`https://${CONFIG.PROXY_DOMAIN}`, 301);
     }
 
+    // Check for OpenGraph prefix - this enables CORS for external fetching
+    const isOpenGraphRequest = rawSubdomain.startsWith("ograph-");
+    const actualSubdomain = isOpenGraphRequest ? rawSubdomain.substring(7) : rawSubdomain; // Remove "ograph-" prefix
+
     // Check if there's no "-" (which would become "." after conversion)
     // This means it's a single word with no dots, return empty error
-    if (!rawSubdomain.includes("-")) {
+    if (!actualSubdomain.includes("-")) {
       return new Response("", { status: 404 });
     }
 
@@ -72,7 +76,7 @@ export default {
     // Convert subdomain format to target domain
     // Double dashes (--) become single dashes (-), single dashes (-) become dots (.)
     // Example: www-airbnb-co-uk → www.airbnb.co.uk
-    const targetDomain = rawSubdomain
+    const targetDomain = actualSubdomain
       .replace(/--/g, "___TEMP___")
       .replace(/-/g, ".")
       .replace(/___TEMP___/g, "-");
@@ -82,6 +86,19 @@ export default {
     // Debug endpoint
     if (url.pathname.startsWith(CONFIG.DEBUG_PATH)) {
       return createDebugResponse(request, targetUrl, targetDomain, CONFIG);
+    }
+
+    // Handle CORS preflight for OpenGraph requests
+    if (isOpenGraphRequest && request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, User-Agent",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
     }
 
     try {
@@ -107,7 +124,7 @@ export default {
       }
 
       // Return proxied response with CORS headers
-      return createProxiedResponse(response, targetUrl, CONFIG, request);
+      return createProxiedResponse(response, targetUrl, CONFIG, request, isOpenGraphRequest);
     } catch (error) {
       return new Response(`Proxy error: ${error.message}`, {
         status: 500,
@@ -195,10 +212,11 @@ function handleRedirect(response, targetUrl, CONFIG, request) {
   });
 }
 
-function createProxiedResponse(response, targetUrl, CONFIG, request) {
-  // Check if we should inject postMessage tunnel
+function createProxiedResponse(response, targetUrl, CONFIG, request, isOpenGraphRequest = false) {
+  // Check if we should inject postMessage tunnel (not for OpenGraph requests)
   const contentType = response.headers.get("content-type") || "";
   const shouldInject =
+    !isOpenGraphRequest &&
     CONFIG.INJECT_POSTMESSAGE_TUNNEL &&
     contentType.includes("text/html") &&
     !contentType.includes("charset=iso-8859-1"); // Avoid non-UTF8 content
@@ -222,7 +240,13 @@ function createProxiedResponse(response, targetUrl, CONFIG, request) {
   const modifiedResponse = new Response(body, response);
   const headers = modifiedResponse.headers;
 
-  // No CORS headers needed for iframe content
+  // Add CORS headers for OpenGraph requests
+  if (isOpenGraphRequest) {
+    headers.set("Access-Control-Allow-Origin", "*");
+    headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+    headers.set("Access-Control-Allow-Headers", "Content-Type, User-Agent");
+    headers.set("Access-Control-Max-Age", "86400"); // Cache preflight for 24 hours
+  }
 
   // Remove security headers that might interfere with embedding
   const securityHeaders = [
