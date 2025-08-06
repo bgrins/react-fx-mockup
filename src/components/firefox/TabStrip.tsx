@@ -57,11 +57,7 @@ export function TabStrip({
                   "relative flex items-center gap-2 h-9 px-0 py-[5px] rounded cursor-pointer group",
                   `${TAB_WIDTH.PINNED} justify-center`,
                   tab.isActive 
-                    ? smartWindowMode
-                      ? "firefox-tab--active bg-white/50 backdrop-blur-sm shadow-[0px_0px_1px_0px_rgba(255,255,255,0.3),0px_1px_2px_0px_rgba(255,255,255,0.2)]"
-                      : "firefox-tab--active bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]"
-                    : smartWindowMode
-                      ? "hover:bg-white/20"
+                      ? "firefox-tab--active bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]"
                       : "hover:bg-[rgba(21,20,26,0.05)]"
                 )}
                 data-tab-id={tab.id}
@@ -101,7 +97,7 @@ export function TabStrip({
                       ? "firefox-tab--active bg-white/50 backdrop-blur-sm shadow-[0px_0px_1px_0px_rgba(255,255,255,0.3),0px_1px_2px_0px_rgba(255,255,255,0.2)]"
                       : "firefox-tab--active bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]"
                     : smartWindowMode
-                      ? "hover:bg-white/20"
+                      ? "shadow-[0_2px_8px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.08)] hover:bg-white/20"
                       : "hover:bg-[rgba(21,20,26,0.05)]",
                   draggedTab === tab.id && "opacity-50",
                   dropTargetTab?.id === tab.id && dropTargetTab.before && "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-blue-500 before:rounded-l",

@@ -201,15 +201,11 @@ export function FirefoxView({
 
 
   return (
-    <div className={`h-full relative ${
-      smartWindowMode 
-        ? 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50' 
-        : 'bg-[#f9f9fb]'
-    }`}>
+    <div className="h-full relative bg-transparent">
       
       {/* Fixed toolbar header for Smart Window Mode */}
       {smartWindowMode && (
-        <div className="sticky top-0 z-20 bg-white/20 backdrop-blur-sm border-b border-white/20">
+        <div className="sticky top-0 z-20 border-b border-white/20">
           <div className="max-w-6xl mx-auto px-8 py-4">
             <div className="flex items-center justify-between">
               {/* Left side - sidebar and title */}
@@ -408,7 +404,7 @@ export function FirefoxView({
               const ogData = tabOpenGraphData[tab.id];
               
               return (
-                <div key={tab.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div key={tab.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   {/* Tab Header */}
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex items-start justify-between">

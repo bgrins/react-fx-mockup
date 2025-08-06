@@ -244,7 +244,7 @@ describe("Smart Window Functionality", () => {
       });
     });
 
-    it("should have gradient background in Smart Window mode", () => {
+    it("should have transparent background in Smart Window mode (gradient handled by BrowserShell)", () => {
       const { container } = render(
         <FirefoxView
           {...firefoxViewProps}
@@ -253,13 +253,11 @@ describe("Smart Window Functionality", () => {
       );
 
       const mainDiv = container.firstChild as HTMLElement;
-      expect(mainDiv.className).toContain("bg-gradient-to-br");
-      expect(mainDiv.className).toContain("from-blue-50");
-      expect(mainDiv.className).toContain("via-purple-50");
-      expect(mainDiv.className).toContain("to-pink-50");
+      expect(mainDiv.className).toContain("bg-transparent");
+      expect(mainDiv.className).not.toContain("bg-gradient-to-br");
     });
 
-    it("should have standard background in classic mode", () => {
+    it("should have transparent background in classic mode", () => {
       const { container } = render(
         <FirefoxView
           {...firefoxViewProps}
@@ -268,7 +266,7 @@ describe("Smart Window Functionality", () => {
       );
 
       const mainDiv = container.firstChild as HTMLElement;
-      expect(mainDiv.className).toContain("bg-[#f9f9fb]");
+      expect(mainDiv.className).toContain("bg-transparent");
       expect(mainDiv.className).not.toContain("bg-gradient-to-br");
     });
 

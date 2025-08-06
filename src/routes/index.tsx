@@ -535,7 +535,7 @@ function Browser(): React.ReactElement {
                 </div>
                 <div
                   className={cn(
-                    "flex-1 min-w-0 h-full bg-white overflow-hidden relative transition-all duration-200 ease-in-out",
+                    "flex-1 min-w-0 h-full overflow-hidden relative transition-all duration-200 ease-in-out",
                     sidebarOpen && "rounded-tl-lg",
                   )}
                 >

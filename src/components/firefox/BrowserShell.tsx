@@ -47,10 +47,8 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
     <div className={cn(
       "firefox-ui rounded-xl shadow-2xl overflow-hidden flex flex-col",
       "border-2 border-gray-300",
-      // Smart Window gradient when in Smart Window mode
-      smartWindowMode 
-        ? "bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"
-        : "bg-[#f9f9fb]",
+      // Default background - Smart Window gradient handled via CSS
+      "bg-[#f9f9fb]",
       className
     )}>
       {/* Tab strip with window controls */}
