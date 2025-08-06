@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { OpenGraphPreview } from './OpenGraphPreview';
 import { extractOpenGraphFromHTML } from '~/utils/opengraph';
 import { PROXY_MESSAGE_TYPES } from '~/constants/browser';
@@ -10,7 +10,11 @@ interface FirefoxViewProps {
   activeTabId: string;
   onTabClick: (tabId: string) => void;
   onTabClose: (tabId: string) => void;
+  onNavigate?: (url: string) => void;
+  onNewTab?: () => void;
   iframeRefs: React.MutableRefObject<{ [key: string]: HTMLIFrameElement | null }>;
+  smartWindowMode?: boolean;
+  onSmartWindowToggle?: () => void;
 }
 
 interface TabOpenGraphData {
@@ -26,7 +30,11 @@ export function FirefoxView({
   activeTabId, 
   onTabClick, 
   onTabClose,
-  iframeRefs
+  onNavigate,
+  onNewTab,
+  iframeRefs,
+  smartWindowMode = false,
+  onSmartWindowToggle
 }: FirefoxViewProps) {
   const [tabOpenGraphData, setTabOpenGraphData] = useState<TabOpenGraphData>({});
 
@@ -39,6 +47,8 @@ export function FirefoxView({
 
   // Store command IDs to map responses back to tabs
   const [commandToTabMap, setCommandToTabMap] = useState<{[key: string]: string}>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Extract OpenGraph data for tabs using proxy tunnel
   useEffect(() => {
@@ -126,18 +136,187 @@ export function FirefoxView({
     });
   }, [browsableTabs, sendCommandToTab, tabOpenGraphData, activeTabId]);
 
+  // Auto-focus search bar when entering Smart Window mode
+  useEffect(() => {
+    if (smartWindowMode && searchInputRef.current) {
+      // Small delay to ensure the component is fully rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [smartWindowMode]);
+
+  // Handle search form submission - creates new tab and navigates
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim() && onNewTab && onNavigate) {
+      // Check if it looks like a URL
+      const isURL = searchQuery.includes('.') || searchQuery.startsWith('http');
+      const navigateUrl = isURL 
+        ? (searchQuery.startsWith('http') ? searchQuery : `https://${searchQuery}`)
+        : `https://duckduckgo.com/?q=${encodeURIComponent(searchQuery)}`;
+      
+      // Create new tab first
+      onNewTab();
+      
+      // Navigate to URL after a brief delay to ensure tab is created
+      setTimeout(() => {
+        onNavigate(navigateUrl);
+      }, 10);
+      
+      setSearchQuery('');
+    }
+  };
+
+  // Handle navigation from quick actions - also creates new tab
+  const handleQuickNavigate = (url: string) => {
+    if (onNewTab && onNavigate) {
+      onNewTab();
+      setTimeout(() => {
+        onNavigate(url);
+      }, 10);
+    }
+  };
+
   return (
     <div className="h-full bg-[#f9f9fb] overflow-auto">
       <div className="max-w-6xl mx-auto p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-light text-gray-700 mb-2">Firefox View</h1>
-          <p className="text-gray-500">
-            {browsableTabs.length === 0 
-              ? 'No other tabs open'
-              : `${browsableTabs.length} tab${browsableTabs.length === 1 ? '' : 's'} open`}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-light text-gray-700 mb-2">
+                {smartWindowMode ? 'Smart Window' : 'Firefox View'}
+              </h1>
+              <p className="text-gray-500">
+                {smartWindowMode 
+                  ? 'AI-powered browsing with enhanced features and tab management'
+                  : browsableTabs.length === 0 
+                    ? 'No other tabs open'
+                    : `${browsableTabs.length} tab${browsableTabs.length === 1 ? '' : 's'} open`}
+              </p>
+            </div>
+            
+            {/* Smart Window Toggle - positioned consistently in both modes */}
+            {onSmartWindowToggle && (
+              <button
+                onClick={onSmartWindowToggle}
+                className={`
+                  px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+                  ${smartWindowMode 
+                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-200' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
+                  }
+                `}
+              >
+                {smartWindowMode ? 'Exit Smart Window' : 'Enable Smart Window'}
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Centered Search Bar (only in Smart Window mode) */}
+        {smartWindowMode && (
+          <div className="mb-8 flex justify-center">
+            <form onSubmit={handleSearchSubmit} className="w-full max-w-2xl">
+              <div className="relative">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search or enter address"
+                  className="w-full px-6 py-4 text-lg rounded-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none shadow-sm bg-white"
+                />
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                  <button
+                    type="submit"
+                    className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                    aria-label="Search"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Smart Window Features (when in smart mode) */}
+        {smartWindowMode && (
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1.5A6.5 6.5 0 1 0 14.5 8A6.5 6.5 0 0 0 8 1.5zM8 12.5A4.5 4.5 0 1 1 12.5 8A4.5 4.5 0 0 1 8 12.5z" fill="#2563eb"/>
+                  </svg>
+                </div>
+                <h3 className="font-medium text-gray-900">Smart Search</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Enhanced search with AI-powered suggestions and context understanding
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 3h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm0 2v6h12V5H2z" fill="#16a34a"/>
+                  </svg>
+                </div>
+                <h3 className="font-medium text-gray-900">Tab Intelligence</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Automatic tab grouping, preview cards, and intelligent organization
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2L9.5 6.5H14L10.5 9.5L12 14L8 11L4 14L5.5 9.5L2 6.5H6.5L8 2z" fill="#7c3aed"/>
+                  </svg>
+                </div>
+                <h3 className="font-medium text-gray-900">AI Assistant</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Built-in AI to help with research, summarization, and web navigation
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions (when in smart mode) */}
+        {smartWindowMode && onNavigate && onNewTab && (
+          <div className="mb-8">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => handleQuickNavigate('https://github.com/mozilla-firefox/firefox')}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+              >
+                🔧 Firefox Source Code
+              </button>
+              <button
+                onClick={() => handleQuickNavigate('https://developer.mozilla.org')}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+              >
+                📚 MDN Web Docs
+              </button>
+              <button
+                onClick={() => handleQuickNavigate('/link-preview-demo')}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+              >
+                🔗 OpenGraph Demo
+              </button>
+            </div>
+          </div>
+        )}
 
         {browsableTabs.length === 0 ? (
           /* Empty State */

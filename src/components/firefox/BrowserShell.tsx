@@ -13,6 +13,7 @@ interface BrowserShellProps extends BaseBrowserShellProps {
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void
   showSplitView?: boolean
+  hideToolbar?: boolean
 }
 
 export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(function BrowserShell({
@@ -35,7 +36,8 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
   onCompareTabs,
   onCloseBothTabs,
   showSplitView,
-  onSidebarToggle
+  onSidebarToggle,
+  hideToolbar = false
 }, ref) {
   return (
     <div className={cn(
@@ -69,35 +71,37 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
       </ContextMenu>
       
       {/* Toolbar */}
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div id="firefox-toolbar" className="browser-chrome">
-            <Toolbar
-              ref={ref}
-              url={currentUrl}
-              onNavigate={onNavigate}
-              onNewTab={onNewTab}
-              onBack={onBack}
-              onForward={onForward}
-              onRefresh={onRefresh}
-              canGoBack={canGoBack}
-              canGoForward={canGoForward}
-              className="shrink-0"
-              onNewTabBelow={onNewTabBelow}
-              onCompareTabs={onCompareTabs}
-              onCloseBothTabs={onCloseBothTabs}
-              showSplitView={showSplitView}
-              onSidebarToggle={onSidebarToggle}
-            />
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem onClick={onNewTab}>
-            <PlusIcon />
-            <span className="ml-2">New Tab</span>
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
+      {!hideToolbar && (
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <div id="firefox-toolbar" className="browser-chrome">
+              <Toolbar
+                ref={ref}
+                url={currentUrl}
+                onNavigate={onNavigate}
+                onNewTab={onNewTab}
+                onBack={onBack}
+                onForward={onForward}
+                onRefresh={onRefresh}
+                canGoBack={canGoBack}
+                canGoForward={canGoForward}
+                className="shrink-0"
+                onNewTabBelow={onNewTabBelow}
+                onCompareTabs={onCompareTabs}
+                onCloseBothTabs={onCloseBothTabs}
+                showSplitView={showSplitView}
+                onSidebarToggle={onSidebarToggle}
+              />
+            </div>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem onClick={onNewTab}>
+              <PlusIcon />
+              <span className="ml-2">New Tab</span>
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      )}
       
       {/* Content area */}
       <div id="firefox-content-area" className="flex-1 flex overflow-hidden min-h-0 browser-content">

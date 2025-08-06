@@ -311,7 +311,31 @@ function Browser(): React.ReactElement {
   };
 
   const handleSmartWindowToggle = () => {
-    setSmartWindowMode(!smartWindowMode);
+    const newSmartWindowMode = !smartWindowMode;
+    setSmartWindowMode(newSmartWindowMode);
+
+    // When entering Smart Window mode
+    if (newSmartWindowMode) {
+      // If the current tab is a new tab (about:blank), close it
+      if (activeTab?.url === ABOUT_PAGES.BLANK) {
+        closeTab(activeTab.id);
+
+        // Clean up iframe reference for the closed tab
+        if (activeTab.id !== "firefox-view") {
+          // Don't clean up firefox-view
+          delete iframeRefs.current[activeTab.id];
+        }
+      }
+
+      // Switch to Firefox View
+      switchTab("firefox-view");
+    } else {
+      // When exiting Smart Window mode
+      // If currently on Firefox View, create a new tab and switch to it
+      if (activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW) {
+        handleNewTab();
+      }
+    }
   };
 
   const handleTabReorder = (draggedTabId: string, targetTabId: string, dropBefore: boolean) => {
@@ -453,6 +477,7 @@ function Browser(): React.ReactElement {
               canGoBack={canGoBack}
               canGoForward={canGoForward}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+              hideToolbar={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && smartWindowMode}
               className={cn("flex-1 min-h-0", smartWindowMode && "smart-window-mode")}
             >
               <div className="flex w-full h-full overflow-hidden">
@@ -615,7 +640,11 @@ function Browser(): React.ReactElement {
                         switchTab(tabId);
                       }}
                       onTabClose={handleTabClose}
+                      onNavigate={handleNavigate}
+                      onNewTab={handleNewTab}
                       iframeRefs={iframeRefs}
+                      smartWindowMode={smartWindowMode}
+                      onSmartWindowToggle={handleSmartWindowToggle}
                     />
                   )}
                 </div>
