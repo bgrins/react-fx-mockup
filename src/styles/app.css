@@ -95,3 +95,14 @@
     display: none; /* Chrome, Safari and Opera */
   }
 }
+
+/* Smart Window Mode styling */
+.smart-window-mode {
+  box-shadow:
+    0 0 0 2px rgba(0, 96, 223, 0.3),
+    0 8px 32px rgba(0, 96, 223, 0.15) !important;
+}
+
+.smart-window-mode .browser-chrome {
+  background: linear-gradient(135deg, #f0f0f4 0%, #e8f4f8 100%) !important;
+}

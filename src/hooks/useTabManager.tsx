@@ -1,10 +1,16 @@
 import React from "react";
 import { Tab, TabType, ABOUT_PAGES } from "~/constants/browser";
-import { FirefoxFavicon, FirefoxViewIcon, DynamicFavicon } from "~/components/firefox/Favicons";
+import {
+  FirefoxFavicon,
+  FirefoxViewIcon,
+  SparklyFirefoxViewIcon,
+  DynamicFavicon,
+} from "~/components/firefox/Favicons";
 import { getTabTypeForUrl } from "~/utils/navigation";
 
 interface UseTabManagerOptions {
   initialTabs?: Tab[];
+  smartWindowMode?: boolean;
 }
 
 interface TabNavigationOptions {
@@ -14,12 +20,14 @@ interface TabNavigationOptions {
 }
 
 export function useTabManager(options: UseTabManagerOptions = {}) {
+  const { smartWindowMode = false } = options;
+
   const defaultTabs: Tab[] = [
     {
       id: "firefox-view",
       title: "Firefox View",
       url: ABOUT_PAGES.FIREFOX_VIEW,
-      favicon: <FirefoxViewIcon />,
+      favicon: smartWindowMode ? <SparklyFirefoxViewIcon /> : <FirefoxViewIcon />,
       isPinned: true,
       isActive: false,
       history: [ABOUT_PAGES.FIREFOX_VIEW],

@@ -227,15 +227,15 @@ export function Sidebar({
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
       
-      // Get the parent sidebar container position
-      const sidebarContainer = sidebarRef.current?.parentElement;
-      if (!sidebarContainer) return;
+      // Get the entire sidebar component position
+      const sidebarComponent = sidebarRef.current?.closest('.flex.h-full.bg-\\[\\#f9f9fb\\]');
+      if (!sidebarComponent) return;
       
-      const containerRect = sidebarContainer.getBoundingClientRect();
+      const componentRect = sidebarComponent.getBoundingClientRect();
       const iconStripWidth = 48; // Width of the icon strip
       
-      // Calculate new width from the left edge of the content area (after icon strip)
-      const newWidth = e.clientX - containerRect.left - iconStripWidth;
+      // Calculate new width from mouse position relative to the sidebar component left edge minus icon strip
+      const newWidth = e.clientX - componentRect.left - iconStripWidth;
       
       if (newWidth >= 280 && newWidth <= 600) {
         setWidth(newWidth);

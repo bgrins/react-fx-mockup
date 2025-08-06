@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
-import { DynamicFavicon, FirefoxFavicon } from "~/components/firefox/Favicons";
+import {
+  DynamicFavicon,
+  FirefoxFavicon,
+  FirefoxViewIcon,
+  SparklyFirefoxViewIcon,
+} from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
@@ -34,6 +39,7 @@ export const Route = createFileRoute("/")({
 function Browser(): React.ReactElement {
   const addressBarRef = React.useRef<AddressBarHandle>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [smartWindowMode, setSmartWindowMode] = React.useState(false);
   const [pageContent, setPageContent] = React.useState<string>("");
   const [proxyNavigationState, setProxyNavigationState] = React.useState<{
     canGoBack: boolean;
@@ -47,18 +53,26 @@ function Browser(): React.ReactElement {
     tabs,
     activeTab,
     activeTabId,
+    updateTab,
     updateActiveTab,
     navigateActiveTab,
     closeTab,
     createTab,
     switchTab,
     reorderTabs,
-  } = useTabManager();
+  } = useTabManager({ smartWindowMode });
 
   // Set isClient to true after mount
   React.useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Update Firefox View tab icon when Smart Window mode changes
+  React.useEffect(() => {
+    updateTab("firefox-view", {
+      favicon: smartWindowMode ? <SparklyFirefoxViewIcon /> : <FirefoxViewIcon />,
+    });
+  }, [smartWindowMode, updateTab]);
 
   // Memoize navigation states to ensure consistent values during SSR
   const canGoBack = React.useMemo(() => {
@@ -295,6 +309,10 @@ function Browser(): React.ReactElement {
     }, 0);
   };
 
+  const handleSmartWindowToggle = () => {
+    setSmartWindowMode(!smartWindowMode);
+  };
+
   const handleTabReorder = (draggedTabId: string, targetTabId: string, dropBefore: boolean) => {
     reorderTabs(draggedTabId, targetTabId, dropBefore);
   };
@@ -434,7 +452,7 @@ function Browser(): React.ReactElement {
               canGoBack={canGoBack}
               canGoForward={canGoForward}
               onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-              className="flex-1 min-h-0"
+              className={cn("flex-1 min-h-0", smartWindowMode && "smart-window-mode")}
             >
               <div className="flex w-full h-full overflow-hidden">
                 <div
@@ -533,8 +551,60 @@ function Browser(): React.ReactElement {
                   })}
 
                   {/* Show special pages for active tab */}
-                  {activeTab?.url === ABOUT_PAGES.BLANK && (
-                    <NewTabPage onNavigate={handleNavigate} />
+                  {activeTab?.url === ABOUT_PAGES.BLANK && !smartWindowMode && (
+                    <NewTabPage
+                      onNavigate={handleNavigate}
+                      onSmartWindowToggle={handleSmartWindowToggle}
+                    />
+                  )}
+                  {activeTab?.url === ABOUT_PAGES.BLANK && smartWindowMode && (
+                    <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
+                      <div className="max-w-6xl mx-auto w-full p-8">
+                        <div className="text-center mb-8">
+                          <h1 className="text-3xl font-light text-gray-700 mb-4">
+                            Smart Window Mode
+                          </h1>
+                          <p className="text-gray-500 mb-6">
+                            AI-powered browsing experience with enhanced features
+                          </p>
+                          <button
+                            onClick={handleSmartWindowToggle}
+                            className={cn(
+                              "px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700",
+                              "rounded-lg shadow-sm hover:shadow-md transition-all duration-200",
+                              "font-medium text-sm",
+                            )}
+                          >
+                            Exit Smart Window
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-800 mb-2">Smart Search</h3>
+                            <p className="text-gray-600 text-sm">
+                              Enhanced search with AI-powered suggestions and context
+                            </p>
+                          </div>
+                          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-800 mb-2">
+                              Page Analysis
+                            </h3>
+                            <p className="text-gray-600 text-sm">
+                              Automatic page summaries and key information extraction
+                            </p>
+                          </div>
+                          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-800 mb-2">
+                              Smart Bookmarks
+                            </h3>
+                            <p className="text-gray-600 text-sm">
+                              AI-organized bookmarks with automatic categorization
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   )}
                   {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
                     <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
