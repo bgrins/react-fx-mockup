@@ -1,5 +1,5 @@
 // SQLite Worker for OPFS support
-import {default as init} from "https://cdn.jsdelivr.net/npm/sqlite-vec-wasm-demo@latest/sqlite3.mjs";
+import {default as init} from "/sqlite3.mjs";
 
 let sqlite3;
 let db;
