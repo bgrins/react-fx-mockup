@@ -204,6 +204,11 @@ export const INJECTION_JS = `(function() {
       documentHeight: document.documentElement.scrollHeight,
       viewportHeight: window.innerHeight
     }),
+
+    // Get outer HTML of the document for OpenGraph extraction
+    getOuterHTML: () => {
+      return document.documentElement.outerHTML;
+    },
     
     // Scroll to element
     scrollToElement: (selector) => {

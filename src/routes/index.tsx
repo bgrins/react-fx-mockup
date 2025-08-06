@@ -9,6 +9,7 @@ import {
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
+import { FirefoxView } from "~/components/firefox/FirefoxView";
 import { urlToProxy } from "~/utils/proxy";
 import { useDebug } from "~/contexts/useDebug";
 import { useProxyTunnel } from "~/hooks/useProxyTunnel";
@@ -607,14 +608,15 @@ function Browser(): React.ReactElement {
                     </div>
                   )}
                   {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
-                    <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
-                        <p className="text-gray-500">
-                          Recently closed tabs and synced tabs would appear here
-                        </p>
-                      </div>
-                    </div>
+                    <FirefoxView
+                      tabs={tabs}
+                      activeTabId={activeTabId}
+                      onTabClick={(tabId) => {
+                        switchTab(tabId);
+                      }}
+                      onTabClose={handleTabClose}
+                      iframeRefs={iframeRefs}
+                    />
                   )}
                 </div>
               </div>

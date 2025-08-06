@@ -74,6 +74,12 @@ const defaultTiles: Tile[] = [
     title: 'St. George',
     url: '/pages/st-george.html',
     favicon: 'https://www.airbnb.com/favicon.ico'
+  },
+  {
+    id: 'firefox-github',
+    title: 'Firefox GitHub',
+    url: 'https://github.com/mozilla-firefox/firefox',
+    favicon: 'https://github.githubassets.com/favicons/favicon.svg'
   }
 ]
 
