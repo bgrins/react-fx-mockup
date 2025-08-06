@@ -4,6 +4,7 @@ import { extractOpenGraphFromHTML } from '~/utils/opengraph';
 import { PROXY_MESSAGE_TYPES } from '~/constants/browser';
 import type { Tab } from '~/types/browser';
 import type { OpenGraphData } from '~/utils/opengraph';
+import { defaultShortcuts } from '~/constants/shortcuts';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,7 @@ interface TabOpenGraphData {
     error: string | null;
   };
 }
+
 
 export function FirefoxView({ 
   tabs, 
@@ -207,7 +209,7 @@ export function FirefoxView({
       
       {/* Fixed toolbar header for Smart Window Mode */}
       {smartWindowMode && (
-        <div className="sticky top-0 z-20 bg-gradient-to-r from-blue-50/90 via-purple-50/90 to-pink-50/90 backdrop-blur-sm border-b border-white/20">
+        <div className="sticky top-0 z-20 bg-white/20 backdrop-blur-sm border-b border-white/20">
           <div className="max-w-6xl mx-auto px-8 py-4">
             <div className="flex items-center justify-between">
               {/* Left side - sidebar and title */}
@@ -499,14 +501,60 @@ export function FirefoxView({
           </div>
         )}
 
-          {/* Footer */}
-          {browsableTabs.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-              <p className="text-sm text-gray-500">
-                Click on any tab preview to switch to it, or use the close button to close tabs.
-              </p>
+        {/* URL Shortcuts Section (only in Smart Window mode) */}
+        {smartWindowMode && (
+          <div className="mt-16">
+            <div className="mb-8">
+              <h2 className="text-xl font-medium text-gray-900 mb-2">Quick Access</h2>
+              <p className="text-gray-600 text-sm">Your favorite sites, one click away</p>
             </div>
-          )}
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 mb-8">
+              {defaultShortcuts.map((shortcut) => (
+                <button
+                  key={shortcut.id}
+                  onClick={() => handleSafeNavigation(shortcut.url)}
+                  className="group relative flex flex-col items-center justify-center p-4 h-28 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-gray-300 cursor-pointer"
+                >
+                  <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-xl overflow-hidden bg-gray-50 group-hover:bg-gray-100 transition-colors">
+                    {shortcut.favicon ? (
+                      <img 
+                        src={shortcut.favicon} 
+                        alt={shortcut.title}
+                        className="w-full h-full object-contain p-1"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon') as HTMLElement
+                          if (fallback) fallback.style.display = 'flex'
+                        }}
+                      />
+                    ) : null}
+                    <div className={`fallback-icon w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center text-blue-600 text-lg font-bold ${shortcut.favicon ? 'hidden' : 'flex'}`}>
+                      {shortcut.title.charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-700 font-medium truncate w-full text-center px-1 leading-tight">
+                    {shortcut.title}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        {browsableTabs.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p className="text-sm text-gray-500">
+              Click on any tab preview to switch to it, or use the close button to close tabs.
+            </p>
+          </div>
+        )}
+
+        {/* Additional vertical spacing for scrolling */}
+        {smartWindowMode && (
+          <div className="h-32" />
+        )}
         </div>
       </div>
     </div>

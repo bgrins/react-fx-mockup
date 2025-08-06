@@ -40,20 +40,29 @@ export function TabStrip({
     return () => window.removeEventListener('resize', checkOverflow)
   }, [tabs.length])
   return (
-    <div className="bg-[#f0f0f4] h-11 flex items-center px-0 min-w-0">
+    <div className="h-11 flex items-center px-0 min-w-0">
       <div ref={scrollContainerRef} className="flex-1 flex items-center gap-1 px-2 min-w-0 overflow-x-auto scrollbar-none max-w-full">
         {/* Firefox View and other pinned tabs */}
         {tabs.filter(tab => tab.isPinned).map((tab) => {
           return (
-            <div className="flex items-center gap-1 pr-1 border-r border-[#cfcfd8] h-full" key={tab.id}>
+            <div className={cn(
+              "flex items-center gap-1 pr-1 h-full",
+              smartWindowMode 
+                ? "border-r border-white/30" 
+                : "border-r border-[#cfcfd8]"
+            )} key={tab.id}>
               <div
                 className={cn(
                   "firefox-tab firefox-tab--pinned",
                   "relative flex items-center gap-2 h-9 px-0 py-[5px] rounded cursor-pointer group",
                   `${TAB_WIDTH.PINNED} justify-center`,
                   tab.isActive 
-                    ? "firefox-tab--active bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]" 
-                    : "hover:bg-[rgba(21,20,26,0.05)]"
+                    ? smartWindowMode
+                      ? "firefox-tab--active bg-white/50 backdrop-blur-sm shadow-[0px_0px_1px_0px_rgba(255,255,255,0.3),0px_1px_2px_0px_rgba(255,255,255,0.2)]"
+                      : "firefox-tab--active bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]"
+                    : smartWindowMode
+                      ? "hover:bg-white/20"
+                      : "hover:bg-[rgba(21,20,26,0.05)]"
                 )}
                 data-tab-id={tab.id}
                 data-tab-active={tab.isActive}
@@ -88,8 +97,12 @@ export function TabStrip({
                   "relative flex items-center gap-2 h-9 px-2 py-[5px] rounded cursor-pointer group",
                   isSplitTab ? TAB_WIDTH.SPLIT : TAB_WIDTH.REGULAR,
                   tab.isActive 
-                    ? "firefox-tab--active bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]" 
-                    : "hover:bg-[rgba(21,20,26,0.05)]",
+                    ? smartWindowMode
+                      ? "firefox-tab--active bg-white/50 backdrop-blur-sm shadow-[0px_0px_1px_0px_rgba(255,255,255,0.3),0px_1px_2px_0px_rgba(255,255,255,0.2)]"
+                      : "firefox-tab--active bg-white shadow-[0px_0px_1px_0px_rgba(0,0,0,0.15),0px_1px_2px_0px_rgba(0,0,0,0.2)]"
+                    : smartWindowMode
+                      ? "hover:bg-white/20"
+                      : "hover:bg-[rgba(21,20,26,0.05)]",
                   draggedTab === tab.id && "opacity-50",
                   dropTargetTab?.id === tab.id && dropTargetTab.before && "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-blue-500 before:rounded-l",
                   dropTargetTab?.id === tab.id && !dropTargetTab.before && "after:absolute after:right-0 after:top-0 after:bottom-0 after:w-1 after:bg-blue-500 after:rounded-r"

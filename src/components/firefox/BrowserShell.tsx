@@ -45,14 +45,23 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
 }, ref) {
   return (
     <div className={cn(
-      "firefox-ui bg-[#f9f9fb] rounded-xl shadow-2xl overflow-hidden flex flex-col",
+      "firefox-ui rounded-xl shadow-2xl overflow-hidden flex flex-col",
       "border-2 border-gray-300",
+      // Smart Window gradient when in Smart Window mode
+      smartWindowMode 
+        ? "bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"
+        : "bg-[#f9f9fb]",
       className
     )}>
       {/* Tab strip with window controls */}
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div id="firefox-tab-strip" className="bg-[#f0f0f4] flex items-center shrink-0 browser-chrome min-w-0">
+          <div id="firefox-tab-strip" className={cn(
+            "flex items-center shrink-0 browser-chrome min-w-0",
+            smartWindowMode 
+              ? "bg-white/20 backdrop-blur-sm" 
+              : "bg-[#f0f0f4]"
+          )}>
             <WindowControls />
             <div className="flex-1 min-w-0 overflow-hidden">
               <TabStrip

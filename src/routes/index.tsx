@@ -303,6 +303,21 @@ function Browser(): React.ReactElement {
   };
 
   const handleNewTab = (url?: string) => {
+    // In Smart Window mode, focus Firefox View instead of creating new tab
+    if (smartWindowMode && !url) {
+      switchTab("firefox-view");
+      // Focus the search input in Firefox View
+      setTimeout(() => {
+        const searchInput = document.querySelector(
+          'input[placeholder="Search or enter address"]',
+        ) as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 0);
+      return;
+    }
+
     createTab(url);
     // Focus the address bar for the new tab only if no URL provided
     if (!url) {
@@ -362,8 +377,9 @@ function Browser(): React.ReactElement {
 
     // Tabs
     newTab: () => {
-      // If in Firefox View Smart Window mode, focus search instead of creating new tab
-      if (activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && smartWindowMode) {
+      // In Smart Window mode, focus Firefox View search instead of creating new tab
+      if (smartWindowMode) {
+        switchTab("firefox-view");
         // Find the search input and focus it
         const searchInput = document.querySelector(
           'input[placeholder="Search or enter address"]',

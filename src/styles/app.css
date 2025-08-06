@@ -104,5 +104,5 @@
 }
 
 .smart-window-mode .browser-chrome {
-  background: linear-gradient(135deg, #f0f0f4 0%, #e8f4f8 100%) !important;
+  background: transparent !important;
 }
