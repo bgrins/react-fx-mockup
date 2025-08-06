@@ -41,7 +41,7 @@ export function TabStrip({
   }, [tabs.length])
   return (
     <div className="h-11 flex items-center px-0 min-w-0">
-      <div ref={scrollContainerRef} className="flex-1 flex items-center gap-1 px-2 min-w-0 overflow-x-auto scrollbar-none max-w-full">
+      <div ref={scrollContainerRef} className="flex-1 flex items-center gap-1 px-2 py-2 min-w-0 overflow-x-auto scrollbar-none max-w-full">
         {/* Firefox View and other pinned tabs */}
         {tabs.filter(tab => tab.isPinned).map((tab) => {
           return (
