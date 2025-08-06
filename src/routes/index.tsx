@@ -36,6 +36,13 @@ export const Route = createFileRoute("/")({
   component: Browser,
 });
 
+interface WindowState {
+  id: string;
+  smartWindowMode: boolean;
+  sidebarOpen: boolean;
+  tabManagerState?: any; // We'll store tab state here
+}
+
 function Browser(): React.ReactElement {
   const addressBarRef = React.useRef<AddressBarHandle>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -45,6 +52,66 @@ function Browser(): React.ReactElement {
     canGoBack: boolean;
     canGoForward: boolean;
   }>({ canGoBack: false, canGoForward: false });
+
+  // Window management state
+  const [windows, setWindows] = React.useState<WindowState[]>([
+    {
+      id: "window-1",
+      smartWindowMode: false,
+      sidebarOpen: false,
+    },
+  ]);
+  const [activeWindowId, setActiveWindowId] = React.useState("window-1");
+
+  // Get current window state
+  const currentWindow = windows.find((w) => w.id === activeWindowId) || windows[0];
+
+  // Sync individual state with current window
+  React.useEffect(() => {
+    if (currentWindow) {
+      setSmartWindowMode(currentWindow.smartWindowMode);
+      setSidebarOpen(currentWindow.sidebarOpen);
+    }
+  }, [currentWindow]);
+
+  // Update current window state when individual state changes
+  const updateCurrentWindow = React.useCallback(
+    (updates: Partial<WindowState>) => {
+      setWindows((prev) =>
+        prev.map((window) => (window.id === activeWindowId ? { ...window, ...updates } : window)),
+      );
+    },
+    [activeWindowId],
+  );
+
+  // Window management functions
+  const createNewWindow = React.useCallback(() => {
+    const newWindowId = `window-${Date.now()}`;
+    const newWindow: WindowState = {
+      id: newWindowId,
+      smartWindowMode: currentWindow?.smartWindowMode || false,
+      sidebarOpen: false,
+    };
+
+    setWindows((prev) => [newWindow, ...prev]); // New window goes to front
+    setActiveWindowId(newWindowId);
+  }, [currentWindow]);
+
+  const closeWindow = React.useCallback(() => {
+    if (windows.length <= 1) return; // Don't close the last window
+
+    const currentIndex = windows.findIndex((w) => w.id === activeWindowId);
+    const newWindows = windows.filter((w) => w.id !== activeWindowId);
+
+    // Move to the next window in the stack
+    const nextWindow = newWindows[Math.min(currentIndex, newWindows.length - 1)];
+
+    if (nextWindow) {
+      setWindows(newWindows);
+      setActiveWindowId(nextWindow.id);
+    }
+  }, [windows, activeWindowId]);
+
   const { setDebugInfo } = useDebug();
   const iframeRefs = React.useRef<{ [key: string]: HTMLIFrameElement | null }>({});
   const [isClient, setIsClient] = React.useState(false);
@@ -310,7 +377,9 @@ function Browser(): React.ReactElement {
   };
 
   const handleSmartWindowToggle = () => {
-    setSmartWindowMode(!smartWindowMode);
+    const newMode = !smartWindowMode;
+    setSmartWindowMode(newMode);
+    updateCurrentWindow({ smartWindowMode: newMode });
   };
 
   const handleTabReorder = (draggedTabId: string, targetTabId: string, dropBefore: boolean) => {
@@ -336,6 +405,9 @@ function Browser(): React.ReactElement {
     // Tabs
     newTab: handleNewTab,
     closeTab: () => activeTabId && handleTabClose(activeTabId),
+
+    // Windows
+    newWindow: createNewWindow,
     nextTab: () => {
       const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
       if (currentIndex >= 0 && currentIndex < tabs.length - 1) {
@@ -424,203 +496,240 @@ function Browser(): React.ReactElement {
   return (
     <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-5 flex items-start justify-center overflow-hidden">
       <div className="relative" style={containerStyle}>
-        <div ref={containerRef} className="flex flex-col absolute" style={browserStyle}>
-          {isClient ? (
-            <BrowserShell
-              ref={addressBarRef}
-              tabs={tabs}
-              activeTabId={activeTabId}
-              currentUrl={activeTab?.displayUrl ?? activeTab?.url ?? ""}
-              onTabClick={(tabId) => {
-                switchTab(tabId);
+        {windows.map((window, index) => {
+          const isActive = window.id === activeWindowId;
+          const zIndex = windows.length - index;
+          const offsetX = index * 15;
+          const offsetY = index * 10;
 
-                // Focus address bar if clicking on a new tab (about:blank)
-                const clickedTab = tabs.find((tab) => tab.id === tabId);
-                if (clickedTab?.url === ABOUT_PAGES.BLANK) {
-                  setTimeout(() => {
-                    addressBarRef.current?.focus();
-                  }, 0);
-                }
+          return (
+            <div
+              key={window.id}
+              ref={isActive ? containerRef : undefined}
+              className={cn(
+                "flex flex-col absolute transition-all duration-300 ease-in-out",
+                !isActive && "opacity-80",
+              )}
+              style={{
+                ...browserStyle,
+                zIndex,
+                transform: `translate(${offsetX}px, ${offsetY}px)`,
+                filter: !isActive ? "brightness(0.95)" : "none",
               }}
-              onTabClose={handleTabClose}
-              onNewTab={handleNewTab}
-              onTabReorder={handleTabReorder}
-              onNavigate={handleNavigate}
-              onBack={handleBack}
-              onForward={handleForward}
-              onRefresh={handleRefresh}
-              canGoBack={canGoBack}
-              canGoForward={canGoForward}
-              onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-              className={cn("flex-1 min-h-0", smartWindowMode && "smart-window-mode")}
             >
-              <div className="flex w-full h-full overflow-hidden">
-                <div
-                  className={cn(
-                    "flex-shrink-0 transition-all duration-200 ease-in-out",
-                    sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
-                  )}
+              {isClient && isActive ? (
+                <BrowserShell
+                  ref={addressBarRef}
+                  tabs={tabs}
+                  activeTabId={activeTabId}
+                  currentUrl={activeTab?.displayUrl ?? activeTab?.url ?? ""}
+                  onTabClick={(tabId) => {
+                    switchTab(tabId);
+
+                    // Focus address bar if clicking on a new tab (about:blank)
+                    const clickedTab = tabs.find((tab) => tab.id === tabId);
+                    if (clickedTab?.url === ABOUT_PAGES.BLANK) {
+                      setTimeout(() => {
+                        addressBarRef.current?.focus();
+                      }, 0);
+                    }
+                  }}
+                  onTabClose={handleTabClose}
+                  onNewTab={handleNewTab}
+                  onTabReorder={handleTabReorder}
+                  onNavigate={handleNavigate}
+                  onBack={handleBack}
+                  onForward={handleForward}
+                  onRefresh={handleRefresh}
+                  canGoBack={canGoBack}
+                  canGoForward={canGoForward}
+                  onSidebarToggle={() => {
+                    const newSidebarState = !sidebarOpen;
+                    setSidebarOpen(newSidebarState);
+                    updateCurrentWindow({ sidebarOpen: newSidebarState });
+                  }}
+                  onWindowClose={closeWindow}
+                  className={cn("flex-1 min-h-0", smartWindowMode && "smart-window-mode")}
                 >
-                  <Sidebar
-                    isOpen={sidebarOpen}
-                    onClose={() => setSidebarOpen(false)}
-                    pageContent={pageContent}
-                    pageTitle={activeTab?.title}
-                    pageUrl={activeTab?.url}
-                    accessKey={
-                      typeof window !== "undefined"
-                        ? localStorage.getItem("infer-access-key") || undefined
-                        : undefined
-                    }
-                  />
-                </div>
-                <div
-                  className={cn(
-                    "flex-1 min-w-0 h-full bg-white overflow-hidden relative transition-all duration-200 ease-in-out",
-                    sidebarOpen && "rounded-tl-lg",
-                  )}
-                >
-                  {/* Render all proxy iframes but only show the active one */}
-                  {tabs.map((tab) => {
-                    if (tab.type === TabType.PROXY) {
-                      return (
-                        <iframe
-                          key={tab.id}
-                          ref={(el) => {
-                            if (el) {
-                              iframeRefs.current[tab.id] = el;
-                            }
-                          }}
-                          src={urlToProxy(tab.url)}
-                          className={cn(
-                            "w-full h-full absolute inset-0",
-                            tab.id === activeTabId && tab.url !== ABOUT_PAGES.BLANK
-                              ? "block"
-                              : "hidden",
-                          )}
-                          title={tab.title}
-                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                        />
-                      );
-                    }
-                    // Handle local files (STUB type with local path)
-                    if (tab.type === TabType.STUB && isLocalPath(tab.url)) {
-                      return (
-                        <iframe
-                          key={tab.id}
-                          ref={(el) => {
-                            if (el) {
-                              iframeRefs.current[tab.id] = el;
-
-                              // Inject proxy-tunnel.js after iframe loads
-                              el.addEventListener(
-                                "load",
-                                () => {
-                                  const iframeDoc = el.contentDocument;
-                                  const iframeWin = el.contentWindow;
-
-                                  if (iframeDoc && iframeWin) {
-                                    // Set configuration on the iframe's window
-                                    (iframeWin as any).PROXY_TUNNEL_CONFIG = {
-                                      PROXY_DOMAIN: import.meta.env.VITE_PROXY_DOMAIN,
-                                      ALLOWED_ORIGINS: ["*"],
-                                    };
-
-                                    // Create and inject the script tag
-                                    const script = iframeDoc.createElement("script");
-                                    script.src = "/proxy-tunnel.js";
-                                    script.async = true;
-                                    iframeDoc.body.appendChild(script);
-                                  }
-                                },
-                                { once: true },
-                              );
-                            }
-                          }}
-                          src={tab.url} // Serve local file directly
-                          className={cn(
-                            "w-full h-full absolute inset-0",
-                            tab.id === activeTabId ? "block" : "hidden",
-                          )}
-                          title={tab.title}
-                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                        />
-                      );
-                    }
-                    return null;
-                  })}
-
-                  {/* Show special pages for active tab */}
-                  {activeTab?.url === ABOUT_PAGES.BLANK && !smartWindowMode && (
-                    <NewTabPage
-                      onNavigate={handleNavigate}
-                      onSmartWindowToggle={handleSmartWindowToggle}
-                    />
-                  )}
-                  {activeTab?.url === ABOUT_PAGES.BLANK && smartWindowMode && (
-                    <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
-                      <div className="max-w-6xl mx-auto w-full p-8">
-                        <div className="text-center mb-8">
-                          <h1 className="text-3xl font-light text-gray-700 mb-4">
-                            Smart Window Mode
-                          </h1>
-                          <p className="text-gray-500 mb-6">
-                            AI-powered browsing experience with enhanced features
-                          </p>
-                          <button
-                            onClick={handleSmartWindowToggle}
-                            className={cn(
-                              "px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700",
-                              "rounded-lg shadow-sm hover:shadow-md transition-all duration-200",
-                              "font-medium text-sm",
-                            )}
-                          >
-                            Exit Smart Window
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-800 mb-2">Smart Search</h3>
-                            <p className="text-gray-600 text-sm">
-                              Enhanced search with AI-powered suggestions and context
-                            </p>
-                          </div>
-                          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-800 mb-2">
-                              Page Analysis
-                            </h3>
-                            <p className="text-gray-600 text-sm">
-                              Automatic page summaries and key information extraction
-                            </p>
-                          </div>
-                          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-800 mb-2">
-                              Smart Bookmarks
-                            </h3>
-                            <p className="text-gray-600 text-sm">
-                              AI-organized bookmarks with automatic categorization
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="flex w-full h-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "flex-shrink-0 transition-all duration-200 ease-in-out",
+                        sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
+                      )}
+                    >
+                      <Sidebar
+                        isOpen={sidebarOpen}
+                        onClose={() => setSidebarOpen(false)}
+                        pageContent={pageContent}
+                        pageTitle={activeTab?.title}
+                        pageUrl={activeTab?.url}
+                        accessKey={
+                          typeof window !== "undefined"
+                            ? localStorage.getItem("infer-access-key") || undefined
+                            : undefined
+                        }
+                      />
                     </div>
-                  )}
-                  {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
-                    <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
-                      <div className="text-center">
-                        <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
-                        <p className="text-gray-500">
-                          Recently closed tabs and synced tabs would appear here
-                        </p>
-                      </div>
+                    <div
+                      className={cn(
+                        "flex-1 min-w-0 h-full bg-white overflow-hidden relative transition-all duration-200 ease-in-out",
+                        sidebarOpen && "rounded-tl-lg",
+                      )}
+                    >
+                      {/* Render all proxy iframes but only show the active one */}
+                      {tabs.map((tab) => {
+                        if (tab.type === TabType.PROXY) {
+                          return (
+                            <iframe
+                              key={tab.id}
+                              ref={(el) => {
+                                if (el) {
+                                  iframeRefs.current[tab.id] = el;
+                                }
+                              }}
+                              src={urlToProxy(tab.url)}
+                              className={cn(
+                                "w-full h-full absolute inset-0",
+                                tab.id === activeTabId && tab.url !== ABOUT_PAGES.BLANK
+                                  ? "block"
+                                  : "hidden",
+                              )}
+                              title={tab.title}
+                              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                            />
+                          );
+                        }
+                        // Handle local files (STUB type with local path)
+                        if (tab.type === TabType.STUB && isLocalPath(tab.url)) {
+                          return (
+                            <iframe
+                              key={tab.id}
+                              ref={(el) => {
+                                if (el) {
+                                  iframeRefs.current[tab.id] = el;
+
+                                  // Inject proxy-tunnel.js after iframe loads
+                                  el.addEventListener(
+                                    "load",
+                                    () => {
+                                      const iframeDoc = el.contentDocument;
+                                      const iframeWin = el.contentWindow;
+
+                                      if (iframeDoc && iframeWin) {
+                                        // Set configuration on the iframe's window
+                                        (iframeWin as any).PROXY_TUNNEL_CONFIG = {
+                                          PROXY_DOMAIN: import.meta.env.VITE_PROXY_DOMAIN,
+                                          ALLOWED_ORIGINS: ["*"],
+                                        };
+
+                                        // Create and inject the script tag
+                                        const script = iframeDoc.createElement("script");
+                                        script.src = "/proxy-tunnel.js";
+                                        script.async = true;
+                                        iframeDoc.body.appendChild(script);
+                                      }
+                                    },
+                                    { once: true },
+                                  );
+                                }
+                              }}
+                              src={tab.url} // Serve local file directly
+                              className={cn(
+                                "w-full h-full absolute inset-0",
+                                tab.id === activeTabId ? "block" : "hidden",
+                              )}
+                              title={tab.title}
+                              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+
+                      {/* Show special pages for active tab */}
+                      {activeTab?.url === ABOUT_PAGES.BLANK && !smartWindowMode && (
+                        <NewTabPage
+                          onNavigate={handleNavigate}
+                          onSmartWindowToggle={handleSmartWindowToggle}
+                        />
+                      )}
+                      {activeTab?.url === ABOUT_PAGES.BLANK && smartWindowMode && (
+                        <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
+                          <div className="max-w-6xl mx-auto w-full p-8">
+                            <div className="text-center mb-8">
+                              <h1 className="text-3xl font-light text-gray-700 mb-4">
+                                Smart Window Mode
+                              </h1>
+                              <p className="text-gray-500 mb-6">
+                                AI-powered browsing experience with enhanced features
+                              </p>
+                              <button
+                                onClick={handleSmartWindowToggle}
+                                className={cn(
+                                  "px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700",
+                                  "rounded-lg shadow-sm hover:shadow-md transition-all duration-200",
+                                  "font-medium text-sm",
+                                )}
+                              >
+                                Exit Smart Window
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                                  Smart Search
+                                </h3>
+                                <p className="text-gray-600 text-sm">
+                                  Enhanced search with AI-powered suggestions and context
+                                </p>
+                              </div>
+                              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                                  Page Analysis
+                                </h3>
+                                <p className="text-gray-600 text-sm">
+                                  Automatic page summaries and key information extraction
+                                </p>
+                              </div>
+                              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                                  Smart Bookmarks
+                                </h3>
+                                <p className="text-gray-600 text-sm">
+                                  AI-organized bookmarks with automatic categorization
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
+                        <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
+                          <div className="text-center">
+                            <h1 className="text-2xl font-light text-gray-700 mb-4">Firefox View</h1>
+                            <p className="text-gray-500">
+                              Recently closed tabs and synced tabs would appear here
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                </BrowserShell>
+              ) : (
+                // Placeholder for inactive windows
+                <div className="firefox-ui bg-[#f9f9fb] rounded-xl shadow-2xl overflow-hidden flex flex-col border-2 border-gray-300 flex-1 min-h-0">
+                  <div className="bg-[#f0f0f4] flex items-center shrink-0 browser-chrome min-w-0 p-3">
+                    <div className="text-sm text-gray-600">Window {index + 1}</div>
+                  </div>
+                  <div className="flex-1 bg-white"></div>
                 </div>
-              </div>
-            </BrowserShell>
-          ) : null}
-        </div>
+              )}
+            </div>
+          );
+        })}
       </div>
       <SettingsModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </div>

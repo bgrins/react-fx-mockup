@@ -33,6 +33,8 @@ export type ShortcutId =
   | "moveTabEnd"
   | "pinTab"
   | "duplicateTab"
+  // Windows
+  | "newWindow"
   // Tab selection
   | "selectTab1"
   | "selectTab2"

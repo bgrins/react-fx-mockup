@@ -20,6 +20,9 @@ export const firefoxKeyboardShortcuts: Record<ShortcutId, KeyboardShortcutDefini
   // Tabs
   newTab: { id: "new-tab", name: "New Tab", key: "t", modifiers: ["ctrl"] },
   closeTab: { id: "close-tab", name: "Close Tab", key: "w", modifiers: ["ctrl"] },
+
+  // Windows
+  newWindow: { id: "new-window", name: "New Window", key: "n", modifiers: ["alt"] },
   nextTab: { id: "next-tab", name: "Next Tab", key: "Tab", modifiers: ["ctrl"] },
   previousTab: {
     id: "previous-tab",
@@ -127,6 +130,10 @@ export const shortcutCategories: ShortcutCategory[] = [
   {
     name: "Tabs",
     shortcuts: ["newTab", "closeTab", "nextTab", "previousTab", "pinTab", "duplicateTab"],
+  },
+  {
+    name: "Windows",
+    shortcuts: ["newWindow"],
   },
   {
     name: "Tab Selection",

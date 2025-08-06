@@ -13,6 +13,7 @@ interface BrowserShellProps extends BaseBrowserShellProps {
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void
   showSplitView?: boolean
+  onWindowClose?: () => void
 }
 
 export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(function BrowserShell({
@@ -35,7 +36,8 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
   onCompareTabs,
   onCloseBothTabs,
   showSplitView,
-  onSidebarToggle
+  onSidebarToggle,
+  onWindowClose
 }, ref) {
   return (
     <div className={cn(
@@ -47,7 +49,7 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div id="firefox-tab-strip" className="bg-[#f0f0f4] flex items-center shrink-0 browser-chrome min-w-0">
-            <WindowControls />
+            <WindowControls onClose={onWindowClose} />
             <div className="flex-1 min-w-0 overflow-hidden">
               <TabStrip
                 tabs={tabs}
