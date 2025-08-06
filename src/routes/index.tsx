@@ -11,6 +11,7 @@ import { useBrowserCore } from "~/hooks/useBrowserCore";
 import { useKeyboardShortcuts } from "~/hooks/useKeyboardShortcuts";
 import React from "react";
 import type { AddressBarHandle } from "~/components/firefox/AddressBar";
+import type { FirefoxViewHandle } from "~/components/firefox/FirefoxView";
 import type { ShortcutHandlers } from "~/types/browser";
 import { ABOUT_PAGES, TabType } from "~/constants/browser";
 import { cn } from "~/lib/utils";
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/")({
 
 function Browser(): React.ReactElement {
   const addressBarRef = React.useRef<AddressBarHandle>(null);
+  const firefoxViewRef = React.useRef<FirefoxViewHandle>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [smartWindowMode, setSmartWindowMode] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
@@ -209,7 +211,14 @@ function Browser(): React.ReactElement {
     showHistorySidebar: () => toast("Show History Sidebar"),
 
     // UI
-    focusAddressBar: () => addressBarRef.current?.focus(),
+    focusAddressBar: () => {
+      // In Smart Window mode on Firefox View, focus the search box instead
+      if (smartWindowMode && activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW) {
+        firefoxViewRef.current?.focusSearch();
+      } else {
+        addressBarRef.current?.focus();
+      }
+    },
     toggleSidebar: () => setSidebarOpen(!sidebarOpen),
     toggleSettings: () => setShowHelp((prev) => !prev),
     pageInfo: () => {
@@ -320,29 +329,88 @@ function Browser(): React.ReactElement {
                             if (el) {
                               iframeRefs.current[tab.id] = el;
 
-                              // Inject proxy-tunnel.js after iframe loads
-                              el.addEventListener(
-                                "load",
-                                () => {
-                                  const iframeDoc = el.contentDocument;
-                                  const iframeWin = el.contentWindow;
+                              // Inject proxy-tunnel.js - handle both already loaded and loading cases
+                              const injectScript = () => {
+                                console.log(
+                                  "[LOCAL] Attempting to inject script for:",
+                                  tab.url,
+                                  "smartWindowMode:",
+                                  smartWindowMode,
+                                );
+                                const iframeDoc = el.contentDocument;
+                                const iframeWin = el.contentWindow;
 
-                                  if (iframeDoc && iframeWin) {
-                                    // Set configuration on the iframe's window
-                                    (iframeWin as any).PROXY_TUNNEL_CONFIG = {
-                                      PROXY_DOMAIN: import.meta.env.VITE_PROXY_DOMAIN,
-                                      ALLOWED_ORIGINS: ["*"],
-                                    };
+                                if (iframeDoc && iframeWin) {
+                                  console.log(
+                                    "[LOCAL] Document ready state:",
+                                    iframeDoc.readyState,
+                                    "title:",
+                                    iframeDoc.title,
+                                  );
 
-                                    // Create and inject the script tag
-                                    const script = iframeDoc.createElement("script");
-                                    script.src = "/proxy-tunnel.js";
-                                    script.async = true;
+                                  // Set configuration on the iframe's window
+                                  (iframeWin as any).PROXY_TUNNEL_CONFIG = {
+                                    PROXY_DOMAIN: import.meta.env.VITE_PROXY_DOMAIN,
+                                    ALLOWED_ORIGINS: ["*"],
+                                  };
+
+                                  // Create and inject the script tag
+                                  const script = iframeDoc.createElement("script");
+                                  script.src = "/proxy-tunnel.js";
+                                  script.async = true;
+
+                                  script.onload = () => {
+                                    console.log(
+                                      "[LOCAL] Proxy tunnel script loaded for tab:",
+                                      tab.id,
+                                    );
+                                    console.log(
+                                      "[LOCAL] Script loaded, iframe title:",
+                                      iframeDoc.title,
+                                    );
+                                  };
+                                  script.onerror = (e) => {
+                                    console.error("[LOCAL] Proxy tunnel script error:", e);
+                                  };
+
+                                  if (iframeDoc.body) {
                                     iframeDoc.body.appendChild(script);
+                                    console.log("[LOCAL] Script tag appended to body");
+                                  } else {
+                                    console.log("[LOCAL] No body element, appending to head");
+                                    iframeDoc.head.appendChild(script);
                                   }
-                                },
-                                { once: true },
-                              );
+                                  return true;
+                                } else {
+                                  console.error("[LOCAL] Could not access iframe document/window");
+                                  return false;
+                                }
+                              };
+
+                              // Try to inject immediately if already loaded
+                              const tryImmediate = () => {
+                                try {
+                                  if (
+                                    el.contentDocument &&
+                                    (el.contentDocument.readyState === "complete" ||
+                                      el.contentDocument.readyState === "interactive")
+                                  ) {
+                                    console.log(
+                                      "[LOCAL] Iframe already loaded, injecting immediately",
+                                    );
+                                    return injectScript();
+                                  }
+                                } catch (e) {
+                                  console.log("[LOCAL] Not ready for immediate injection:", e);
+                                }
+                                return false;
+                              };
+
+                              // Try immediate injection first, fallback to load event
+                              if (!tryImmediate()) {
+                                console.log("[LOCAL] Waiting for load event");
+                                el.addEventListener("load", injectScript, { once: true });
+                              }
                             }
                           }}
                           src={tab.url} // Serve local file directly
@@ -416,6 +484,7 @@ function Browser(): React.ReactElement {
                   )}
                   {activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && (
                     <FirefoxView
+                      ref={firefoxViewRef}
                       tabs={tabs}
                       activeTabId={activeTabId}
                       onTabClick={(tabId) => {

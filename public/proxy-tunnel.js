@@ -310,7 +310,7 @@
   // Helper function to get page info
   function getPageInfo() {
     return {
-      title: document.title,
+      title: document.title || 'Untitled',
       url: window.location.href,
       readyState: document.readyState,
       documentHeight: document.documentElement.scrollHeight,
@@ -321,12 +321,13 @@
   // Notify parent that tunnel is ready
   if (window.parent !== window) {
     // Send ready message immediately
-    console.log('[PROXY WORKER] Sending READY message, history.length:', window.history.length);
+    const initialPageInfo = getPageInfo();
+    console.log('[PROXY WORKER] Sending READY message, history.length:', window.history.length, 'pageInfo:', initialPageInfo);
     window.parent.postMessage({
       type: 'PROXY_TUNNEL_READY',
       origin: TARGET_ORIGIN,
       url: window.location.href,
-      pageInfo: getPageInfo()
+      pageInfo: initialPageInfo
     }, '*');
     
     // Send initial navigation state
@@ -343,24 +344,46 @@
     // Send updated ready message when DOM is loaded (with proper title)
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        console.log('[PROXY WORKER] DOM loaded, sending updated READY message with page info');
+        const domPageInfo = getPageInfo();
+        console.log('[PROXY WORKER] DOM loaded, sending updated READY message with page info:', domPageInfo);
         window.parent.postMessage({
           type: 'PROXY_TUNNEL_READY',
           origin: TARGET_ORIGIN,
           url: window.location.href,
           domLoaded: true,
-          pageInfo: getPageInfo()
+          pageInfo: domPageInfo
+        }, '*');
+        
+        // Also send as navigation event to ensure title is captured
+        window.parent.postMessage({
+          type: 'PROXY_TUNNEL_NAVIGATION',
+          url: window.location.href,
+          canGoBack: window.history.length > 1,
+          canGoForward: false,
+          navigationType: 'domloaded',
+          pageInfo: domPageInfo
         }, '*');
       });
     } else {
       // DOM already loaded
-      console.log('[PROXY WORKER] DOM already loaded, sending updated READY message with page info');
+      const domPageInfo = getPageInfo();
+      console.log('[PROXY WORKER] DOM already loaded, sending updated READY message with page info:', domPageInfo);
       window.parent.postMessage({
         type: 'PROXY_TUNNEL_READY',
         origin: TARGET_ORIGIN,
         url: window.location.href,
         domLoaded: true,
-        pageInfo: getPageInfo()
+        pageInfo: domPageInfo
+      }, '*');
+      
+      // Also send as navigation event to ensure title is captured
+      window.parent.postMessage({
+        type: 'PROXY_TUNNEL_NAVIGATION',
+        url: window.location.href,
+        canGoBack: window.history.length > 1,
+        canGoForward: false,
+        navigationType: 'domready',
+        pageInfo: domPageInfo
       }, '*');
     }
     

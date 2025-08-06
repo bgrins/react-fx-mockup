@@ -110,7 +110,7 @@ export function useProxyTunnel({
         });
 
         if (command === "getPageInfo" && result) {
-          console.log("[PROXY] getPageInfo result contains:", Object.keys(result));
+          console.log("[PROXY] getPageInfo result:", result);
 
           onPageInfo?.({
             title: result.title,
