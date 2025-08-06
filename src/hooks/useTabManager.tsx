@@ -138,6 +138,8 @@ export function useTabManager(options: UseTabManagerOptions = {}) {
           history: newHistory,
         });
 
+        console.log("[navigateTab] Setting tab with displayUrl:", options.displayUrl);
+
         return {
           ...tab,
           url: options.url, // Always use the actual URL

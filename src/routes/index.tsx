@@ -1,37 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
-import {
-  DynamicFavicon,
-  FirefoxFavicon,
-  FirefoxViewIcon,
-  SparklyFirefoxViewIcon,
-} from "~/components/firefox/Favicons";
+import { FirefoxViewIcon, SparklyFirefoxViewIcon } from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { FirefoxView } from "~/components/firefox/FirefoxView";
 import { urlToProxy } from "~/utils/proxy";
-import { useDebug } from "~/contexts/useDebug";
-import { useProxyTunnel } from "~/hooks/useProxyTunnel";
 import { useBrowserScale } from "~/hooks/useBrowserScale";
-import { useTabManager } from "~/hooks/useTabManager";
+import { useBrowserCore } from "~/hooks/useBrowserCore";
 import { useKeyboardShortcuts } from "~/hooks/useKeyboardShortcuts";
 import React from "react";
 import type { AddressBarHandle } from "~/components/firefox/AddressBar";
 import type { ShortcutHandlers } from "~/types/browser";
-import { ABOUT_PAGES, TabType, PROXY_MESSAGE_TYPES } from "~/constants/browser";
+import { ABOUT_PAGES, TabType } from "~/constants/browser";
 import { cn } from "~/lib/utils";
 import { toast } from "sonner";
-import {
-  parseNavigationUrl,
-  shouldHandleNavigationLocally,
-  canGoBack as checkCanGoBack,
-  canGoForward as checkCanGoForward,
-  getPreviousUrl,
-  getNextUrl,
-  getTabTypeForUrl,
-} from "~/utils/navigation";
-import { isLocalPath, getUrlForLocalPath } from "~/constants/urlShortcuts";
+import { isLocalPath } from "~/constants/urlShortcuts";
 
 export const Route = createFileRoute("/")({
   component: Browser,
@@ -41,27 +25,29 @@ function Browser(): React.ReactElement {
   const addressBarRef = React.useRef<AddressBarHandle>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [smartWindowMode, setSmartWindowMode] = React.useState(false);
-  const [pageContent, setPageContent] = React.useState<string>("");
-  const [proxyNavigationState, setProxyNavigationState] = React.useState<{
-    canGoBack: boolean;
-    canGoForward: boolean;
-  }>({ canGoBack: false, canGoForward: false });
-  const { setDebugInfo } = useDebug();
-  const iframeRefs = React.useRef<{ [key: string]: HTMLIFrameElement | null }>({});
   const [isClient, setIsClient] = React.useState(false);
 
+  // Use shared browser core functionality
   const {
     tabs,
     activeTab,
     activeTabId,
     updateTab,
-    updateActiveTab,
-    navigateActiveTab,
-    closeTab,
-    createTab,
     switchTab,
-    reorderTabs,
-  } = useTabManager({ smartWindowMode });
+    handleNavigate,
+    handleBack,
+    handleForward,
+    handleRefresh,
+    canGoBack,
+    canGoForward,
+    handleTabClose: coreHandleTabClose,
+    handleNewTab: coreHandleNewTab,
+    handleTabReorder,
+    pageContent,
+    iframeRefs,
+    requestPageInfo,
+    requestPageContent,
+  } = useBrowserCore({ smartWindowMode });
 
   // Set isClient to true after mount
   React.useEffect(() => {
@@ -74,94 +60,6 @@ function Browser(): React.ReactElement {
       favicon: smartWindowMode ? <SparklyFirefoxViewIcon /> : <FirefoxViewIcon />,
     });
   }, [smartWindowMode, updateTab]);
-
-  // Memoize navigation states to ensure consistent values during SSR
-  const canGoBack = React.useMemo(() => {
-    return checkCanGoBack(activeTab, proxyNavigationState.canGoBack);
-  }, [activeTab, proxyNavigationState.canGoBack]);
-
-  const canGoForward = React.useMemo(() => {
-    return checkCanGoForward(activeTab);
-  }, [activeTab]);
-
-  const handleNavigate = React.useCallback(
-    (url: string, navigationType?: string) => {
-      if (!url || !activeTab) return;
-
-      console.log("[handleNavigate] Navigating to:", url);
-      console.log("[handleNavigate] isLocalPath:", isLocalPath(url));
-
-      try {
-        // Check if this is a local path that needs to be served locally
-        if (isLocalPath(url)) {
-          // For local paths, we need to navigate to the actual local file
-          // but show the corresponding real URL in the address bar
-          const realUrl = getUrlForLocalPath(url);
-          console.log("[handleNavigate] Local path detected, real URL:", realUrl);
-          navigateActiveTab({
-            url: url, // Navigate to the local file
-            navigationType,
-            displayUrl: realUrl || url, // Show the real URL in the address bar
-          });
-        } else {
-          const parsedUrl = parseNavigationUrl(url);
-          console.log("[handleNavigate] Parsed URL:", parsedUrl);
-          navigateActiveTab({
-            url: parsedUrl.fullUrl,
-            navigationType,
-            displayUrl: parsedUrl.displayUrl,
-          });
-        }
-      } catch (error) {
-        console.error("Navigation error:", error);
-      }
-    },
-    [activeTab, navigateActiveTab],
-  );
-
-  // Update debug info whenever active tab changes
-  React.useEffect(() => {
-    if (activeTab) {
-      const proxyUrl =
-        activeTab.type === TabType.PROXY && activeTab.url !== ABOUT_PAGES.BLANK
-          ? urlToProxy(activeTab.url)
-          : undefined;
-
-      setDebugInfo({
-        currentTab: {
-          url: activeTab.url,
-          proxyUrl,
-          title: activeTab.title,
-          type: activeTab.type,
-        },
-      });
-    }
-  }, [activeTab, setDebugInfo]);
-
-  // Get current iframe ref
-  const currentIframeRef = React.useMemo(() => {
-    return {
-      current: activeTab ? iframeRefs.current[activeTab.id] || null : null,
-    };
-  }, [activeTab]);
-
-  // Use proxy tunnel hook
-  const { requestPageInfo, requestPageContent, sendCommand } = useProxyTunnel({
-    onNavigate: handleNavigate,
-    onPageInfo: (info) => {
-      updateActiveTab({
-        title: info.title || activeTab?.title,
-      });
-    },
-    onPageContent: setPageContent,
-    onNavigationStateChange: setProxyNavigationState,
-    activeTabUrl: activeTab?.url,
-    iframeRef: currentIframeRef,
-    // Enable for proxy tabs and local files (stub tabs with local paths)
-    enabled:
-      (activeTab?.type === TabType.PROXY && activeTab?.url !== ABOUT_PAGES.BLANK) ||
-      (activeTab?.type === TabType.STUB && isLocalPath(activeTab?.url || "")),
-  });
 
   // Request page content when sidebar is opened or tab changes
   React.useEffect(() => {
@@ -178,121 +76,21 @@ function Browser(): React.ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sidebarOpen, activeTabId, activeTab?.type, activeTab?.url]);
 
-  // Reset proxy navigation state when switching tabs
+  // Debug logging for current URL
   React.useEffect(() => {
-    if (activeTab?.type !== TabType.PROXY) {
-      setProxyNavigationState({ canGoBack: false, canGoForward: false });
-    }
-  }, [activeTabId, activeTab?.type]);
-
-  const handleBack = () => {
-    if (!activeTab) return;
-
-    const previous = getPreviousUrl(activeTab);
-    if (!previous) return;
-
-    console.log("[handleBack] Previous URL:", previous.url);
-    console.log("[handleBack] Current tab:", activeTab);
-    console.log("[handleBack] Tab history:", activeTab.history);
-    console.log("[handleBack] History index:", activeTab.historyIndex);
-    const parsedUrl = parseNavigationUrl(previous.url);
-    const shouldHandleLocally = shouldHandleNavigationLocally(activeTab, previous.url);
-    console.log("[handleBack] Should handle locally:", shouldHandleLocally);
-
-    if (!shouldHandleLocally) {
-      // For proxy tabs going to non-about:blank URLs, send the goBack command
-      // Use setTimeout to ensure the command is sent after any event propagation
-      setTimeout(() => {
-        sendCommand("goBack");
-      }, 0);
-
-      // Update the local history index to track that we went back
-      updateActiveTab({
-        historyIndex: previous.index,
-      });
-    } else {
-      // For non-proxy tabs or when going back to about:blank or local files, handle locally
-      // Check if this is a local path and get the display URL
-      let displayUrl = parsedUrl.displayUrl;
-      if (isLocalPath(previous.url)) {
-        const realUrl = getUrlForLocalPath(previous.url);
-        displayUrl = realUrl || previous.url;
-      }
-
-      updateActiveTab({
-        url: previous.url,
-        displayUrl: displayUrl,
-        historyIndex: previous.index,
-        title: previous.url === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
-        favicon:
-          previous.url === ABOUT_PAGES.BLANK ? (
-            <FirefoxFavicon />
-          ) : (
-            <DynamicFavicon url={displayUrl} />
-          ),
-        type: getTabTypeForUrl(previous.url),
+    if (activeTab) {
+      console.log("[Browser] Active tab changed:", {
+        id: activeTab.id,
+        url: activeTab.url,
+        displayUrl: activeTab.displayUrl,
+        title: activeTab.title,
+        currentUrl: activeTab?.displayUrl ?? activeTab?.url ?? "",
       });
     }
-  };
-
-  const handleForward = () => {
-    if (!activeTab) return;
-
-    const next = getNextUrl(activeTab);
-    if (!next) return;
-
-    const parsedUrl = parseNavigationUrl(next.url);
-    const shouldHandleLocally = shouldHandleNavigationLocally(activeTab, next.url);
-
-    // If we're currently on about:blank or going to a local file, handle locally
-    if (!shouldHandleLocally && activeTab.url !== ABOUT_PAGES.BLANK) {
-      // For proxy tabs that aren't on about:blank, send the goForward command
-      sendCommand("goForward");
-
-      // Update the local history index to track that we went forward
-      updateActiveTab({
-        historyIndex: next.index,
-      });
-    } else {
-      // For non-proxy tabs or when navigating from about:blank or to local files, handle locally
-      // Check if this is a local path and get the display URL
-      let displayUrl = parsedUrl.displayUrl;
-      if (isLocalPath(next.url)) {
-        const realUrl = getUrlForLocalPath(next.url);
-        displayUrl = realUrl || next.url;
-      }
-
-      updateActiveTab({
-        url: next.url,
-        displayUrl: displayUrl,
-        historyIndex: next.index,
-        title: next.url === ABOUT_PAGES.BLANK ? "New Tab" : `Loading...`,
-        favicon:
-          next.url === ABOUT_PAGES.BLANK ? <FirefoxFavicon /> : <DynamicFavicon url={displayUrl} />,
-        type: getTabTypeForUrl(next.url),
-      });
-    }
-  };
-
-  const handleRefresh = () => {
-    if (!activeTab) return;
-
-    if (activeTab.type === TabType.PROXY) {
-      // Update tab to show loading state
-      updateActiveTab({
-        title: `Loading ${new URL(activeTab.url).hostname}...`,
-      });
-
-      // Send reload command through the proxy tunnel
-      sendCommand("reload");
-    }
-  };
+  }, [activeTab]);
 
   const handleTabClose = (id: string) => {
-    // Clean up iframe reference
-    delete iframeRefs.current[id];
-
-    const newActiveTabId = closeTab(id);
+    const newActiveTabId = coreHandleTabClose(id);
 
     // Focus the address bar if we created a new tab
     if (newActiveTabId && tabs.length === 1) {
@@ -303,24 +101,10 @@ function Browser(): React.ReactElement {
   };
 
   const handleNewTab = (url?: string) => {
-    // In Smart Window mode, focus Firefox View instead of creating new tab
-    if (smartWindowMode && !url) {
-      switchTab("firefox-view");
-      // Focus the search input in Firefox View
-      setTimeout(() => {
-        const searchInput = document.querySelector(
-          'input[placeholder="Search or enter address"]',
-        ) as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
-      }, 0);
-      return;
-    }
+    const newTabId = coreHandleNewTab(url);
 
-    createTab(url);
-    // Focus the address bar for the new tab only if no URL provided
-    if (!url) {
+    // Focus the address bar for the new tab only if no URL provided and not in smart window mode
+    if (!url && !smartWindowMode && newTabId) {
       setTimeout(() => {
         addressBarRef.current?.focus();
       }, 0);
@@ -335,13 +119,7 @@ function Browser(): React.ReactElement {
     if (newSmartWindowMode) {
       // If the current tab is a new tab (about:blank), close it
       if (activeTab?.url === ABOUT_PAGES.BLANK) {
-        closeTab(activeTab.id);
-
-        // Clean up iframe reference for the closed tab
-        if (activeTab.id !== "firefox-view") {
-          // Don't clean up firefox-view
-          delete iframeRefs.current[activeTab.id];
-        }
+        handleTabClose(activeTab.id);
       }
 
       // Switch to Firefox View
@@ -353,10 +131,6 @@ function Browser(): React.ReactElement {
         handleNewTab();
       }
     }
-  };
-
-  const handleTabReorder = (draggedTabId: string, targetTabId: string, dropBefore: boolean) => {
-    reorderTabs(draggedTabId, targetTabId, dropBefore);
   };
 
   // Calculate scale for mobile
@@ -451,31 +225,6 @@ function Browser(): React.ReactElement {
   };
 
   const { showHelp, setShowHelp } = useKeyboardShortcuts(shortcutHandlers);
-
-  // Handle keyboard events forwarded from proxy iframes
-  React.useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === PROXY_MESSAGE_TYPES.KEYBOARD) {
-        // Create a synthetic keyboard event
-        const keyboardEvent = new KeyboardEvent("keydown", {
-          key: event.data.key,
-          code: event.data.code,
-          altKey: event.data.altKey,
-          ctrlKey: event.data.ctrlKey,
-          shiftKey: event.data.shiftKey,
-          metaKey: event.data.metaKey,
-          bubbles: true,
-          cancelable: true,
-        });
-
-        // Dispatch the event on the window
-        window.dispatchEvent(keyboardEvent);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
 
   return (
     <div className="h-[calc(100vh-60px)] bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-5 flex items-start justify-center overflow-hidden">
