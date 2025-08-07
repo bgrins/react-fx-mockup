@@ -1,4 +1,5 @@
 (function() {
+  console.log('[PROXY] Script loaded');
   // Get configuration from script tag data attributes or window config
   const currentScript = document.currentScript || document.querySelector('script[src*="proxy-tunnel"]');
   const config = window.PROXY_TUNNEL_CONFIG || {};

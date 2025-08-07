@@ -316,7 +316,6 @@ function Browser(): React.ReactElement {
                               : "hidden",
                           )}
                           title={tab.title}
-                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
                         />
                       );
                     }
@@ -327,6 +326,9 @@ function Browser(): React.ReactElement {
                           key={tab.id}
                           ref={(el) => {
                             if (el) {
+                              if (iframeRefs.current[tab.id]) {
+                                return;
+                              }
                               iframeRefs.current[tab.id] = el;
 
                               // Inject proxy-tunnel.js - handle both already loaded and loading cases
@@ -376,9 +378,6 @@ function Browser(): React.ReactElement {
                                   if (iframeDoc.body) {
                                     iframeDoc.body.appendChild(script);
                                     console.log("[LOCAL] Script tag appended to body");
-                                  } else {
-                                    console.log("[LOCAL] No body element, appending to head");
-                                    iframeDoc.head.appendChild(script);
                                   }
                                   return true;
                                 } else {
@@ -419,7 +418,6 @@ function Browser(): React.ReactElement {
                             tab.id === activeTabId ? "block" : "hidden",
                           )}
                           title={tab.title}
-                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
                         />
                       );
                     }

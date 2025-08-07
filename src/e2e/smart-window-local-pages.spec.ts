@@ -29,9 +29,8 @@ test.describe("Smart Window Mode - Local Pages Title Updates", () => {
     const tabTitle = await page.locator('.tab-title[data-tab-active="true"]').textContent();
     console.log("Tab title after navigation:", tabTitle);
 
-    // In Smart Window mode, local pages should keep their "Loading..." title
-    // This is the expected behavior for Smart Window mode - titles don't get updated
-    expect(tabTitle).toBe("Loading...");
+    // In Smart Window mode, local pages should have their titles updated correctly
+    expect(tabTitle).toBe("Test Page - Proxy Tunnel");
 
     // Verify the iframe is loading the local test page
     const iframeSrc = await page.locator("iframe").first().getAttribute("src");
@@ -47,9 +46,9 @@ test.describe("Smart Window Mode - Local Pages Title Updates", () => {
     const updatedTabTitle = await page.locator('.tab-title[data-tab-active="true"]').textContent();
     console.log("Tab title after dynamic change:", updatedTabTitle);
 
-    // The title should STILL be "Loading..." in Smart Window mode
-    // This demonstrates that the proxy tunnel script injection fix is needed
-    expect(updatedTabTitle).toBe("Loading...");
+    // The title should be updated with the dynamic content in Smart Window mode
+    // This demonstrates that proxy tunnel script injection works correctly
+    expect(updatedTabTitle).toMatch(/Test Page - \d+:\d+:\d+ [AP]M/);
   });
 
   test("should update tab title for local pages when NOT in Smart Window mode", async ({

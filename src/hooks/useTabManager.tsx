@@ -7,6 +7,7 @@ import {
   DynamicFavicon,
 } from "~/components/firefox/Favicons";
 import { getTabTypeForUrl } from "~/utils/navigation";
+import { isLocalPath, getUrlForLocalPath } from "~/constants/urlShortcuts";
 
 interface UseTabManagerOptions {
   initialTabs?: Tab[];
@@ -213,11 +214,16 @@ export function useTabManager(options: UseTabManagerOptions = {}) {
         id: newTabId,
         title: url === ABOUT_PAGES.BLANK ? "New Tab" : "Loading...",
         url,
-        favicon: url === ABOUT_PAGES.BLANK ? <FirefoxFavicon /> : <DynamicFavicon url={url} />,
+        favicon:
+          url === ABOUT_PAGES.BLANK ? (
+            <FirefoxFavicon />
+          ) : (
+            <DynamicFavicon url={isLocalPath(url) ? getUrlForLocalPath(url) || url : url} />
+          ),
         isActive: true,
         history: [url],
         historyIndex: 0,
-        type: url === ABOUT_PAGES.BLANK ? TabType.STUB : TabType.PROXY,
+        type: getTabTypeForUrl(url),
       };
 
       // Set all other tabs as inactive

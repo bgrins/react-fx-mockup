@@ -170,6 +170,21 @@ describe("useTabManager", () => {
     expect(newOrder[2]).toBe(initialOrder[1]);
   });
 
+  it("should create tab with STUB type for local URLs", () => {
+    const { result } = renderHook(() => useTabManager());
+
+    act(() => {
+      result.current.createTab("/test-page.html");
+    });
+
+    expect(result.current.tabs).toHaveLength(3);
+    const newTab = result.current.tabs[2];
+    expect(newTab?.url).toBe("/test-page.html");
+    expect(newTab?.isActive).toBe(true);
+    expect(newTab?.type).toBe(TabType.STUB);
+    expect(result.current.activeTabId).toBe(newTab?.id);
+  });
+
   it("should initialize with custom tabs", () => {
     const customTabs = [
       {
