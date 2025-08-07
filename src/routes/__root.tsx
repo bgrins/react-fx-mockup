@@ -51,12 +51,17 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
   const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    // Check URL parameters for initial access key
     const urlParams = new URLSearchParams(window.location.search);
     const urlAccessKey = urlParams.get("accessKey") || urlParams.get("access-key");
+    const urlProfile = urlParams.get("profile");
+
+    let needsReload = false;
 
     if (urlAccessKey) {
       localStorage.setItem("infer-access-key", urlAccessKey);
+      urlParams.delete("accessKey");
+      urlParams.delete("access-key");
+      needsReload = true;
     } else if (
       !localStorage.getItem("infer-access-key") &&
       import.meta.env.DEV &&
@@ -64,6 +69,18 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
     ) {
       // If no stored value, use env variable in development only
       localStorage.setItem("infer-access-key", import.meta.env.VITE_INFER_ACCESS_KEY);
+    }
+
+    if (urlProfile) {
+      localStorage.setItem("selected-profile", urlProfile);
+      urlParams.delete("profile");
+      needsReload = true;
+    }
+
+    if (needsReload) {
+      const newUrl = window.location.pathname + (urlParams.size ? `?${urlParams.toString()}` : "");
+      window.history.replaceState({}, "", newUrl);
+      window.location.reload();
     }
   }, []);
 

@@ -25,16 +25,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
-  useEffect(() => {
-    // Load the default shortcuts as the initial profile
-    const defaultProfile: Profile = {
-      name: "Default",
-      shortcuts: defaultShortcuts,
-    };
-    setProfiles([defaultProfile]);
-    setSelectedProfile(defaultProfile);
-  }, []);
-
   const loadProfile = async (profileName: string) => {
     try {
       const response = await fetch(`/src/profiles/${profileName}.csv`);
@@ -68,14 +58,41 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         shortcuts: topShortcuts,
       };
 
-      setProfiles((prevProfiles) => [...prevProfiles, newProfile]);
+      setProfiles((prevProfiles) => {
+        if (prevProfiles.find((p) => p.name === profileName)) {
+          return prevProfiles;
+        }
+        return [...prevProfiles, newProfile];
+      });
       setSelectedProfile(newProfile);
     } catch (error) {
       console.error("Failed to load profile:", error);
     }
   };
 
+  // On mount, setup default profile and load from localStorage if available
+  useEffect(() => {
+    const defaultProfile: Profile = {
+      name: "Default",
+      shortcuts: defaultShortcuts,
+    };
+
+    // Initialize with default profile
+    setProfiles([defaultProfile]);
+
+    const storedProfileName =
+      typeof window !== "undefined" ? localStorage.getItem("selected-profile") : null;
+    if (storedProfileName && storedProfileName !== "Default") {
+      loadProfile(storedProfileName);
+    } else {
+      setSelectedProfile(defaultProfile);
+    }
+  }, []);
+
   const selectProfile = (profileName: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("selected-profile", profileName);
+    }
     const profile = profiles.find((p) => p.name === profileName);
     if (profile) {
       setSelectedProfile(profile);
