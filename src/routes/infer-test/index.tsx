@@ -18,6 +18,9 @@ import {
 import { Label } from "../../components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Alert, AlertDescription } from "../../components/ui/alert";
+import { AssistantRuntimeProvider, useLocalRuntime } from "@assistant-ui/react";
+import { Thread } from "~/components/assistant-ui/thread";
+import * as Tooltip from "@radix-ui/react-tooltip";
 
 export const Route = createFileRoute("/infer-test/")({
   component: InferTestPage,
@@ -125,6 +128,40 @@ function InferTestPage() {
       setLoading(false);
     }
   };
+
+  const runtime = useLocalRuntime({
+    async run({ messages }) {
+      if (!accessKey) {
+        throw new Error("Please enter an access key to chat with the AI");
+      }
+
+      try {
+        // Use the AI SDK directly instead of parsing the response manually
+        const infer = createInferClient(accessKey);
+        const { text } = await generateText({
+          model: infer("gpt-4o-mini"),
+          messages: messages.map((msg) => ({
+            role: msg.role,
+            content: msg.content
+              .map((part) => (part.type === "text" && "text" in part ? part.text : ""))
+              .join(""),
+          })),
+        });
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: text || "Sorry, I couldn't generate a response.",
+            },
+          ],
+        };
+      } catch (error: any) {
+        console.error("Chat error:", error);
+        throw new Error(`Chat failed: ${error.message}`);
+      }
+    },
+  });
 
   const handleStreaming = async () => {
     if (!accessKey) {
@@ -314,6 +351,13 @@ function InferTestPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      <div>
+        <Tooltip.Provider>
+          <AssistantRuntimeProvider runtime={runtime}>
+            <Thread />
+          </AssistantRuntimeProvider>
+        </Tooltip.Provider>
+      </div>
     </div>
   );
 }
