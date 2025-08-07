@@ -1,22 +1,11 @@
 import React from "react";
 import { cn } from "~/lib/utils";
-import { streamText } from "ai";
-import { createInferClient } from "~/lib/infer-client";
 import { MegaChat } from '../assistant-ui/mega-chat';
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  pageContent?: string;
-  pageTitle?: string;
-  pageUrl?: string;
   accessKey?: string;
   defaultSection?: SidebarSection;
   onSidebarToggle?: () => void;
@@ -67,9 +56,6 @@ const sectionIcons = {
 export function Sidebar({
   isOpen,
   onClose,
-  pageContent,
-  pageTitle,
-  pageUrl,
   accessKey,
   defaultSection = "pageInfo",
   onSidebarToggle,
@@ -79,14 +65,9 @@ export function Sidebar({
 }: SidebarProps) {
   const [activeSection, setActiveSection] = React.useState<SidebarSection>(null);
   const [previousSection, setPreviousSection] = React.useState<SidebarSection>(null);
-  const [messages, setMessages] = React.useState<Message[]>([]);
-  const [input, setInput] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
   const [width, setWidth] = React.useState(360);
   const [isResizing, setIsResizing] = React.useState(false);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Load saved width from localStorage
   React.useEffect(() => {
@@ -105,14 +86,6 @@ export function Sidebar({
     }
   }, [width, activeSection]);
 
-  // Auto-focus input when page info section opens
-  React.useEffect(() => {
-    if (activeSection === "pageInfo" && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
-  }, [activeSection]);
 
   // Handle sidebar open/close - restore previous section when reopening
   React.useEffect(() => {
@@ -135,99 +108,7 @@ export function Sidebar({
     }
   }, [isOpen, isExpanded, smartWindowMode, defaultSection]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
-  React.useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const sendMessage = async () => {
-    if (!input.trim() || !accessKey) return;
-
-    const userMessage: Message = {
-      id: `msg-${Date.now()}`,
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsLoading(true);
-
-    try {
-      const contentString = typeof pageContent === 'string' ? pageContent : '';
-      const context = contentString
-        ? `Current page: ${pageTitle || "Unknown"} (${pageUrl || "Unknown URL"})
-           
-           Page content:
-           ${contentString.substring(0, 3000)}...`
-        : "No page content available.";
-
-      const infer = createInferClient(accessKey);
-      
-      const assistantMessage: Message = {
-        id: `msg-assistant-${Date.now()}-${Math.random()}`,
-        role: "assistant",
-        content: "",
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-
-      const { textStream } = await streamText({
-        model: infer("gpt-4o-mini"),
-        messages: [
-          {
-            role: "system",
-            content: `You are a helpful assistant that can answer questions about the current webpage. ${context}`,
-          },
-          ...messages.map((msg) => ({
-            role: msg.role as "system" | "user" | "assistant",
-            content: msg.content,
-          })),
-          {
-            role: "user",
-            content: input,
-          },
-        ],
-        temperature: 0.7,
-      });
-
-      let fullContent = "";
-      for await (const chunk of textStream) {
-        fullContent += chunk;
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessage.id
-              ? { ...msg, content: fullContent }
-              : msg
-          )
-        );
-      }
-    } catch (error: any) {
-      console.error("Error sending message:", error);
-      const errorDetails = error?.message || "Unknown error";
-      const errorMessage: Message = {
-        id: `msg-${Date.now()}`,
-        role: "assistant",
-        content: `Sorry, I encountered an error: ${errorDetails}. Please check your API key and try again.`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -357,17 +238,6 @@ export function Sidebar({
                 </div>
               ))}
 
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 rounded-lg px-3 py-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div ref={messagesEndRef} />
             </div> */}
@@ -382,12 +252,12 @@ export function Sidebar({
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about this page..."
-                  disabled={!accessKey || isLoading}
+                  disabled={!accessKey}
                   className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!accessKey || isLoading || !input.trim()}
+                  disabled={!accessKey || !input.trim()}
                   className="w-full bg-blue-500 text-white rounded-lg px-4 py-2 text-sm hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
                 >
                   Send

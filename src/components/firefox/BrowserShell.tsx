@@ -51,6 +51,7 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
       "border-2 border-gray-300",
       // Default background - Smart Window gradient handled via CSS
       "bg-[#f9f9fb]",
+      smartWindowMode && "smart-window-mode",
       className
     )}>
       {/* Tab strip with window controls */}

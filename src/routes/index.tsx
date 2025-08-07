@@ -52,7 +52,6 @@ function Browser(): React.ReactElement {
     handleTabClose: coreHandleTabClose,
     handleNewTab: coreHandleNewTab,
     handleTabReorder,
-    pageContent,
     iframeRefs,
     requestPageInfo,
     requestPageContent,
@@ -329,52 +328,55 @@ function Browser(): React.ReactElement {
               <div className="flex w-full h-full overflow-hidden">
                 <div
                   className={cn(
-                    "flex-shrink-0 transition-all duration-200 ease-in-out flex flex-col",
-                    // In Smart Window mode, always show sidebar; in classic mode, use sidebarOpen
-                    smartWindowMode ? "w-[320px]" : sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
+                    "flex-shrink-0 transition-all duration-200 ease-in-out",
+                    // In Smart Window mode, hide sidebar when on Firefox View; otherwise show sidebar. In classic mode, use sidebarOpen
+                    smartWindowMode
+                      ? activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW
+                        ? "w-0 overflow-hidden"
+                        : "w-[352px] p-1 pr-0"
+                      : sidebarOpen
+                        ? "w-auto"
+                        : "w-0 overflow-hidden",
                   )}
                 >
-                  {/* Smart Mode Narrow Toolbar - positioned above sidebar */}
-                  {smartWindowMode && (
-                    <div className="border-r border-[rgba(21,20,26,0.1)]">
-                      <Toolbar
-                        url={activeTab?.displayUrl ?? activeTab?.url ?? ""}
-                        onBack={handleBack}
-                        onForward={handleForward}
-                        onRefresh={handleRefresh}
-                        onNavigate={handleNavigate}
-                        onNewTab={handleNewTab}
-                        canGoBack={canGoBack}
-                        canGoForward={canGoForward}
-                        onSidebarToggle={() => {
-                          if (smartWindowMode) {
-                            setSidebarExpanded(!sidebarExpanded);
-                          } else {
-                            setSidebarOpen(!sidebarOpen);
-                          }
-                        }}
-                        smartMode={true}
-                        pageTitle={activeTab?.title}
-                        className="shrink-0"
+                  {smartWindowMode && activeTab?.url !== ABOUT_PAGES.FIREFOX_VIEW ? (
+                    <div className="flex flex-col h-full rounded-xl border border-white/30 shadow-[0px_4px_14px_0px_rgba(0,0,0,0.1)] overflow-hidden">
+                      {/* Smart Mode Narrow Toolbar - positioned above sidebar */}
+                      <div className="border-b border-[rgba(21,20,26,0.1)]">
+                        <Toolbar
+                          url={activeTab?.displayUrl ?? activeTab?.url ?? ""}
+                          onBack={handleBack}
+                          onForward={handleForward}
+                          onRefresh={handleRefresh}
+                          onNavigate={handleNavigate}
+                          onNewTab={handleNewTab}
+                          canGoBack={canGoBack}
+                          canGoForward={canGoForward}
+                          onSidebarToggle={() => {
+                            if (smartWindowMode) {
+                              setSidebarExpanded(!sidebarExpanded);
+                            } else {
+                              setSidebarOpen(!sidebarOpen);
+                            }
+                          }}
+                          smartMode={true}
+                          pageTitle={activeTab?.title}
+                          className="shrink-0"
+                        />
+                      </div>
+                      <MegaChat
+                        accessKey={
+                          typeof window !== "undefined"
+                            ? localStorage.getItem("infer-access-key") || ""
+                            : ""
+                        }
                       />
                     </div>
-                  )}
-                  {smartWindowMode ? (
-                    <MegaChat
-                      accessKey={
-                        typeof window !== "undefined"
-                          ? localStorage.getItem("infer-access-key") || ""
-                          : ""
-                      }
-                    />
-                  ) : (
+                  ) : !smartWindowMode ? (
                     <div className="flex-1 min-h-0">
                       <Sidebar
                         isOpen={sidebarOpen}
                         onClose={() => setSidebarOpen(false)}
-                        pageContent={pageContent}
-                        pageTitle={activeTab?.title}
-                        pageUrl={activeTab?.url}
                         accessKey={
                           typeof window !== "undefined"
                             ? localStorage.getItem("infer-access-key") || undefined
@@ -392,13 +394,13 @@ function Browser(): React.ReactElement {
                         isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
                       />
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 <div
                   className={cn(
                     "flex-1 min-w-0 h-full relative transition-all duration-200 ease-in-out",
                     smartWindowMode && activeTab?.url !== ABOUT_PAGES.FIREFOX_VIEW
-                      ? "p-4"
+                      ? "p-1"
                       : "overflow-hidden",
                     sidebarOpen && !smartWindowMode && "rounded-tl-lg",
                   )}

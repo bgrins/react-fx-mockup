@@ -32,7 +32,7 @@ import { TripPlanningTool } from "./trip-planning-tool";
 export const Thread: FC = () => {
   return (
     <ThreadPrimitive.Root
-      className="bg-white/50 backdrop-blur-sm flex h-full flex-col"
+      className="backdrop-blur-sm bg-white/40 flex h-full flex-col"
       style={{
         ["--thread-max-width" as string]: "48rem",
         ["--thread-padding-x" as string]: "1rem",
@@ -145,15 +145,17 @@ const ThreadWelcomeSuggestions: FC = () => {
           >
             <Button
               variant="ghost"
-              className="dark:hover:bg-accent/60 h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-xl border px-4 py-3.5 text-left text-sm sm:flex-col"
+              className="dark:hover:bg-accent/60 h-auto w-full items-start justify-start rounded-xl border px-4 py-3.5 text-left text-sm"
               aria-label={suggestedAction.action}
             >
-              <span className="font-medium whitespace-normal">
-                {suggestedAction.title}
-              </span>
-              <p className="text-muted-foreground whitespace-normal text-xs">
-                {suggestedAction.label}
-              </p>
+              <div className="flex flex-col gap-1 w-full min-w-0">
+                <span className="font-medium leading-tight break-words">
+                  {suggestedAction.title}
+                </span>
+                <p className="text-muted-foreground leading-tight break-words">
+                  {suggestedAction.label}
+                </p>
+              </div>
             </Button>
           </ThreadPrimitive.Suggestion>
         </motion.div>
@@ -164,7 +166,7 @@ const ThreadWelcomeSuggestions: FC = () => {
 
 const Composer: FC = () => {
   return (
-    <div className="relative mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 px-[var(--thread-padding-x)] pb-4 md:pb-6">
+    <div className=" relative mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 px-[var(--thread-padding-x)] pb-4 md:pb-6">
       <ThreadScrollToBottom />
       <ThreadPrimitive.Empty>
         <ThreadWelcomeSuggestions />
