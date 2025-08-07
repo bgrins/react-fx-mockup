@@ -18,6 +18,8 @@ interface SidebarProps {
   pageUrl?: string;
   accessKey?: string;
   defaultSection?: SidebarSection;
+  onSidebarToggle?: () => void;
+  smartWindowMode?: boolean;
 }
 
 type SidebarSection = "pageInfo" | "bookmarks" | "history" | "synced" | "settings" | null;
@@ -67,6 +69,8 @@ export function Sidebar({
   pageUrl,
   accessKey,
   defaultSection = "pageInfo",
+  onSidebarToggle,
+  smartWindowMode = false,
 }: SidebarProps) {
   const [activeSection, setActiveSection] = React.useState<SidebarSection>(null);
   const [previousSection, setPreviousSection] = React.useState<SidebarSection>(null);
@@ -506,7 +510,22 @@ export function Sidebar({
         !isResizing && "transition-all duration-200 ease-in-out",
         !isOpen && "w-0 overflow-hidden"
       )}>
-        <div className="flex-1 flex flex-col py-2">
+        <div className={cn("flex-1 flex flex-col", smartWindowMode && onSidebarToggle ? "py-1" : "py-2")}>
+          {/* Sidebar toggle button at the top - only in Smart Window mode */}
+          {onSidebarToggle && smartWindowMode && (
+            <button
+              onClick={onSidebarToggle}
+              className="w-full h-10 flex items-center justify-center hover:bg-[#e0e0e4] transition-colors"
+              title="Sidebar"
+            >
+              <span className="text-[#0c0c0d]">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M2 2C0.895786 2 0 2.89579 0 4V12C0 13.1042 0.895786 14 2 14H14C15.1042 14 16 13.1042 16 12V4C16 2.89579 15.1042 2 14 2H2ZM4 12.5H14C14.2758 12.5 14.5 12.2758 14.5 12V4C14.5 3.72421 14.2758 3.5 14 3.5H4V12.5Z" fill="#5B5B66"/>
+                </svg>
+              </span>
+            </button>
+          )}
+          
           {(Object.keys(sectionIcons) as Array<keyof typeof sectionIcons>).map((section) => (
             <button
               key={section}

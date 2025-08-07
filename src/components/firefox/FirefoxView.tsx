@@ -22,6 +22,7 @@ interface FirefoxViewProps {
   iframeRefs: React.MutableRefObject<{ [key: string]: HTMLIFrameElement | null }>;
   smartWindowMode?: boolean;
   onSidebarToggle?: () => void;
+  sidebarOpen?: boolean;
 }
 
 export interface FirefoxViewHandle {
@@ -45,7 +46,8 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
   onNewTab,
   iframeRefs,
   smartWindowMode = false,
-  onSidebarToggle
+  onSidebarToggle,
+  sidebarOpen = false
 }, ref) => {
   const [tabOpenGraphData, setTabOpenGraphData] = useState<TabOpenGraphData>({});
   const { selectedProfile } = useProfile();
@@ -219,15 +221,17 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
       {smartWindowMode && (
         <div className="sticky top-0 z-20 border-b border-white/20">
           <div className="h-10 flex items-center justify-between px-2 py-1">
-            {/* Left side - sidebar and title */}
+            {/* Left side - sidebar button (only when sidebar is closed) */}
             <div className="flex items-center gap-1">
-              <button 
-                className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/50 transition-colors"
-                onClick={onSidebarToggle}
-                title="Sidebar"
-              >
-                <SidebarCollapsedIcon />
-              </button>
+              {!sidebarOpen && (
+                <button 
+                  className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/50 transition-colors"
+                  onClick={onSidebarToggle}
+                  title="Sidebar"
+                >
+                  <SidebarCollapsedIcon />
+                </button>
+              )}
             </div>
             
             {/* Right side - toolbar icons */}

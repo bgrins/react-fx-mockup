@@ -255,6 +255,7 @@ describe("Smart Window Functionality", () => {
       onNewTab: vi.fn(),
       iframeRefs: { current: {} },
       onSidebarToggle: vi.fn(),
+      sidebarOpen: false,
     };
 
     it("should show classic Firefox View layout when not in smart mode", () => {
@@ -421,6 +422,50 @@ describe("Smart Window Functionality", () => {
 
       // Verify onNavigate is NEVER called directly by Firefox View
       expect(onNavigate).toHaveBeenCalledTimes(0);
+    });
+
+    describe("Sidebar Button Behavior", () => {
+      it("should show sidebar button in embedded toolbar when sidebar is closed", () => {
+        render(
+          <FirefoxView
+            {...firefoxViewProps}
+            smartWindowMode={true}
+            sidebarOpen={false}
+          />
+        );
+
+        // Should show sidebar button in the embedded toolbar
+        const sidebarButton = screen.queryByTitle("Sidebar");
+        expect(sidebarButton).toBeTruthy();
+      });
+
+      it("should hide sidebar button in embedded toolbar when sidebar is open", () => {
+        render(
+          <FirefoxView
+            {...firefoxViewProps}
+            smartWindowMode={true}
+            sidebarOpen={true}
+          />
+        );
+
+        // Should hide sidebar button from the embedded toolbar when sidebar is open
+        const sidebarButton = screen.queryByTitle("Sidebar");
+        expect(sidebarButton).toBe(null);
+      });
+
+      it("should not show sidebar button in classic mode", () => {
+        render(
+          <FirefoxView
+            {...firefoxViewProps}
+            smartWindowMode={false}
+            sidebarOpen={false}
+          />
+        );
+
+        // Should not show embedded toolbar or sidebar button in classic mode
+        const sidebarButton = screen.queryByTitle("Sidebar");
+        expect(sidebarButton).toBe(null);
+      });
     });
   });
 

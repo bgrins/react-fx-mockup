@@ -288,6 +288,8 @@ function Browser(): React.ReactElement {
                         ? localStorage.getItem("infer-access-key") || undefined
                         : undefined
                     }
+                    onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+                    smartWindowMode={smartWindowMode}
                   />
                 </div>
                 <div
@@ -480,6 +482,7 @@ function Browser(): React.ReactElement {
                       iframeRefs={iframeRefs}
                       smartWindowMode={smartWindowMode}
                       onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+                      sidebarOpen={sidebarOpen}
                     />
                   )}
                 </div>
