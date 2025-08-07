@@ -15,6 +15,8 @@ interface ToolbarProps extends BaseToolbarProps {
   onCompareTabs?: () => void
   onCloseBothTabs?: () => void
   showSplitView?: boolean
+  smartMode?: boolean
+  pageTitle?: string
 }
 
 export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolbar({
@@ -31,21 +33,23 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
   onCompareTabs,
   onCloseBothTabs,
   showSplitView,
-  onSidebarToggle
+  onSidebarToggle,
+  smartMode = false,
+  pageTitle
 }, ref) {
   console.log('[TOOLBAR] Props received:', { canGoBack, canGoForward, url });
   return (
     <div className={cn("h-10 flex items-center gap-1 px-2 py-1", className)}>
       {/* Left actions */}
       <div className="flex items-center gap-1">
-        <button 
+        {!smartMode && (<button
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]"
           onClick={onSidebarToggle}
           title="Sidebar"
         >
           <SidebarCollapsedIcon />
-        </button>
-        
+        </button>)}
+
         <button 
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] disabled:opacity-50 nav-back"
           onClick={onBack}
@@ -64,46 +68,69 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
           <ForwardArrowIcon />
         </button>
         
-        <button 
+        {!smartMode && (<button
           className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] nav-refresh"
           onClick={onRefresh}
         >
           <RefreshIcon />
-        </button>
+        </button>)}
       </div>
-      
-      {/* Address bar */}
-      <div className="flex-1 px-16">
-        <AddressBar 
-          ref={ref}
-          url={url} 
-          onNavigate={onNavigate}
-          onNewTabBelow={onNewTabBelow}
-          onCompareTabs={onCompareTabs}
-          onCloseBothTabs={onCloseBothTabs}
-          showSplitView={showSplitView}
-        />
-      </div>
-      
-      {/* Right actions */}
-      <div className="flex items-center gap-1">
-        <ToolbarIcon icon={<DownloadsIcon />} />
-        <ToolbarIcon icon={<AccountIcon />} />
-        <ToolbarIcon icon={<ExtensionsIcon />} />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] relative">
-              <AppMenuIcon />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onNewTab?.()}>
-              <PlusIcon />
-              <span className="ml-2">New Tab</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+
+      {smartMode ? (
+        /* Smart mode: Show page title and right refresh button */
+        <>
+          <div className="flex-1 px-2 min-w-0">
+            <span className="text-sm text-[#15141A] truncate font-medium block">
+              {pageTitle || 'New Tab'}
+            </span>
+          </div>
+
+          {/* Right refresh button for smart mode */}
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(21,20,26,0.07)] mr-2"
+            onClick={onRefresh}
+            title="Refresh"
+          >
+            <RefreshIcon />
+          </button>
+        </>
+      ) : (
+        /* Classic mode: Show address bar and right actions */
+        <>
+          {/* Address bar */}
+          <div className="flex-1 px-16">
+            <AddressBar 
+              ref={ref}
+              url={url} 
+              onNavigate={onNavigate}
+              onNewTabBelow={onNewTabBelow}
+              onCompareTabs={onCompareTabs}
+              onCloseBothTabs={onCloseBothTabs}
+              showSplitView={showSplitView}
+            />
+          </div>
+          
+          {/* Right actions */}
+          <div className="flex items-center gap-1">
+            <ToolbarIcon icon={<DownloadsIcon />} />
+            <ToolbarIcon icon={<AccountIcon />} />
+            <ToolbarIcon icon={<ExtensionsIcon />} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] relative">
+                  <AppMenuIcon />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onNewTab?.()}>
+                  <PlusIcon />
+                  <span className="ml-2">New Tab</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </>
+      )}
     </div>
   )
 })

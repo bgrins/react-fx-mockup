@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
+import { Toolbar } from "~/components/firefox/Toolbar";
 import { FirefoxViewIcon, SparklyFirefoxViewIcon } from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
+import { MegaChat } from "~/components/assistant-ui/mega-chat";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { FirefoxView } from "~/components/firefox/FirefoxView";
 import { urlToProxy } from "~/utils/proxy";
@@ -318,7 +320,7 @@ function Browser(): React.ReactElement {
                   setSidebarOpen(!sidebarOpen);
                 }
               }}
-              hideToolbar={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && smartWindowMode}
+              hideToolbar={smartWindowMode}
               smartWindowMode={smartWindowMode}
               isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
               onSmartWindowToggle={handleSmartWindowToggle}
@@ -327,33 +329,70 @@ function Browser(): React.ReactElement {
               <div className="flex w-full h-full overflow-hidden">
                 <div
                   className={cn(
-                    "flex-shrink-0 transition-all duration-200 ease-in-out",
+                    "flex-shrink-0 transition-all duration-200 ease-in-out flex flex-col",
                     // In Smart Window mode, always show sidebar; in classic mode, use sidebarOpen
-                    smartWindowMode ? "w-auto" : sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
+                    smartWindowMode ? "w-[320px]" : sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
                   )}
                 >
-                  <Sidebar
-                    isOpen={sidebarOpen}
-                    onClose={() => setSidebarOpen(false)}
-                    pageContent={pageContent}
-                    pageTitle={activeTab?.title}
-                    pageUrl={activeTab?.url}
-                    accessKey={
-                      typeof window !== "undefined"
-                        ? localStorage.getItem("infer-access-key") || undefined
-                        : undefined
-                    }
-                    onSidebarToggle={() => {
-                      if (smartWindowMode) {
-                        setSidebarExpanded(!sidebarExpanded);
-                      } else {
-                        setSidebarOpen(!sidebarOpen);
+                  {/* Smart Mode Narrow Toolbar - positioned above sidebar */}
+                  {smartWindowMode && (
+                    <div className="border-r border-[rgba(21,20,26,0.1)]">
+                      <Toolbar
+                        url={activeTab?.displayUrl ?? activeTab?.url ?? ""}
+                        onBack={handleBack}
+                        onForward={handleForward}
+                        onRefresh={handleRefresh}
+                        onNavigate={handleNavigate}
+                        onNewTab={handleNewTab}
+                        canGoBack={canGoBack}
+                        canGoForward={canGoForward}
+                        onSidebarToggle={() => {
+                          if (smartWindowMode) {
+                            setSidebarExpanded(!sidebarExpanded);
+                          } else {
+                            setSidebarOpen(!sidebarOpen);
+                          }
+                        }}
+                        smartMode={true}
+                        pageTitle={activeTab?.title}
+                        className="shrink-0"
+                      />
+                    </div>
+                  )}
+                  {smartWindowMode ? (
+                    <MegaChat
+                      accessKey={
+                        typeof window !== "undefined"
+                          ? localStorage.getItem("infer-access-key") || ""
+                          : ""
                       }
-                    }}
-                    smartWindowMode={smartWindowMode}
-                    isExpanded={sidebarExpanded}
-                    isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
-                  />
+                    />
+                  ) : (
+                    <div className="flex-1 min-h-0">
+                      <Sidebar
+                        isOpen={sidebarOpen}
+                        onClose={() => setSidebarOpen(false)}
+                        pageContent={pageContent}
+                        pageTitle={activeTab?.title}
+                        pageUrl={activeTab?.url}
+                        accessKey={
+                          typeof window !== "undefined"
+                            ? localStorage.getItem("infer-access-key") || undefined
+                            : undefined
+                        }
+                        onSidebarToggle={() => {
+                          if (smartWindowMode) {
+                            setSidebarExpanded(!sidebarExpanded);
+                          } else {
+                            setSidebarOpen(!sidebarOpen);
+                          }
+                        }}
+                        smartWindowMode={smartWindowMode}
+                        isExpanded={sidebarExpanded}
+                        isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div
                   className={cn(
