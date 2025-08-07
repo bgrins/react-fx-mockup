@@ -119,13 +119,11 @@ function Browser(): React.ReactElement {
 
     // When entering Smart Window mode
     if (newSmartWindowMode) {
-      // If the current tab is a new tab (about:blank), close it
+      // If the current tab is a new tab (about:blank), switch to Firefox View
       if (activeTab?.url === ABOUT_PAGES.BLANK) {
-        handleTabClose(activeTab.id);
+        switchTab("firefox-view");
       }
-
-      // Switch to Firefox View
-      switchTab("firefox-view");
+      // If on a normal tab, keep it selected (do nothing)
     } else {
       // When exiting Smart Window mode
       // If currently on Firefox View, create a new tab and switch to it
@@ -269,6 +267,7 @@ function Browser(): React.ReactElement {
               hideToolbar={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && smartWindowMode}
               smartWindowMode={smartWindowMode}
               isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
+              onSmartWindowToggle={handleSmartWindowToggle}
               className={cn("flex-1 min-h-0", smartWindowMode && "smart-window-mode")}
             >
               <div className="flex w-full h-full overflow-hidden">
@@ -426,10 +425,7 @@ function Browser(): React.ReactElement {
 
                   {/* Show special pages for active tab */}
                   {activeTab?.url === ABOUT_PAGES.BLANK && !smartWindowMode && (
-                    <NewTabPage
-                      onNavigate={handleNavigate}
-                      onSmartWindowToggle={handleSmartWindowToggle}
-                    />
+                    <NewTabPage onNavigate={handleNavigate} />
                   )}
                   {activeTab?.url === ABOUT_PAGES.BLANK && smartWindowMode && (
                     <div className="flex items-center justify-center h-full bg-[#f9f9fb]">
@@ -441,16 +437,6 @@ function Browser(): React.ReactElement {
                           <p className="text-gray-500 mb-6">
                             AI-powered browsing experience with enhanced features
                           </p>
-                          <button
-                            onClick={handleSmartWindowToggle}
-                            className={cn(
-                              "px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700",
-                              "rounded-lg shadow-sm hover:shadow-md transition-all duration-200",
-                              "font-medium text-sm",
-                            )}
-                          >
-                            Exit Smart Window
-                          </button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -493,7 +479,6 @@ function Browser(): React.ReactElement {
                       onNewTab={handleNewTab}
                       iframeRefs={iframeRefs}
                       smartWindowMode={smartWindowMode}
-                      onSmartWindowToggle={handleSmartWindowToggle}
                       onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
                     />
                   )}

@@ -30,6 +30,7 @@ export interface TabStripProps {
   onTabReorder?: (draggedTabId: string, targetTabId: string, dropBefore: boolean) => void;
   smartWindowMode?: boolean;
   isFirefoxViewActive?: boolean;
+  onSmartWindowToggle?: () => void;
 }
 
 export interface ToolbarProps {

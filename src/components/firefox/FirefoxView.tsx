@@ -21,7 +21,6 @@ interface FirefoxViewProps {
   onNewTab?: (url?: string) => void;
   iframeRefs: React.MutableRefObject<{ [key: string]: HTMLIFrameElement | null }>;
   smartWindowMode?: boolean;
-  onSmartWindowToggle?: () => void;
   onSidebarToggle?: () => void;
 }
 
@@ -47,7 +46,6 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
   onNewTab,
   iframeRefs,
   smartWindowMode = false,
-  onSmartWindowToggle,
   onSidebarToggle
 }, ref) => {
   const [tabOpenGraphData, setTabOpenGraphData] = useState<TabOpenGraphData>({});
@@ -256,18 +254,6 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="w-px h-6 bg-gray-300 mx-2" />
-                {onSmartWindowToggle && (
-                  <button
-                    onClick={onSmartWindowToggle}
-                    className="px-3 py-1.5 bg-white/90 backdrop-blur-sm text-orange-700 hover:bg-white border border-orange-200/50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 font-medium text-xs flex items-center gap-2"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
-                      <path d="M8 2L9.5 6.5H14L10.5 9.5L12 14L8 11L4 14L5.5 9.5L2 6.5H6.5L8 2z"/>
-                    </svg>
-                    Exit
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -280,19 +266,6 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
           {/* Header for Classic Mode */}
           {!smartWindowMode && (
             <div className="mb-8 relative">
-              {onSmartWindowToggle && (
-                <div className="absolute top-0 right-0">
-                  <button
-                    onClick={onSmartWindowToggle}
-                    className="px-6 py-3 bg-[#0060df] hover:bg-[#0050bb] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm flex items-center gap-2"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
-                      <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2H2V3zm0 4h12v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7zm9 2a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
-                    </svg>
-                    Switch to Smart Window
-                  </button>
-                </div>
-              )}
               <div className="flex items-center justify-center">
                 <div className="text-center">
                   <h1 className="text-3xl font-light text-gray-700 mb-2">Firefox View</h1>

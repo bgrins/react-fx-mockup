@@ -11,10 +11,10 @@ test.describe("Smart Window Mode - Local Pages Title Updates", () => {
     // Wait for the app to load
     await page.waitForLoadState("networkidle");
 
-    // Enable Smart Window mode first by clicking the toggle button on the new tab page
-    const smartWindowButton = page.getByText("Smart Window");
-    await expect(smartWindowButton).toBeVisible();
-    await smartWindowButton.click();
+    // Enable Smart Window mode first by clicking the Smart toggle in the tab bar
+    const smartToggle = page.getByRole("button", { name: "Smart" });
+    await expect(smartToggle).toBeVisible();
+    await smartToggle.click();
 
     // Click on Test Page bookmark
     console.log("Clicking on Test Page bookmark...");

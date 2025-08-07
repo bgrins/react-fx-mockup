@@ -16,7 +16,8 @@ export function TabStrip({
   onNewTab,
   onTabReorder,
   smartWindowMode = false,
-  isFirefoxViewActive = false
+  isFirefoxViewActive = false,
+  onSmartWindowToggle
 }: TabStripProps) {
   const [draggedTab, setDraggedTab] = React.useState<string | null>(null)
   const [dropTargetTab, setDropTargetTab] = React.useState<{ id: string; before: boolean } | null>(null)
@@ -198,11 +199,43 @@ export function TabStrip({
         </button>
       )}
       
-      <button className="w-8 h-8 mr-6 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)] shrink-0">
-        <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
-          <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
+      {onSmartWindowToggle && (
+        <div className="mr-4 flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden shrink-0 shadow-sm">
+          <button
+            onClick={smartWindowMode ? onSmartWindowToggle : undefined}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
+              !smartWindowMode 
+                ? "bg-blue-500 text-white shadow-sm" 
+                : "text-gray-600 hover:bg-gray-50 cursor-pointer"
+            )}
+            title="Classic Mode"
+            disabled={!smartWindowMode}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
+              <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2H2V3zm0 4h12v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/>
+            </svg>
+            Classic
+          </button>
+          <div className="w-px h-4 bg-gray-300" />
+          <button
+            onClick={!smartWindowMode ? onSmartWindowToggle : undefined}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
+              smartWindowMode 
+                ? "bg-orange-500 text-white shadow-sm" 
+                : "text-gray-600 hover:bg-gray-50 cursor-pointer"
+            )}
+            title="Smart Window Mode"
+            disabled={smartWindowMode}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
+              <path d="M8 2L9.5 6.5H14L10.5 9.5L12 14L8 11L4 14L5.5 9.5L2 6.5H6.5L8 2z"/>
+            </svg>
+            Smart
+          </button>
+        </div>
+      )}
     </div>
   )
 }

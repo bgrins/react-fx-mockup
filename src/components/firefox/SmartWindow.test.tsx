@@ -126,6 +126,123 @@ describe("Smart Window Functionality", () => {
 
       expect(onTabClick).toHaveBeenCalledWith("firefox-view");
     });
+
+    describe("Smart/Classic Toggle", () => {
+      it("should show Smart/Classic toggle when onSmartWindowToggle is provided", () => {
+        const onSmartWindowToggle = vi.fn();
+        render(
+          <TabStrip
+            {...defaultProps}
+            smartWindowMode={false}
+            onSmartWindowToggle={onSmartWindowToggle}
+          />
+        );
+
+        expect(screen.getByText("Classic")).toBeTruthy();
+        expect(screen.getByText("Smart")).toBeTruthy();
+      });
+
+      it("should not show toggle when onSmartWindowToggle is not provided", () => {
+        render(
+          <TabStrip
+            {...defaultProps}
+            smartWindowMode={false}
+          />
+        );
+
+        expect(screen.queryByText("Classic")).toBe(null);
+        expect(screen.queryByText("Smart")).toBe(null);
+      });
+
+      it("should highlight Classic button in classic mode", () => {
+        const onSmartWindowToggle = vi.fn();
+        render(
+          <TabStrip
+            {...defaultProps}
+            smartWindowMode={false}
+            onSmartWindowToggle={onSmartWindowToggle}
+          />
+        );
+
+        const classicButton = screen.getByText("Classic").closest("button");
+        const smartButton = screen.getByText("Smart").closest("button");
+
+        expect(classicButton?.className).toContain("bg-blue-500");
+        expect(classicButton?.className).toContain("text-white");
+        expect(smartButton?.className).toContain("text-gray-600");
+        expect(smartButton?.hasAttribute("disabled")).toBe(false);
+      });
+
+      it("should highlight Smart button in smart mode", () => {
+        const onSmartWindowToggle = vi.fn();
+        render(
+          <TabStrip
+            {...defaultProps}
+            smartWindowMode={true}
+            onSmartWindowToggle={onSmartWindowToggle}
+          />
+        );
+
+        const classicButton = screen.getByText("Classic").closest("button");
+        const smartButton = screen.getByText("Smart").closest("button");
+
+        expect(smartButton?.className).toContain("bg-orange-500");
+        expect(smartButton?.className).toContain("text-white");
+        expect(classicButton?.className).toContain("text-gray-600");
+        expect(classicButton?.hasAttribute("disabled")).toBe(false);
+      });
+
+      it("should call onSmartWindowToggle when Smart button is clicked", () => {
+        const onSmartWindowToggle = vi.fn();
+        render(
+          <TabStrip
+            {...defaultProps}
+            smartWindowMode={false}
+            onSmartWindowToggle={onSmartWindowToggle}
+          />
+        );
+
+        const smartButton = screen.getByText("Smart");
+        fireEvent.click(smartButton);
+
+        expect(onSmartWindowToggle).toHaveBeenCalledTimes(1);
+      });
+
+      it("should call onSmartWindowToggle when Classic button is clicked", () => {
+        const onSmartWindowToggle = vi.fn();
+        render(
+          <TabStrip
+            {...defaultProps}
+            smartWindowMode={true}
+            onSmartWindowToggle={onSmartWindowToggle}
+          />
+        );
+
+        const classicButton = screen.getByText("Classic");
+        fireEvent.click(classicButton);
+
+        expect(onSmartWindowToggle).toHaveBeenCalledTimes(1);
+      });
+
+      it("should disable and not call toggle for active state", () => {
+        const onSmartWindowToggle = vi.fn();
+        
+        // Test Classic button when in classic mode
+        render(
+          <TabStrip
+            {...defaultProps}
+            smartWindowMode={false}
+            onSmartWindowToggle={onSmartWindowToggle}
+          />
+        );
+
+        const classicButton = screen.getByText("Classic").closest("button");
+        expect(classicButton?.hasAttribute("disabled")).toBe(true);
+        
+        fireEvent.click(classicButton!);
+        expect(onSmartWindowToggle).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe("FirefoxView Smart Window Features", () => {
@@ -137,7 +254,6 @@ describe("Smart Window Functionality", () => {
       onNavigate: vi.fn(),
       onNewTab: vi.fn(),
       iframeRefs: { current: {} },
-      onSmartWindowToggle: vi.fn(),
       onSidebarToggle: vi.fn(),
     };
 
@@ -163,7 +279,7 @@ describe("Smart Window Functionality", () => {
       );
 
       expect(screen.getByText("Smart Window")).toBeTruthy();
-      expect(screen.getByText("Exit")).toBeTruthy();
+      expect(screen.queryByText("Exit")).toBe(null); // Exit button removed
     });
 
     it("should show search input in Smart Window mode", () => {
@@ -208,22 +324,6 @@ describe("Smart Window Functionality", () => {
 
       // Should show embedded toolbar in Smart Window mode
       expect(screen.getByTestId("dropdown-menu")).toBeTruthy();
-    });
-
-    it("should call onSmartWindowToggle when exit button is clicked", () => {
-      const onSmartWindowToggle = vi.fn();
-      render(
-        <FirefoxView
-          {...firefoxViewProps}
-          smartWindowMode={true}
-          onSmartWindowToggle={onSmartWindowToggle}
-        />
-      );
-
-      const exitButton = screen.getByText("Exit");
-      fireEvent.click(exitButton);
-
-      expect(onSmartWindowToggle).toHaveBeenCalledTimes(1);
     });
 
     it("should focus search when dropdown Focus Search is clicked", async () => {
@@ -332,18 +432,21 @@ describe("Smart Window Functionality", () => {
       const onTabClick = vi.fn();
       const onSmartWindowToggle = vi.fn();
 
-      // Render TabStrip in Smart Window mode with Firefox View active
+      // Render TabStrip in Smart Window mode with Firefox View active and toggle
       const { rerender } = render(
         <TabStrip
           {...defaultProps}
           onTabClick={onTabClick}
           smartWindowMode={true}
           isFirefoxViewActive={true}
+          onSmartWindowToggle={onSmartWindowToggle}
         />
       );
 
-      // New tab button should be hidden
+      // New tab button should be hidden, but toggle should be visible
       expect(screen.queryByTestId("plus-icon")).toBe(null);
+      expect(screen.getByText("Smart")).toBeTruthy();
+      expect(screen.getByText("Classic")).toBeTruthy();
 
       // Render FirefoxView in Smart Window mode
       rerender(
@@ -356,15 +459,36 @@ describe("Smart Window Functionality", () => {
           onNewTab={vi.fn()}
           iframeRefs={{ current: {} }}
           smartWindowMode={true}
-          onSmartWindowToggle={onSmartWindowToggle}
           onSidebarToggle={vi.fn()}
         />
       );
 
-      // Should show Smart Window UI
+      // Should show Smart Window UI (no Exit button since it's now in TabStrip)
       expect(screen.getByText("Smart Window")).toBeTruthy();
-      expect(screen.getByText("Exit")).toBeTruthy();
+      expect(screen.queryByText("Exit")).toBe(null);
       expect(screen.getByPlaceholderText("Search or enter address")).toBeTruthy();
+    });
+
+    it("should toggle between modes correctly", () => {
+      const onSmartWindowToggle = vi.fn();
+      render(
+        <TabStrip
+          {...defaultProps}
+          smartWindowMode={false}
+          onSmartWindowToggle={onSmartWindowToggle}
+        />
+      );
+
+      // Should be in classic mode initially
+      const classicButton = screen.getByText("Classic").closest("button");
+      const smartButton = screen.getByText("Smart").closest("button");
+      
+      expect(classicButton?.className).toContain("bg-blue-500");
+      expect(smartButton?.className).not.toContain("bg-orange-500");
+
+      // Click Smart to switch modes
+      fireEvent.click(smartButton!);
+      expect(onSmartWindowToggle).toHaveBeenCalledTimes(1);
     });
   });
 });

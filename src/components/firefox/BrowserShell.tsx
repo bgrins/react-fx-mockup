@@ -16,6 +16,7 @@ interface BrowserShellProps extends BaseBrowserShellProps {
   hideToolbar?: boolean
   smartWindowMode?: boolean
   isFirefoxViewActive?: boolean
+  onSmartWindowToggle?: () => void
 }
 
 export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(function BrowserShell({
@@ -41,7 +42,8 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
   onSidebarToggle,
   hideToolbar = false,
   smartWindowMode = false,
-  isFirefoxViewActive = false
+  isFirefoxViewActive = false,
+  onSmartWindowToggle
 }, ref) {
   return (
     <div className={cn(
@@ -71,6 +73,7 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
                 onTabReorder={onTabReorder}
                 smartWindowMode={smartWindowMode}
                 isFirefoxViewActive={isFirefoxViewActive}
+                onSmartWindowToggle={onSmartWindowToggle}
               />
             </div>
           </div>
