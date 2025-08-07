@@ -1,6 +1,7 @@
 export { PlusIcon } from './PlusIcon'
 export { CloseIcon } from './CloseIcon'
 export { SettingsIcon } from './SettingsIcon'
+export { ResetIcon } from './ResetIcon'
 export { AlertCircleIcon } from './AlertCircleIcon'
 export { UserXIcon } from './UserXIcon'
 export { XCircleIcon } from './XCircleIcon'

@@ -59,7 +59,7 @@ export const BrowserShell = forwardRef<AddressBarHandle, BrowserShellProps>(func
           <div id="firefox-tab-strip" className={cn(
             "flex items-center shrink-0 browser-chrome min-w-0",
             smartWindowMode && isFirefoxViewActive
-              ? "bg-white/20 backdrop-blur-sm" 
+              ? "backdrop-blur-sm" 
               : "bg-[#f0f0f4]"
           )}>
             <WindowControls />

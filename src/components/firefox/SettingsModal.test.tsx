@@ -24,6 +24,9 @@ const localStorageMock = {
 };
 global.localStorage = localStorageMock as Storage;
 
+// Mock fetch to prevent network requests in tests
+global.fetch = vi.fn();
+
 // Mock window properties
 Object.defineProperty(window, "screen", {
   value: { width: 1920, height: 1080 },
@@ -68,6 +71,10 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe("SettingsModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset localStorage mock to return null by default (no stored profiles)
+    localStorageMock.getItem.mockReturnValue(null);
+    // Mock fetch to reject immediately to prevent network requests
+    (global.fetch as any).mockRejectedValue(new Error('Network request blocked in tests'));
   });
 
   it("should not render when isOpen is false", () => {
@@ -168,7 +175,10 @@ describe("SettingsModal", () => {
   });
 
   it("should clear access key when clicking Clear button", () => {
-    localStorageMock.getItem.mockReturnValue("existing-key");
+    // Override the default mock for this test only
+    localStorageMock.getItem.mockImplementation((key) => 
+      key === "infer-access-key" ? "existing-key" : null
+    );
     renderWithProviders(<SettingsModal isOpen={true} onClose={() => {}} />);
     
     const clearButton = screen.getByText("Clear");

@@ -9,6 +9,7 @@ import { urlToProxy } from "~/utils/proxy";
 import { useBrowserScale } from "~/hooks/useBrowserScale";
 import { useBrowserCore } from "~/hooks/useBrowserCore";
 import { useKeyboardShortcuts } from "~/hooks/useKeyboardShortcuts";
+import { useProfile } from "~/contexts/ProfileContext";
 import React from "react";
 import type { AddressBarHandle } from "~/components/firefox/AddressBar";
 import type { FirefoxViewHandle } from "~/components/firefox/FirefoxView";
@@ -27,8 +28,11 @@ function Browser(): React.ReactElement {
   const firefoxViewRef = React.useRef<FirefoxViewHandle>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [sidebarExpanded, setSidebarExpanded] = React.useState(false); // For Smart Window mode narrow/expanded
-  const [smartWindowMode, setSmartWindowMode] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
+
+  // Use profile context for browser state management
+  const { browserState, updateBrowserState } = useProfile();
+  const smartWindowMode = browserState.windowType === "smart";
 
   // Use shared browser core functionality
   const {
@@ -63,6 +67,13 @@ function Browser(): React.ReactElement {
       favicon: smartWindowMode ? <SparklyFirefoxViewIcon /> : <FirefoxViewIcon />,
     });
   }, [smartWindowMode, updateTab]);
+
+  // When smart mode is restored, switch to Firefox View if on blank page
+  React.useEffect(() => {
+    if (smartWindowMode && activeTab?.url === ABOUT_PAGES.BLANK) {
+      switchTab("firefox-view");
+    }
+  }, [smartWindowMode, activeTab?.url, switchTab]);
 
   // Request page content when sidebar is opened or tab changes
   React.useEffect(() => {
@@ -116,7 +127,7 @@ function Browser(): React.ReactElement {
 
   const handleSmartWindowToggle = () => {
     const newSmartWindowMode = !smartWindowMode;
-    setSmartWindowMode(newSmartWindowMode);
+    updateBrowserState({ windowType: newSmartWindowMode ? "smart" : "classic" });
 
     // When entering Smart Window mode
     if (newSmartWindowMode) {

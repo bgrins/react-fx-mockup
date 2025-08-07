@@ -5,10 +5,10 @@ import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
 import { NotFound } from "~/components/NotFound";
 import appCss from "~/styles/app.css?url";
 import { seo } from "~/utils/seo";
-import { SettingsIcon } from "~/components/icons";
+import { SettingsIcon, ResetIcon } from "~/components/icons";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { DebugProvider } from "~/contexts/DebugContext";
-import { ProfileProvider } from "~/contexts/ProfileContext";
+import { ProfileProvider, useProfile } from "~/contexts/ProfileContext";
 import { Toaster } from "~/components/ui/sonner";
 
 export const Route = createRootRoute({
@@ -41,14 +41,21 @@ export const Route = createRootRoute({
   shellComponent: (props) => (
     <ProfileProvider>
       <DebugProvider>
-        <RootDocument {...props} />
+        <RootDocumentInner {...props} />
       </DebugProvider>
     </ProfileProvider>
   ),
 });
 
-function RootDocument({ children }: { children: React.ReactNode }): React.ReactElement {
+function RootDocumentInner({ children }: { children: React.ReactNode }): React.ReactElement {
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const { selectedProfile, resetBrowserState } = useProfile();
+
+  const handleReset = () => {
+    resetBrowserState();
+    // Reload to apply the reset
+    window.location.reload();
+  };
 
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -97,6 +104,13 @@ function RootDocument({ children }: { children: React.ReactNode }): React.ReactE
           <img src="/firefox.svg" alt="Firefox" width="20" height="20" className="sm:w-6 sm:h-6" />
           <span className="font-semibold text-gray-700 text-sm sm:text-lg">Firefox Mockup</span>
           <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={handleReset}
+              className="p-1 sm:p-2 hover:bg-gray-100 rounded-md"
+              title={`Reset browser state for ${selectedProfile?.name || "Default"}`}
+            >
+              <ResetIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
             <button
               onClick={() => setSettingsOpen(true)}
               className="p-1 sm:p-2 hover:bg-gray-100 rounded-md"

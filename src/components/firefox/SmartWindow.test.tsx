@@ -755,7 +755,7 @@ describe("Smart Window Functionality", () => {
       vi.clearAllMocks();
     });
 
-    it("should have semitransparent background in Smart Window mode + Firefox View", async () => {
+    it("should have glassy blur background in Smart Window mode + Firefox View", async () => {
       const { Sidebar } = await import("./Sidebar");
       
       const { container } = render(
@@ -766,12 +766,15 @@ describe("Smart Window Functionality", () => {
         />
       );
 
-      // Should have single layer semitransparent background
+      // Should have glassy blur background with backdrop blur and border
       const sidebarContainer = container.firstChild as HTMLElement;
-      expect(sidebarContainer.className).toContain("bg-white/30");
+      expect(sidebarContainer.className).toContain("bg-white/20");
+      expect(sidebarContainer.className).toContain("backdrop-blur-md");
+      expect(sidebarContainer.className).toContain("border-r");
+      expect(sidebarContainer.className).toContain("border-white/10");
     });
 
-    it("should have semitransparent background in Smart Window mode when NOT Firefox View", async () => {
+    it("should have glassy blur background in Smart Window mode when NOT Firefox View", async () => {
       const { Sidebar } = await import("./Sidebar");
       
       const { container } = render(
@@ -782,9 +785,12 @@ describe("Smart Window Functionality", () => {
         />
       );
 
-      // Should have single layer semitransparent background
+      // Should have glassy blur background with backdrop blur and border
       const sidebarContainer = container.firstChild as HTMLElement;
-      expect(sidebarContainer.className).toContain("bg-white/30");
+      expect(sidebarContainer.className).toContain("bg-white/20");
+      expect(sidebarContainer.className).toContain("backdrop-blur-md");
+      expect(sidebarContainer.className).toContain("border-r");
+      expect(sidebarContainer.className).toContain("border-white/10");
       expect(sidebarContainer.className).not.toContain("bg-[#f9f9fb]");
     });
 
@@ -802,7 +808,8 @@ describe("Smart Window Functionality", () => {
       // Should have normal background color in classic mode
       const sidebarContainer = container.firstChild as HTMLElement;
       expect(sidebarContainer.className).toContain("bg-[#f9f9fb]");
-      expect(sidebarContainer.className).not.toContain("bg-white/30");
+      expect(sidebarContainer.className).not.toContain("bg-white/20");
+      expect(sidebarContainer.className).not.toContain("backdrop-blur-md");
     });
   });
 });

@@ -516,7 +516,7 @@ export function Sidebar({
   // In Smart Window mode, always show sidebar (narrow or expanded)
   // In classic mode, use traditional open/closed behavior
   const shouldShow = smartWindowMode || isOpen;
-  const backgroundClass = smartWindowMode ? "bg-white/30" : "bg-[#f9f9fb]";
+  const backgroundClass = smartWindowMode ? "bg-white/20 backdrop-blur-md border-r border-white/10" : "bg-[#f9f9fb]";
 
   return (
     <div className={cn(
@@ -590,7 +590,7 @@ export function Sidebar({
         ref={sidebarRef}
         className={cn(
           "relative flex-shrink-0",
-          smartWindowMode ? "bg-white/30" : "bg-[#f9f9fb]",
+          smartWindowMode ? "bg-white/10 backdrop-blur-lg border-r border-white/5" : "bg-[#f9f9fb]",
           !isResizing && "transition-all duration-200 ease-in-out",
           // In Smart Window mode: show content only when expanded
           // In classic mode: show content when activeSection exists
