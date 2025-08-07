@@ -18,7 +18,7 @@ export const ServerRoute = createServerFileRoute("/api/chat").methods({
       const openai = createInferClient(accessKey);
 
       const result = await streamText({
-        model: openai("gpt-4o-mini"),
+        model: openai("gpt-4.1"),
         messages,
         async onFinish() {
           // Optional: save to database here

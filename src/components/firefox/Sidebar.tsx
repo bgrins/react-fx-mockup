@@ -2,6 +2,7 @@ import React from "react";
 import { cn } from "~/lib/utils";
 import { streamText } from "ai";
 import { createInferClient } from "~/lib/infer-client";
+import { MegaChat } from '../assistant-ui/mega-chat';
 
 interface Message {
   id: string;
@@ -290,9 +291,13 @@ export function Sidebar({
                 </svg>
               </button>
             </div>
+            <div className="max-h-[93%]">
+              <MegaChat accessKey={accessKey ? accessKey : ''} />
+            </div>
+
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto space-y-3 p-3">
+            {/* <div className="flex-1 overflow-y-auto space-y-3 p-3">
               {messages.length === 0 && (
                 <div className="text-center text-gray-500 mt-8">
                   <p className="text-sm">Ask questions about the current page!</p>
@@ -346,10 +351,10 @@ export function Sidebar({
               )}
 
               <div ref={messagesEndRef} />
-            </div>
+            </div> */}
 
             {/* Input */}
-            <div className="border-t p-3">
+            {/* <div className="border-t p-3">
               <div className="flex flex-col gap-2">
                 <input
                   ref={inputRef}
@@ -369,7 +374,7 @@ export function Sidebar({
                   Send
                 </button>
               </div>
-            </div>
+            </div> */}
           </>
         );
       

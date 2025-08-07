@@ -26,6 +26,8 @@ import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { MarkdownText } from "./markdown-text";
 import { ToolFallback } from "./tool-fallback";
+import { SettingsTool } from "./settings-tool";
+import { TripPlanningTool } from "./trip-planning-tool";
 
 export const Thread: FC = () => {
   return (
@@ -182,15 +184,33 @@ const Composer: FC = () => {
 };
 
 const ComposerAction: FC = () => {
+  const handleFileAttachment = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*,text/*,.pdf,.doc,.docx,.txt,.md';
+    
+    input.onchange = (event) => {
+      const files = (event.target as HTMLInputElement).files;
+      if (files && files.length > 0) {
+        console.log('Files selected:', Array.from(files).map(f => ({ name: f.name, size: f.size, type: f.type })));
+        // TODO: Handle file attachments - could upload to server or convert to base64
+        // For now, just show an alert with file info
+        const fileNames = Array.from(files).map(f => f.name).join(', ');
+        alert(`Files selected: ${fileNames}\n\nFile attachment handling is not yet fully implemented.`);
+      }
+    };
+    
+    input.click();
+  };
+
   return (
     <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2">
       <TooltipIconButton
         tooltip="Attach file"
         variant="ghost"
         className="hover:bg-foreground/15 dark:hover:bg-background/50 scale-115 p-3.5"
-        onClick={() => {
-          console.log("Attachment clicked - not implemented");
-        }}
+        onClick={handleFileAttachment}
       >
         <PlusIcon />
       </TooltipIconButton>
@@ -251,7 +271,13 @@ const AssistantMessage: FC = () => {
           <MessagePrimitive.Content
             components={{
               Text: MarkdownText,
-              tools: { Fallback: ToolFallback },
+              tools: { 
+                by_name: {
+                  settings: SettingsTool,
+                  tripPlanning: TripPlanningTool,
+                },
+                Fallback: ToolFallback 
+              },
             }}
           />
           <MessageError />
