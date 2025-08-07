@@ -4,6 +4,8 @@ import { createInferClient } from "~/lib/infer-client";
 import { AssistantRuntimeProvider, useLocalRuntime } from "@assistant-ui/react";
 import { Thread } from "~/components/assistant-ui/thread";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { chatHistory } from "~/lib/chat-history";
+import { useEffect } from "react";
 
 interface MegaChatProps {
   accessKey: string;
@@ -151,6 +153,20 @@ function extractDuration(message: string): string | null {
 }
 
 export function MegaChat({ accessKey }: MegaChatProps) {
+  // Initialize or restore chat session on mount
+  useEffect(() => {
+    // Create a new session if none exists
+    const currentSession = localStorage.getItem('assistant-ui-current-session');
+    if (!currentSession) {
+      chatHistory.createNewSession();
+    }
+    
+    // Save session when component unmounts
+    return () => {
+      chatHistory.finishSession();
+    };
+  }, []);
+
   const runtime = useLocalRuntime({
     async run({ messages }) {
       if (!accessKey) {
@@ -175,6 +191,12 @@ export function MegaChat({ accessKey }: MegaChatProps) {
             tripPlanning: "trip planning tool",
           }),
         );
+
+        // Track user message in chat history
+        const latestMessage = mappedMessages[mappedMessages.length - 1];
+        if (latestMessage && latestMessage.role === 'user') {
+          chatHistory.addMessage('user', latestMessage.content);
+        }
 
         // Check if user is asking for trip planning and force tool call if needed
         const userMessage = mappedMessages[mappedMessages.length - 1]?.content.toLowerCase() || "";
@@ -231,13 +253,27 @@ export function MegaChat({ accessKey }: MegaChatProps) {
           const destination = extractDestination(userMessage);
           const duration = extractDuration(userMessage);
 
+          const responseText = `I'll help you plan your trip${destination ? ` to ${destination}` : ""}! Let me open the trip planning interface for you.`;
+
+          // Track assistant response (estimated token usage for forced responses)
+          chatHistory.addMessage('assistant', responseText, 
+            {
+              promptTokens: 20, // Estimated
+              completionTokens: 15, // Estimated  
+              totalTokens: 35,
+              model: 'gpt-4o-mini'
+            },
+            500, // Estimated response time
+            [{ toolName: 'tripPlanning', args: { destination, duration } }]
+          );
+
           // Manually create the tool call response
           const content = [];
 
           // Add both text and tool call
           content.push({
             type: "text" as const,
-            text: `I'll help you plan your trip${destination ? ` to ${destination}` : ""}! Let me open the trip planning interface for you.`,
+            text: responseText,
           });
 
           const args: Record<string, string> = {};
@@ -259,11 +295,25 @@ export function MegaChat({ accessKey }: MegaChatProps) {
         if (isSettingsRequest) {
           console.log("Forcing settings tool call");
 
+          const responseText = "I'll help you manage your settings! Let me open the settings interface for you.";
+
+          // Track assistant response (estimated token usage for forced responses)  
+          chatHistory.addMessage('assistant', responseText, 
+            {
+              promptTokens: 18, // Estimated
+              completionTokens: 12, // Estimated
+              totalTokens: 30,
+              model: 'gpt-4o-mini'
+            },
+            400, // Estimated response time
+            [{ toolName: 'settings', args: { settingsType: 'general', reason: 'User requested settings access' } }]
+          );
+
           const content = [];
 
           content.push({
             type: "text" as const,
-            text: "I'll help you manage your settings! Let me open the settings interface for you.",
+            text: responseText,
           });
 
           content.push({
@@ -283,6 +333,7 @@ export function MegaChat({ accessKey }: MegaChatProps) {
           return { content };
         }
 
+        const startTime = Date.now();
         const result = await generateText({
           model: infer("gpt-4o-mini"),
           system:
@@ -340,6 +391,27 @@ export function MegaChat({ accessKey }: MegaChatProps) {
             }),
           },
         });
+
+        // Track assistant response with actual token usage  
+        if (result.text) {
+          const responseTime = Date.now() - startTime;
+          const toolCalls = result.toolCalls?.map(tc => ({
+            toolName: tc.toolName,
+            args: tc.args,
+            result: undefined // Result will be populated by the tool execution
+          }));
+
+          chatHistory.addMessage('assistant', result.text, 
+            {
+              promptTokens: result.usage?.promptTokens || 0,
+              completionTokens: result.usage?.completionTokens || 0,
+              totalTokens: result.usage?.totalTokens || 0,
+              model: 'gpt-4o-mini'
+            },
+            responseTime,
+            toolCalls
+          );
+        }
 
         const content = [];
 

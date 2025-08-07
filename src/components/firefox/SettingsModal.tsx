@@ -4,6 +4,7 @@ import { getMockupShortcuts, formatShortcut, shortcutCategories } from "~/lib/ke
 import { useDebug } from "~/contexts/useDebug";
 import { useProfile } from "~/hooks/useProfile";
 import { Link } from "@tanstack/react-router";
+import {SettingsTool} from "~/components/assistant-ui/settings-tool";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -336,6 +337,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </div>
                   </div>
                 )}
+                <SettingsTool />
               </section>
             </div>
           </div>
