@@ -21,8 +21,6 @@ interface FirefoxViewProps {
   onNewTab?: (url?: string) => void;
   iframeRefs: React.MutableRefObject<{ [key: string]: HTMLIFrameElement | null }>;
   smartWindowMode?: boolean;
-  onSidebarToggle?: () => void;
-  sidebarOpen?: boolean;
 }
 
 export interface FirefoxViewHandle {
@@ -45,9 +43,7 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
   onTabClose,
   onNewTab,
   iframeRefs,
-  smartWindowMode = false,
-  onSidebarToggle,
-  sidebarOpen = false
+  smartWindowMode = false
 }, ref) => {
   const [tabOpenGraphData, setTabOpenGraphData] = useState<TabOpenGraphData>({});
   const { selectedProfile } = useProfile();
@@ -220,21 +216,8 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
       {/* Fixed toolbar header for Smart Window Mode */}
       {smartWindowMode && (
         <div className="sticky top-0 z-20 border-b border-white/20">
-          <div className="h-10 flex items-center justify-between px-2 py-1">
-            {/* Left side - sidebar button (only when sidebar is closed) */}
-            <div className="flex items-center gap-1">
-              {!sidebarOpen && (
-                <button 
-                  className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/50 transition-colors"
-                  onClick={onSidebarToggle}
-                  title="Sidebar"
-                >
-                  <SidebarCollapsedIcon />
-                </button>
-              )}
-            </div>
-            
-            {/* Right side - toolbar icons */}
+          <div className="h-10 flex items-center justify-end px-2 py-1">
+            {/* Toolbar icons aligned to the right */}
             <div className="flex items-center gap-1">
               <EmbeddedToolbarIcon icon={<DownloadsIcon />} />
               <EmbeddedToolbarIcon icon={<AccountIcon />} />
@@ -556,13 +539,6 @@ function EmbeddedToolbarIcon({ icon, onClick }: { icon: React.ReactNode, onClick
   );
 }
 
-function SidebarCollapsedIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path fillRule="evenodd" clipRule="evenodd" d="M2 2C0.895786 2 0 2.89579 0 4V12C0 13.1042 0.895786 14 2 14H14C15.1042 14 16 13.1042 16 12V4C16 2.89579 15.1042 2 14 2H2ZM4 12.5H14C14.2758 12.5 14.5 12.2758 14.5 12V4C14.5 3.72421 14.2758 3.5 14 3.5H4V12.5Z" fill="#5B5B66"/>
-    </svg>
-  );
-}
 
 function DownloadsIcon() {
   return (

@@ -20,6 +20,8 @@ interface SidebarProps {
   defaultSection?: SidebarSection;
   onSidebarToggle?: () => void;
   smartWindowMode?: boolean;
+  isExpanded?: boolean; // For Smart Window mode: narrow vs expanded
+  isFirefoxViewActive?: boolean; // Whether Firefox View is the active tab
 }
 
 type SidebarSection = "pageInfo" | "bookmarks" | "history" | "synced" | "settings" | null;
@@ -71,6 +73,8 @@ export function Sidebar({
   defaultSection = "pageInfo",
   onSidebarToggle,
   smartWindowMode = false,
+  isExpanded = false,
+  isFirefoxViewActive = false,
 }: SidebarProps) {
   const [activeSection, setActiveSection] = React.useState<SidebarSection>(null);
   const [previousSection, setPreviousSection] = React.useState<SidebarSection>(null);
@@ -111,21 +115,24 @@ export function Sidebar({
 
   // Handle sidebar open/close - restore previous section when reopening
   React.useEffect(() => {
-    if (isOpen && !activeSection) {
-      // When opening, restore the previous section or use default
+    // In Smart Window mode, use isExpanded instead of isOpen
+    const shouldExpand = smartWindowMode ? isExpanded : isOpen;
+    
+    if (shouldExpand && !activeSection) {
+      // When expanding/opening, restore the previous section or use default
       if (previousSection) {
         setActiveSection(previousSection);
         setPreviousSection(null);
       } else {
-        // Use default section when opening for the first time
+        // Use default section when expanding/opening for the first time
         setActiveSection(defaultSection);
       }
-    } else if (!isOpen && activeSection) {
-      // When closing, save the current section and clear it
+    } else if (!shouldExpand && activeSection) {
+      // When collapsing/closing, save the current section and clear it
       setPreviousSection(activeSection);
       setActiveSection(null);
     }
-  }, [isOpen, defaultSection]);
+  }, [isOpen, isExpanded, smartWindowMode, defaultSection]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -264,8 +271,16 @@ export function Sidebar({
   const handleSectionClick = (section: SidebarSection) => {
     if (activeSection === section) {
       setActiveSection(null);
+      // In Smart Window mode, also collapse the sidebar when closing a section
+      if (smartWindowMode && onSidebarToggle) {
+        onSidebarToggle();
+      }
     } else {
       setActiveSection(section);
+      // In Smart Window mode, expand the sidebar when opening a section
+      if (smartWindowMode && onSidebarToggle && !isExpanded) {
+        onSidebarToggle();
+      }
     }
   };
 
@@ -498,21 +513,27 @@ export function Sidebar({
     }
   };
 
+  // In Smart Window mode, always show sidebar (narrow or expanded)
+  // In classic mode, use traditional open/closed behavior
+  const shouldShow = smartWindowMode || isOpen;
+  const backgroundClass = (smartWindowMode && isFirefoxViewActive) ? "bg-transparent" : "bg-[#f9f9fb]";
+
   return (
     <div className={cn(
-      "flex h-full bg-[#f9f9fb]",
+      "flex h-full",
+      backgroundClass,
       !isResizing && "transition-all duration-200 ease-in-out",
-      !isOpen && "w-0 overflow-hidden"
+      !shouldShow && "w-0 overflow-hidden"
     )}>
       {/* Icon strip */}
       <div className={cn(
         "w-12 flex flex-col",
         !isResizing && "transition-all duration-200 ease-in-out",
-        !isOpen && "w-0 overflow-hidden"
+        !shouldShow && "w-0 overflow-hidden"
       )}>
-        <div className={cn("flex-1 flex flex-col", smartWindowMode && onSidebarToggle ? "py-1" : "py-2")}>
-          {/* Sidebar toggle button at the top - only in Smart Window mode */}
-          {onSidebarToggle && smartWindowMode && (
+        <div className="flex-1 flex flex-col py-2">
+          {/* Sidebar toggle button at the top - only in Smart Window mode + Firefox View */}
+          {onSidebarToggle && smartWindowMode && isFirefoxViewActive && (
             <button
               onClick={onSidebarToggle}
               className="w-full h-10 flex items-center justify-center hover:bg-[#e0e0e4] transition-colors"
@@ -568,13 +589,23 @@ export function Sidebar({
       <div
         ref={sidebarRef}
         className={cn(
-          "relative bg-[#f9f9fb] flex-shrink-0",
+          "relative flex-shrink-0",
+          (smartWindowMode && isFirefoxViewActive) ? "bg-transparent" : "bg-[#f9f9fb]",
           !isResizing && "transition-all duration-200 ease-in-out",
-          !activeSection && "w-0 overflow-hidden"
+          // In Smart Window mode: show content only when expanded
+          // In classic mode: show content when activeSection exists
+          smartWindowMode ? (!isExpanded && "w-0 overflow-hidden") : (!activeSection && "w-0 overflow-hidden")
         )}
-        style={{ width: activeSection ? `${width}px` : '0px' }}
+        style={{ 
+          width: smartWindowMode 
+            ? (isExpanded ? `${width}px` : '0px')
+            : (activeSection ? `${width}px` : '0px')
+        }}
       >
-        <div className="flex flex-col h-full bg-white">
+        <div className={cn(
+          "flex flex-col h-full",
+          (smartWindowMode && isFirefoxViewActive) ? "bg-white/90 backdrop-blur-sm" : "bg-white"
+        )}>
           {renderSectionContent()}
         </div>
         

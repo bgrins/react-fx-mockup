@@ -26,6 +26,7 @@ function Browser(): React.ReactElement {
   const addressBarRef = React.useRef<AddressBarHandle>(null);
   const firefoxViewRef = React.useRef<FirefoxViewHandle>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = React.useState(false); // For Smart Window mode narrow/expanded
   const [smartWindowMode, setSmartWindowMode] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
 
@@ -217,11 +218,21 @@ function Browser(): React.ReactElement {
         addressBarRef.current?.focus();
       }
     },
-    toggleSidebar: () => setSidebarOpen(!sidebarOpen),
+    toggleSidebar: () => {
+      if (smartWindowMode) {
+        setSidebarExpanded(!sidebarExpanded);
+      } else {
+        setSidebarOpen(!sidebarOpen);
+      }
+    },
     toggleSettings: () => setShowHelp((prev) => !prev),
     pageInfo: () => {
-      setSidebarOpen((prev) => !prev);
-      // If opening sidebar, we'll need to trigger the Page Info section
+      if (smartWindowMode) {
+        setSidebarExpanded((prev) => !prev);
+      } else {
+        setSidebarOpen((prev) => !prev);
+      }
+      // If expanding/opening sidebar, we'll need to trigger the Page Info section
       // This will be handled by the Sidebar component's effect
     },
 
@@ -263,7 +274,13 @@ function Browser(): React.ReactElement {
               onRefresh={handleRefresh}
               canGoBack={canGoBack}
               canGoForward={canGoForward}
-              onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+              onSidebarToggle={() => {
+                if (smartWindowMode) {
+                  setSidebarExpanded(!sidebarExpanded);
+                } else {
+                  setSidebarOpen(!sidebarOpen);
+                }
+              }}
               hideToolbar={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW && smartWindowMode}
               smartWindowMode={smartWindowMode}
               isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
@@ -274,7 +291,8 @@ function Browser(): React.ReactElement {
                 <div
                   className={cn(
                     "flex-shrink-0 transition-all duration-200 ease-in-out",
-                    sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
+                    // In Smart Window mode, always show sidebar; in classic mode, use sidebarOpen
+                    smartWindowMode ? "w-auto" : sidebarOpen ? "w-auto" : "w-0 overflow-hidden",
                   )}
                 >
                   <Sidebar
@@ -288,8 +306,16 @@ function Browser(): React.ReactElement {
                         ? localStorage.getItem("infer-access-key") || undefined
                         : undefined
                     }
-                    onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+                    onSidebarToggle={() => {
+                      if (smartWindowMode) {
+                        setSidebarExpanded(!sidebarExpanded);
+                      } else {
+                        setSidebarOpen(!sidebarOpen);
+                      }
+                    }}
                     smartWindowMode={smartWindowMode}
+                    isExpanded={sidebarExpanded}
+                    isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
                   />
                 </div>
                 <div
@@ -481,8 +507,6 @@ function Browser(): React.ReactElement {
                       onNewTab={handleNewTab}
                       iframeRefs={iframeRefs}
                       smartWindowMode={smartWindowMode}
-                      onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-                      sidebarOpen={sidebarOpen}
                     />
                   )}
                 </div>

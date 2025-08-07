@@ -21,16 +21,16 @@ export function SqliteVecDemo() {
     return <div>Loading SQLite Vec Demo...</div>;
   }
 
-  const runDemo = async () => {
+  const loadSyntheticProfiles = async () => {
     if (!isInitialized || isRunning) return;
     
     setIsRunning(true);
     setOutput([]);
     
     try {
-      log('🔄 Running SQLite Vec demo...');
+      log('🔄 Loading Synthetic Profiles dataset...');
 
-      // Test vec_version
+      // Test vec_version first
       try {
         const result = await selectArray('select vec_version() as version');
         const vec_version = result[0];
@@ -39,45 +39,92 @@ export function SqliteVecDemo() {
         log('❌ Failed to get vec_version: ' + (e as Error).message);
       }
 
-      // Test basic vector operations
+      // Load the synthetic profiles data
       try {
-        await exec(`
-          CREATE TABLE IF NOT EXISTS test_vectors(
-            id INTEGER PRIMARY KEY,
-            embedding BLOB
-          );
+        log('📊 Loading synthetic profiles dataset from HuggingFace...');
+        
+        // Fetch the SQL file from the public directory
+        const response = await fetch('/synthetic_profiles.sql');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch SQL file: ${response.status}`);
+        }
+        
+        const sqlContent = await response.text();
+        log('📄 SQL file loaded successfully');
+        
+        // Execute the entire SQL content at once
+        log(`🔄 Executing SQL statements...`);
+        
+        try {
+          // Execute the entire SQL file at once - SQLite can handle this
+          await exec(sqlContent);
+          log('✅ SQL executed successfully');
+        } catch (error) {
+          log(`❌ Bulk execution failed: ${(error as Error).message}`);
+          log('⚠️ Trying to execute raw SQL content directly...');
+          
+          // Remove only comment-only lines, preserve SQL with inline comments
+          const cleanedSQL = sqlContent
+            .split('\n')
+            .filter(line => {
+              const trimmed = line.trim();
+              return trimmed.length > 0 && !trimmed.startsWith('--');
+            })
+            .join('\n');
+          
+          try {
+            await exec(cleanedSQL);
+            log('✅ Raw SQL executed successfully');
+          } catch (rawError) {
+            log(`❌ Raw SQL execution also failed: ${(rawError as Error).message}`);
+            throw rawError;
+          }
+        }
+        
+        // Check how many records were loaded
+        const countResult = await selectArray('SELECT COUNT(*) as count FROM synthetic_profiles');
+        const recordCount = countResult[0];
+        log(`✅ Loaded ${recordCount} synthetic profile records`);
+        
+        // Show some basic statistics
+        const personaStats = await selectArrays(`
+          SELECT persona, COUNT(*) as visit_count 
+          FROM synthetic_profiles 
+          GROUP BY persona 
+          ORDER BY visit_count DESC 
+          LIMIT 5
         `);
+        log(`👤 Top personas by visits: ${JSON.stringify(personaStats)}`);
         
-        await exec(`
-          DELETE FROM test_vectors;
+        const interestStats = await selectArrays(`
+          SELECT interest, COUNT(*) as count 
+          FROM synthetic_profiles 
+          GROUP BY interest 
+          ORDER BY count DESC 
+          LIMIT 5
         `);
+        log(`🎯 Top interests: ${JSON.stringify(interestStats)}`);
         
-        await exec(`
-          INSERT INTO test_vectors(embedding) 
-          VALUES (vec_f32('[1, 2, 3]')), (vec_f32('[4, 5, 6]'));
+        const domainStats = await selectArrays(`
+          SELECT domain, COUNT(*) as visits, SUM(visit_count) as total_visits 
+          FROM synthetic_profiles 
+          GROUP BY domain 
+          ORDER BY visits DESC 
+          LIMIT 5
         `);
+        log(`🌐 Top domains: ${JSON.stringify(domainStats)}`);
         
-        const vectors = await selectArrays(`
-          SELECT id, vec_to_json(embedding) as embedding 
-          FROM test_vectors
+        // Show some sample records
+        const sampleRecords = await selectArrays(`
+          SELECT persona, title_name, domain, interest, visit_time
+          FROM synthetic_profiles 
+          ORDER BY visit_time DESC 
+          LIMIT 3
         `);
-        
-        log(`✅ Created and inserted vectors: ${JSON.stringify(vectors)}`);
-        
-        // Test vector similarity
-        const similarities = await selectArrays(`
-          SELECT 
-            a.id as id_a, 
-            b.id as id_b,
-            vec_distance_cosine(a.embedding, b.embedding) as cosine_distance
-          FROM test_vectors a, test_vectors b 
-          WHERE a.id < b.id
-        `);
-        
-        log(`✅ Vector similarities: ${JSON.stringify(similarities)}`);
+        log(`📋 Recent visits: ${JSON.stringify(sampleRecords)}`);
         
       } catch (e) {
-        log('❌ Vector operations failed: ' + (e as Error).message);
+        log('❌ Failed to load synthetic profiles: ' + (e as Error).message);
       }
       
     } catch (e) {
@@ -89,7 +136,7 @@ export function SqliteVecDemo() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">SQLite Vec Demo</h2>
+      <h2 className="text-2xl font-bold mb-4">SQLite Vec Demo - Synthetic Profiles Dataset</h2>
       
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
@@ -113,11 +160,11 @@ export function SqliteVecDemo() {
       </div>
 
       <button 
-        onClick={runDemo}
+        onClick={loadSyntheticProfiles}
         disabled={!isInitialized || isRunning}
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
       >
-        {isRunning ? 'Running Demo...' : 'Run Demo'}
+        {isRunning ? 'Loading Dataset...' : 'Load Synthetic Profiles Dataset'}
       </button>
 
       <div className="bg-gray-100 p-4 rounded-lg max-h-96 overflow-y-auto">

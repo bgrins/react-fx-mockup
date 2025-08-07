@@ -424,47 +424,42 @@ describe("Smart Window Functionality", () => {
       expect(onNavigate).toHaveBeenCalledTimes(0);
     });
 
-    describe("Sidebar Button Behavior", () => {
-      it("should show sidebar button in embedded toolbar when sidebar is closed", () => {
+    describe("Embedded Toolbar Behavior", () => {
+      it("should not show sidebar button in FirefoxView embedded toolbar", () => {
         render(
           <FirefoxView
             {...firefoxViewProps}
             smartWindowMode={true}
-            sidebarOpen={false}
           />
         );
 
-        // Should show sidebar button in the embedded toolbar
-        const sidebarButton = screen.queryByTitle("Sidebar");
-        expect(sidebarButton).toBeTruthy();
-      });
-
-      it("should hide sidebar button in embedded toolbar when sidebar is open", () => {
-        render(
-          <FirefoxView
-            {...firefoxViewProps}
-            smartWindowMode={true}
-            sidebarOpen={true}
-          />
-        );
-
-        // Should hide sidebar button from the embedded toolbar when sidebar is open
+        // With new approach, sidebar button is not in FirefoxView toolbar - it's always in sidebar
         const sidebarButton = screen.queryByTitle("Sidebar");
         expect(sidebarButton).toBe(null);
       });
 
-      it("should not show sidebar button in classic mode", () => {
+      it("should show embedded toolbar icons in Smart Window mode", () => {
+        render(
+          <FirefoxView
+            {...firefoxViewProps}
+            smartWindowMode={true}
+          />
+        );
+
+        // Should show embedded toolbar in Smart Window mode
+        expect(screen.getByTestId("dropdown-menu")).toBeTruthy();
+      });
+
+      it("should not show embedded toolbar in classic mode", () => {
         render(
           <FirefoxView
             {...firefoxViewProps}
             smartWindowMode={false}
-            sidebarOpen={false}
           />
         );
 
-        // Should not show embedded toolbar or sidebar button in classic mode
-        const sidebarButton = screen.queryByTitle("Sidebar");
-        expect(sidebarButton).toBe(null);
+        // Should not show embedded toolbar in classic mode
+        expect(screen.queryByTestId("dropdown-menu")).toBe(null);
       });
     });
   });
@@ -530,6 +525,273 @@ describe("Smart Window Functionality", () => {
       // Click Smart to switch modes
       fireEvent.click(smartButton!);
       expect(onSmartWindowToggle).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Shared mock props for sidebar tests
+  const mockSidebarProps = {
+    isOpen: false,
+    onClose: vi.fn(),
+    onSidebarToggle: vi.fn(),
+    smartWindowMode: true,
+    isExpanded: false,
+    isFirefoxViewActive: false,
+  };
+
+  describe("Sidebar Section Click Behavior in Smart Window Mode", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("should expand sidebar when clicking a section in Smart Window mode", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      const onSidebarToggle = vi.fn();
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          onSidebarToggle={onSidebarToggle}
+          smartWindowMode={true}
+          isExpanded={false}
+        />
+      );
+
+      // Click on Settings section
+      const settingsButton = screen.getByTitle("Settings");
+      fireEvent.click(settingsButton);
+
+      // Should call onSidebarToggle to expand sidebar
+      expect(onSidebarToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it("should collapse sidebar when clicking the same section again in Smart Window mode", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      const onSidebarToggle = vi.fn();
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          onSidebarToggle={onSidebarToggle}
+          smartWindowMode={true}
+          isExpanded={true}
+        />
+      );
+
+      // First click to open Settings (when sidebar is already expanded)
+      const settingsButton = screen.getByTitle("Settings");
+      fireEvent.click(settingsButton);
+
+      // Should NOT call onSidebarToggle since sidebar is already expanded
+      expect(onSidebarToggle).toHaveBeenCalledTimes(0);
+
+      // Click Settings again to close the section
+      fireEvent.click(settingsButton);
+
+      // Should call onSidebarToggle to collapse sidebar
+      expect(onSidebarToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it("should switch sections without extra toggle when sidebar is already expanded", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      const onSidebarToggle = vi.fn();
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          onSidebarToggle={onSidebarToggle}
+          smartWindowMode={true}
+          isExpanded={true}
+        />
+      );
+
+      // Click Settings to activate it
+      const settingsButton = screen.getByTitle("Settings");
+      fireEvent.click(settingsButton);
+
+      // Should not call onSidebarToggle since sidebar is already expanded
+      expect(onSidebarToggle).toHaveBeenCalledTimes(0);
+
+      // Click Page Info to switch sections
+      const pageInfoButton = screen.getByTitle("Page Info");
+      fireEvent.click(pageInfoButton);
+
+      // Should not call onSidebarToggle since we're just switching sections
+      expect(onSidebarToggle).toHaveBeenCalledTimes(0);
+    });
+
+    it("should not call onSidebarToggle in classic mode", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      const onSidebarToggle = vi.fn();
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          onSidebarToggle={onSidebarToggle}
+          smartWindowMode={false}
+          isOpen={true}
+        />
+      );
+
+      // Click Settings in classic mode
+      const settingsButton = screen.getByTitle("Settings");
+      fireEvent.click(settingsButton);
+
+      // Should not call onSidebarToggle in classic mode
+      expect(onSidebarToggle).toHaveBeenCalledTimes(0);
+
+      // Click Settings again to close section
+      fireEvent.click(settingsButton);
+
+      // Still should not call onSidebarToggle in classic mode
+      expect(onSidebarToggle).toHaveBeenCalledTimes(0);
+    });
+
+    it("should handle Page Info section clicks in Smart Window mode", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      const onSidebarToggle = vi.fn();
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          onSidebarToggle={onSidebarToggle}
+          smartWindowMode={true}
+          isExpanded={false}
+        />
+      );
+
+      // Click Page Info section
+      const pageInfoButton = screen.getByTitle("Page Info");
+      fireEvent.click(pageInfoButton);
+
+      // Should call onSidebarToggle to expand sidebar
+      expect(onSidebarToggle).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Sidebar Toggle Button Visibility", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("should show sidebar toggle button in Smart Window mode + Firefox View", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          smartWindowMode={true}
+          isFirefoxViewActive={true}
+        />
+      );
+
+      // Should show the sidebar toggle button
+      const sidebarToggleButton = screen.getByTitle("Sidebar");
+      expect(sidebarToggleButton).toBeTruthy();
+    });
+
+    it("should NOT show sidebar toggle button in Smart Window mode when NOT Firefox View", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          smartWindowMode={true}
+          isFirefoxViewActive={false}
+        />
+      );
+
+      // Should NOT show the sidebar toggle button
+      const sidebarToggleButton = screen.queryByTitle("Sidebar");
+      expect(sidebarToggleButton).toBe(null);
+    });
+
+    it("should NOT show sidebar toggle button in classic mode", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          smartWindowMode={false}
+          isFirefoxViewActive={true}
+        />
+      );
+
+      // Should NOT show the sidebar toggle button in classic mode
+      const sidebarToggleButton = screen.queryByTitle("Sidebar");
+      expect(sidebarToggleButton).toBe(null);
+    });
+
+    it("should NOT show sidebar toggle button when onSidebarToggle is not provided", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      
+      render(
+        <Sidebar
+          {...mockSidebarProps}
+          onSidebarToggle={undefined}
+          smartWindowMode={true}
+          isFirefoxViewActive={true}
+        />
+      );
+
+      // Should NOT show the sidebar toggle button when no handler provided
+      const sidebarToggleButton = screen.queryByTitle("Sidebar");
+      expect(sidebarToggleButton).toBe(null);
+    });
+  });
+
+  describe("Sidebar Background Color", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("should have transparent background in Smart Window mode + Firefox View", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      
+      const { container } = render(
+        <Sidebar
+          {...mockSidebarProps}
+          smartWindowMode={true}
+          isFirefoxViewActive={true}
+        />
+      );
+
+      // Should have transparent background
+      const sidebarContainer = container.firstChild as HTMLElement;
+      expect(sidebarContainer.className).toContain("bg-transparent");
+    });
+
+    it("should have normal background in Smart Window mode when NOT Firefox View", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      
+      const { container } = render(
+        <Sidebar
+          {...mockSidebarProps}
+          smartWindowMode={true}
+          isFirefoxViewActive={false}
+        />
+      );
+
+      // Should have normal background color
+      const sidebarContainer = container.firstChild as HTMLElement;
+      expect(sidebarContainer.className).toContain("bg-[#f9f9fb]");
+      expect(sidebarContainer.className).not.toContain("bg-transparent");
+    });
+
+    it("should have normal background in classic mode", async () => {
+      const { Sidebar } = await import("./Sidebar");
+      
+      const { container } = render(
+        <Sidebar
+          {...mockSidebarProps}
+          smartWindowMode={false}
+          isFirefoxViewActive={true}
+        />
+      );
+
+      // Should have normal background color in classic mode
+      const sidebarContainer = container.firstChild as HTMLElement;
+      expect(sidebarContainer.className).toContain("bg-[#f9f9fb]");
+      expect(sidebarContainer.className).not.toContain("bg-transparent");
     });
   });
 });
