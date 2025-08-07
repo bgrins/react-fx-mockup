@@ -14,11 +14,14 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 // Mock useSqliteVec hook to prevent Worker not defined error
+const mockSelectArrays = vi.fn();
+const mockExec = vi.fn();
+
 vi.mock("~/hooks/useSqliteVec", () => ({
   useSqliteVec: () => ({
     isInitialized: false,
-    selectArrays: vi.fn(),
-    exec: vi.fn(),
+    selectArrays: mockSelectArrays,
+    exec: mockExec,
   }),
 }));
 
@@ -80,8 +83,19 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe("SettingsModal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
     // Reset localStorage mock to return null by default (no stored profiles)
-    localStorageMock.getItem.mockReturnValue(null);
+    localStorageMock.getItem.mockImplementation((key: string) => {
+      if (key === "selected-profile") return null;
+      if (key.startsWith("firefox-browser-state-")) return null;
+      if (key === "infer-access-key") return "";
+      return null;
+    });
+    
+    // Reset database mocks
+    mockSelectArrays.mockReset();
+    mockExec.mockReset();
+    
     // Mock fetch to reject immediately to prevent network requests
     (global.fetch as any).mockRejectedValue(new Error('Network request blocked in tests'));
   });
@@ -99,14 +113,23 @@ describe("SettingsModal", () => {
   it("should display all main sections", () => {
     renderWithProviders(<SettingsModal isOpen={true} onClose={() => {}} />);
     
+    // Check that tabs are rendered
+    expect(screen.getByText("General")).toBeTruthy();
+    expect(screen.getByText("Shortcuts")).toBeTruthy();
+    expect(screen.getByText("Diagnostics")).toBeTruthy();
+    
+    // Check that the default General tab content is visible
     expect(screen.getByText("Starting States")).toBeTruthy();
     expect(screen.getByText("Infer Access Key")).toBeTruthy();
-    expect(screen.getByText("Keyboard Shortcuts")).toBeTruthy();
-    expect(screen.getByText("System Diagnostics")).toBeTruthy();
+    expect(screen.getByText("User Profile")).toBeTruthy();
   });
 
-  it("should have System Diagnostics expanded by default", () => {
+  it("should show diagnostics content when diagnostics tab is clicked", () => {
     renderWithProviders(<SettingsModal isOpen={true} onClose={() => {}} />);
+    
+    // Click on diagnostics tab
+    const diagnosticsTab = screen.getByText("Diagnostics");
+    fireEvent.click(diagnosticsTab);
     
     // Check if System Information section is visible
     expect(screen.getByText("System Information")).toBeTruthy();
@@ -136,8 +159,11 @@ describe("SettingsModal", () => {
   it("should display Toggle Settings shortcut", () => {
     renderWithProviders(<SettingsModal isOpen={true} onClose={() => {}} />);
     
-    // Find and click the Settings section to expand it (though it's in the second grid)
-    // The shortcut should be visible in the Settings section
+    // Click on shortcuts tab first
+    const shortcutsTab = screen.getByText("Shortcuts");
+    fireEvent.click(shortcutsTab);
+    
+    // Find the Settings section in shortcuts
     const settingsSection = screen.getByText("Settings");
     expect(settingsSection).toBeTruthy();
     
@@ -149,26 +175,28 @@ describe("SettingsModal", () => {
     expect(shortcutElements.length).toBeGreaterThan(0);
   });
 
-  it("should toggle sections when clicking section headers", () => {
+  it("should switch between tabs", () => {
     renderWithProviders(<SettingsModal isOpen={true} onClose={() => {}} />);
     
-    // Find the Keyboard Shortcuts toggle button
-    const shortcutsButton = screen.getByRole("button", { name: /Keyboard Shortcuts/i });
-    
-    // Should be expanded by default - check for Navigation section
-    expect(screen.getByText("Navigation")).toBeTruthy();
-    
-    // Click to collapse
-    fireEvent.click(shortcutsButton);
-    
-    // Navigation section should be hidden
+    // Initially should see general tab content
+    expect(screen.getByText("Starting States")).toBeTruthy();
     expect(screen.queryByText("Navigation")).toBe(null);
     
-    // Click to expand again
-    fireEvent.click(shortcutsButton);
+    // Click shortcuts tab
+    const shortcutsTab = screen.getByText("Shortcuts");
+    fireEvent.click(shortcutsTab);
     
-    // Navigation section should be visible again
+    // Should see shortcuts content and not general content
     expect(screen.getByText("Navigation")).toBeTruthy();
+    expect(screen.queryByText("Starting States")).toBe(null);
+    
+    // Click diagnostics tab
+    const diagnosticsTab = screen.getByText("Diagnostics");
+    fireEvent.click(diagnosticsTab);
+    
+    // Should see diagnostics content and not shortcuts content
+    expect(screen.getByText("System Information")).toBeTruthy();
+    expect(screen.queryByText("Navigation")).toBe(null);
   });
 
   it("should save access key when submitting form", () => {
@@ -198,6 +226,10 @@ describe("SettingsModal", () => {
 
   it("should display browser features correctly", () => {
     renderWithProviders(<SettingsModal isOpen={true} onClose={() => {}} />);
+    
+    // Click on diagnostics tab first
+    const diagnosticsTab = screen.getByText("Diagnostics");
+    fireEvent.click(diagnosticsTab);
     
     // Check for browser features section
     expect(screen.getByText("Browser Features")).toBeTruthy();

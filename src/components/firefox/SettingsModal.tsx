@@ -11,17 +11,15 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
+type TabId = "general" | "shortcuts" | "diagnostics";
+
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [accessKey, setAccessKey] = useState(
     typeof window !== "undefined" ? localStorage.getItem("infer-access-key") || "" : ""
   );
   const { debugInfo } = useDebug();
   const { selectedProfile, selectProfile, availableProfiles } = useProfile();
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    states: true,
-    shortcuts: true,
-    system: true,
-  });
+  const [activeTab, setActiveTab] = useState<TabId>("general");
 
   // Handle Esc key to close modal
   React.useEffect(() => {
@@ -58,9 +56,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     { id: "split", label: "Split View", description: "Two tabs side by side", link: "/split-view" },
   ];
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-  };
+
+  const tabs = [
+    { id: "general" as TabId, label: "General", icon: "⚙️" },
+    { id: "shortcuts" as TabId, label: "Shortcuts", icon: "⌨️" },
+    { id: "diagnostics" as TabId, label: "Diagnostics", icon: "🔧" },
+  ];
 
   return (
     <>
@@ -87,111 +88,120 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </button>
           </div>
 
+          {/* Tabs */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex px-6" aria-label="Tabs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm mr-8 transition-colors ${
+                    activeTab === tab.id
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="mr-2">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-8">
-              {/* Starting States */}
-              <section>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Starting States</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {states.map((state) => (
-                    <Link
-                      key={state.id}
-                      to={state.link}
-                      onClick={onClose}
-                      className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-blue-500 hover:shadow-md transition-all text-left group"
-                    >
-                      <h4 className="font-medium text-gray-900 group-hover:text-blue-600 mb-1">
-                        {state.label}
-                      </h4>
-                      <p className="text-sm text-gray-600">{state.description}</p>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-
-              {/* Access Key Configuration */}
-              <section className="border-t border-gray-200 pt-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Infer Access Key</h3>
-                <form onSubmit={handleAccessKeySubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="access-key" className="block text-sm font-medium text-gray-700 mb-2">
-                      Access Key
-                    </label>
-                    <div className="flex gap-3">
-                      <input
-                        id="access-key"
-                        type="password"
-                        value={accessKey}
-                        onChange={(e) => setAccessKey(e.target.value)}
-                        placeholder="Enter your Infer access key"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          localStorage.removeItem("infer-access-key");
-                          setAccessKey("");
-                        }}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-                      >
-                        Clear
-                      </button>
+              {activeTab === "general" && (
+                <>
+                  {/* Starting States */}
+                  <section>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Starting States</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {states.map((state) => (
+                        <Link
+                          key={state.id}
+                          to={state.link}
+                          onClick={onClose}
+                          className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-blue-500 hover:shadow-md transition-all text-left group"
+                        >
+                          <h4 className="font-medium text-gray-900 group-hover:text-blue-600 mb-1">
+                            {state.label}
+                          </h4>
+                          <p className="text-sm text-gray-600">{state.description}</p>
+                        </Link>
+                      ))}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Used for authentication with the Infer service for enhanced AI-powered features.
-                    </p>
-                  </div>
-                </form>
-              </section>
+                  </section>
 
-              {/* Profile Selection */}
-              <section className="border-t border-gray-200 pt-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">User Profile</h3>
-                <div className="flex items-center gap-4">
-                  <label htmlFor="profile-select" className="text-sm font-medium text-gray-700">
-                    Select Profile:
-                  </label>
-                  <select
-                    id="profile-select"
-                    value={selectedProfile?.name || ""}
-                    onChange={(e) => selectProfile(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {availableProfiles.map((profileName) => (
-                      <option key={profileName} value={profileName}>
-                        {profileName === "Default" ? "Default" : `${profileName}'s Profile`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </section>
+                  {/* Access Key Configuration */}
+                  <section className="border-t border-gray-200 pt-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Infer Access Key</h3>
+                    <form onSubmit={handleAccessKeySubmit} className="space-y-4">
+                      <div>
+                        <label htmlFor="access-key" className="block text-sm font-medium text-gray-700 mb-2">
+                          Access Key
+                        </label>
+                        <div className="flex gap-3">
+                          <input
+                            id="access-key"
+                            type="password"
+                            value={accessKey}
+                            onChange={(e) => setAccessKey(e.target.value)}
+                            placeholder="Enter your Infer access key"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <button
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              localStorage.removeItem("infer-access-key");
+                              setAccessKey("");
+                            }}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Used for authentication with the Infer service for enhanced AI-powered features.
+                        </p>
+                      </div>
+                    </form>
+                  </section>
 
-              {/* Keyboard Shortcuts */}
-              <section className="border-t border-gray-200 pt-8">
-                <button
-                  onClick={() => toggleSection('shortcuts')}
-                  className="flex items-center justify-between w-full text-left"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900">Keyboard Shortcuts</h3>
-                  <svg 
-                    className={`w-5 h-5 text-gray-500 transform transition-transform ${expandedSections.shortcuts ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {expandedSections.shortcuts && (
-                  <div className="mt-4 space-y-6">
+                  {/* Profile Selection */}
+                  <section className="border-t border-gray-200 pt-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">User Profile</h3>
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="profile-select" className="text-sm font-medium text-gray-700">
+                        Select Profile:
+                      </label>
+                      <select
+                        id="profile-select"
+                        value={selectedProfile?.name || ""}
+                        onChange={(e) => selectProfile(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {availableProfiles.map((profileName) => (
+                          <option key={profileName} value={profileName}>
+                            {profileName === "Default" ? "Default" : `${profileName}'s Profile`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </section>
+                </>
+              )}
+
+              {activeTab === "shortcuts" && (
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Keyboard Shortcuts</h3>
+                  <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {shortcutCategories.slice(0, 4).map((category) => (
                         <div key={category.name}>
@@ -244,28 +254,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       </p>
                     </div>
                   </div>
-                )}
-              </section>
+                </section>
+              )}
 
-              {/* System Diagnostics */}
-              <section className="border-t border-gray-200 pt-8">
-                <button
-                  onClick={() => toggleSection('system')}
-                  className="flex items-center justify-between w-full text-left"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900">System Diagnostics</h3>
-                  <svg 
-                    className={`w-5 h-5 text-gray-500 transform transition-transform ${expandedSections.system ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {expandedSections.system && (
-                  <div className="mt-4 space-y-4">
+              {activeTab === "diagnostics" && (
+                <section>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6">System Diagnostics</h3>
+                  <div className="space-y-4">
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-gray-700 mb-3">System Information</h4>
                       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -335,10 +330,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         </div>
                       </div>
                     </div>
+
+                    <SettingsTool />
                   </div>
-                )}
-                <SettingsTool />
-              </section>
+                </section>
+              )}
             </div>
           </div>
         </div>

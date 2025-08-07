@@ -85,9 +85,9 @@ describe("ProfileSwitcher", () => {
 
     // Check for the styled avatar div with profile initial
     await waitFor(() => {
-      const avatarDiv = screen.getByText("D").parentElement
-      expect(avatarDiv?.className).toContain("rounded-full")
-      expect(avatarDiv?.className).toContain("bg-gradient-to-br")
+      const avatarDiv = screen.getByText("D")
+      expect(avatarDiv.className).toContain("rounded-full")
+      expect(avatarDiv.className).toContain("bg-gradient-to-br")
     })
   })
 })

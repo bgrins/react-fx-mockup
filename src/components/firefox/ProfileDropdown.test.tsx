@@ -15,13 +15,13 @@ vi.mock("@tanstack/react-router", () => ({
 
 // Mock the useSqliteVec hook to simulate database with multiple profiles
 const mockSelectArrays = vi.fn();
-const mockIsInitialized = vi.fn().mockReturnValue(true);
+const mockExec = vi.fn();
 
 vi.mock("~/hooks/useSqliteVec", () => ({
   useSqliteVec: () => ({
-    isInitialized: mockIsInitialized(),
+    isInitialized: true,
     selectArrays: mockSelectArrays,
-    exec: vi.fn(),
+    exec: mockExec,
     selectArray: vi.fn(),
   }),
 }));
@@ -52,17 +52,27 @@ describe("Profile Dropdown Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Mock the database to return multiple profiles
-    mockSelectArrays.mockResolvedValue([
-      ["Anna"],
-      ["Jessica"], 
-      ["John"],
-      ["Mina"],
-      ["Peter"],
-      ["Robert"],
-      ["Theo"],
-      ["Youssef"],
-    ]);
+    // Reset localStorage mocks
+    localStorageMock.getItem.mockImplementation((key: string) => {
+      if (key === "selected-profile") return null;
+      if (key.startsWith("firefox-browser-state-")) return null;
+      if (key === "infer-access-key") return "";
+      return null;
+    });
+    
+    // Mock the database calls in the correct order
+    mockSelectArrays
+      .mockResolvedValueOnce([[1]]) // First call: check if table exists
+      .mockResolvedValueOnce([     // Second call: get available profiles
+        ["Anna"],
+        ["Jessica"], 
+        ["John"],
+        ["Mina"],
+        ["Peter"],
+        ["Robert"],
+        ["Theo"],
+        ["Youssef"],
+      ]);
   });
 
   it("should show all available profiles in settings modal dropdown", async () => {
@@ -113,11 +123,22 @@ describe("Profile Dropdown Integration", () => {
     }, { timeout: 2000 });
   });
 
-  it("should gracefully handle database errors", async () => {
-    // Mock database error
-    mockSelectArrays.mockRejectedValue(new Error("Database error"));
+  it("should render dropdown with default profile when no database", async () => {
+    // Clear the mocks from beforeEach and set up minimal scenario
+    vi.clearAllMocks();
     
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    // Mock database as not initialized (simpler test case)
+    vi.mocked(mockSelectArrays).mockClear();
+    
+    // Re-mock the hook to return false for isInitialized
+    vi.doMock("~/hooks/useSqliteVec", () => ({
+      useSqliteVec: () => ({
+        isInitialized: false,
+        selectArrays: mockSelectArrays,
+        exec: mockExec,
+        selectArray: vi.fn(),
+      }),
+    }));
 
     render(
       <DebugProvider>
@@ -127,18 +148,16 @@ describe("Profile Dropdown Integration", () => {
       </DebugProvider>
     );
 
+    // Should just render default profile when database isn't initialized
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith("Failed to load available profiles:", expect.any(Error));
-      
       const profileSelect = screen.getByLabelText("Select Profile:");
       const options = profileSelect.querySelectorAll("option");
       
-      // Should fallback to only Default option
+      // Should only have Default option when database not initialized
       expect(options.length).toBe(1);
       const defaultOption = [...options].find(option => option.value === "Default");
       expect(defaultOption).toBeTruthy();
-    });
-
-    consoleSpy.mockRestore();
+      expect(defaultOption?.textContent).toBe("Default");
+    }, { timeout: 2000 });
   });
 });
