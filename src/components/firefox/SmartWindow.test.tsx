@@ -755,7 +755,7 @@ describe("Smart Window Functionality", () => {
       vi.clearAllMocks();
     });
 
-    it("should have transparent background in Smart Window mode + Firefox View", async () => {
+    it("should have semitransparent background in Smart Window mode + Firefox View", async () => {
       const { Sidebar } = await import("./Sidebar");
       
       const { container } = render(
@@ -766,12 +766,12 @@ describe("Smart Window Functionality", () => {
         />
       );
 
-      // Should have transparent background
+      // Should have single layer semitransparent background
       const sidebarContainer = container.firstChild as HTMLElement;
-      expect(sidebarContainer.className).toContain("bg-transparent");
+      expect(sidebarContainer.className).toContain("bg-white/30");
     });
 
-    it("should have normal background in Smart Window mode when NOT Firefox View", async () => {
+    it("should have semitransparent background in Smart Window mode when NOT Firefox View", async () => {
       const { Sidebar } = await import("./Sidebar");
       
       const { container } = render(
@@ -782,10 +782,10 @@ describe("Smart Window Functionality", () => {
         />
       );
 
-      // Should have normal background color
+      // Should have single layer semitransparent background
       const sidebarContainer = container.firstChild as HTMLElement;
-      expect(sidebarContainer.className).toContain("bg-[#f9f9fb]");
-      expect(sidebarContainer.className).not.toContain("bg-transparent");
+      expect(sidebarContainer.className).toContain("bg-white/30");
+      expect(sidebarContainer.className).not.toContain("bg-[#f9f9fb]");
     });
 
     it("should have normal background in classic mode", async () => {
@@ -802,7 +802,7 @@ describe("Smart Window Functionality", () => {
       // Should have normal background color in classic mode
       const sidebarContainer = container.firstChild as HTMLElement;
       expect(sidebarContainer.className).toContain("bg-[#f9f9fb]");
-      expect(sidebarContainer.className).not.toContain("bg-transparent");
+      expect(sidebarContainer.className).not.toContain("bg-white/30");
     });
   });
 });

@@ -120,6 +120,10 @@ function Browser(): React.ReactElement {
 
     // When entering Smart Window mode
     if (newSmartWindowMode) {
+      // If sidebar was open in classic mode, keep it expanded in smart mode
+      if (sidebarOpen) {
+        setSidebarExpanded(true);
+      }
       // If the current tab is a new tab (about:blank), switch to Firefox View
       if (activeTab?.url === ABOUT_PAGES.BLANK) {
         switchTab("firefox-view");
@@ -127,6 +131,10 @@ function Browser(): React.ReactElement {
       // If on a normal tab, keep it selected (do nothing)
     } else {
       // When exiting Smart Window mode
+      // If sidebar was expanded in smart mode, keep it open in classic mode
+      if (sidebarExpanded) {
+        setSidebarOpen(true);
+      }
       // If currently on Firefox View, create a new tab and switch to it
       if (activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW) {
         handleNewTab();
