@@ -18,4 +18,12 @@ export default defineConfig({
     tanstackStart({ customViteReactPlugin: true, target: "cloudflare-module" }),
     viteReact(),
   ],
+  optimizeDeps: {
+    include: ["papaparse"],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/papaparse/, /node_modules/],
+    },
+  },
 });

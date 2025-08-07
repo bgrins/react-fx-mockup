@@ -3,10 +3,10 @@ import { writeFileSync, existsSync } from "fs";
 import { join } from "path";
 
 async function convertToSqliteVec(dataset, outputDir) {
-  const sqlitePath = join(outputDir, "synthetic_profiles.sql");
+  const csvPath = join(outputDir, "synthetic_profiles.csv");
 
-  if (existsSync(sqlitePath)) {
-    console.log(`SQLite file already exists at ${sqlitePath}, skipping conversion.`);
+  if (existsSync(csvPath)) {
+    console.log(`CSV file already exists at ${csvPath}, skipping conversion.`);
     return;
   }
 
@@ -58,70 +58,56 @@ async function convertToSqliteVec(dataset, outputDir) {
 
     console.log(`Total rows fetched: ${allRows.length}`);
 
-    // Generate SQL for SQLite Vec
-    let sql = `-- Synthetic Profiles Dataset for SQLite Vec
--- Generated from HuggingFace dataset: ${dataset}
+    // Generate CSV for easier parsing
+    const csvHeaders = [
+      "persona",
+      "visit_id",
+      "visit_time",
+      "visit_description",
+      "place_id",
+      "url",
+      "title",
+      "domain",
+      "visit_count",
+      "interest",
+      "title_name",
+    ];
 
-CREATE TABLE IF NOT EXISTS synthetic_profiles (
-  id INTEGER PRIMARY KEY,
-  persona TEXT,
-  visit_id INTEGER,
-  visit_time TEXT,
-  visit_description TEXT,
-  place_id INTEGER,
-  url TEXT,
-  title TEXT,
-  domain TEXT,
-  visit_count INTEGER,
-  interest TEXT,
-  title_name TEXT,
-  -- Could add embeddings here for vector search
-  -- embedding BLOB -- for vec_f32() vectors
-);
+    const escapeCSV = (str) => {
+      if (str === null || str === undefined) return "";
+      const stringValue = String(str);
+      // Escape quotes and wrap in quotes if contains comma, quote, or newline
+      if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
 
--- Clear existing data
-DELETE FROM synthetic_profiles;
-
--- Insert data
-`;
+    let csv = csvHeaders.join(",") + "\n";
 
     for (const rowData of allRows) {
       const row = rowData.row;
 
-      // Escape single quotes for SQL
-      const escapeSQL = (str) => {
-        if (str === null || str === undefined) return "NULL";
-        return `'${String(str).replace(/'/g, "''")}'`;
-      };
+      const csvRow = [
+        escapeCSV(row.persona),
+        escapeCSV(row.visit_id),
+        escapeCSV(row.visit_time),
+        escapeCSV(row.visit_description),
+        escapeCSV(row.place_id),
+        escapeCSV(row.url),
+        escapeCSV(row.title),
+        escapeCSV(row.domain),
+        escapeCSV(row.visit_count),
+        escapeCSV(row.interest),
+        escapeCSV(row.title_name),
+      ];
 
-      sql += `INSERT INTO synthetic_profiles (
-        persona, visit_id, visit_time, visit_description, place_id, url, title, 
-        domain, visit_count, interest, title_name
-      ) VALUES (
-        ${escapeSQL(row.persona)},
-        ${row.visit_id || "NULL"},
-        ${escapeSQL(row.visit_time)},
-        ${escapeSQL(row.visit_description)},
-        ${row.place_id || "NULL"},
-        ${escapeSQL(row.url)},
-        ${escapeSQL(row.title)},
-        ${escapeSQL(row.domain)},
-        ${row.visit_count || "NULL"},
-        ${escapeSQL(row.interest)},
-        ${escapeSQL(row.title_name)}
-      );
-`;
+      csv += csvRow.join(",") + "\n";
     }
 
-    sql += `
--- Example queries for SQLite Vec (after adding embeddings):
--- SELECT * FROM synthetic_profiles WHERE persona = 'Theo';
--- SELECT domain, COUNT(*) as visit_count FROM synthetic_profiles GROUP BY domain ORDER BY visit_count DESC LIMIT 10;
--- SELECT interest, COUNT(*) as count FROM synthetic_profiles GROUP BY interest ORDER BY count DESC;
-`;
-
-    writeFileSync(sqlitePath, sql);
-    console.log(`Generated SQLite Vec file: ${sqlitePath} (${allRows.length} rows)`);
+    const csvPath = join(outputDir, "synthetic_profiles.csv");
+    writeFileSync(csvPath, csv);
+    console.log(`Generated CSV file: ${csvPath} (${allRows.length} rows)`);
   } catch (error) {
     console.error("Error converting to SQLite Vec format:", error);
   }

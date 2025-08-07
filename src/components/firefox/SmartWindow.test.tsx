@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { TabStrip } from "./TabStrip";
 import { FirefoxView } from "./FirefoxView";
+import { ProfileProvider } from "~/contexts/ProfileContext";
 import { ABOUT_PAGES } from "~/constants/browser";
 import type { Tab } from "~/types/browser";
 
@@ -34,6 +35,15 @@ vi.mock("~/utils/opengraph", () => ({
     url: "https://example.com"
   })),
 }));
+
+// Helper function to wrap components with ProfileProvider
+const renderWithProfileProvider = (component: React.ReactElement) => {
+  return render(
+    <ProfileProvider>
+      {component}
+    </ProfileProvider>
+  );
+};
 
 describe("Smart Window Functionality", () => {
   const mockTabs: Tab[] = [
@@ -254,12 +264,10 @@ describe("Smart Window Functionality", () => {
       onNavigate: vi.fn(),
       onNewTab: vi.fn(),
       iframeRefs: { current: {} },
-      onSidebarToggle: vi.fn(),
-      sidebarOpen: false,
     };
 
     it("should show classic Firefox View layout when not in smart mode", () => {
-      render(
+      renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={false}
@@ -272,7 +280,7 @@ describe("Smart Window Functionality", () => {
     });
 
     it("should show Smart Window layout with embedded toolbar", () => {
-      render(
+      renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={true}
@@ -286,7 +294,7 @@ describe("Smart Window Functionality", () => {
     });
 
     it("should show search input in Smart Window mode", () => {
-      render(
+      renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={true}
@@ -297,7 +305,7 @@ describe("Smart Window Functionality", () => {
     });
 
     it("should not show search input in classic mode", () => {
-      render(
+      renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={false}
@@ -308,7 +316,7 @@ describe("Smart Window Functionality", () => {
     });
 
     it("should show embedded toolbar icons only in Smart Window mode", () => {
-      const { rerender } = render(
+      const { rerender } = renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={false}
@@ -319,10 +327,12 @@ describe("Smart Window Functionality", () => {
       expect(screen.queryByTestId("dropdown-menu")).toBe(null);
 
       rerender(
-        <FirefoxView
-          {...firefoxViewProps}
-          smartWindowMode={true}
-        />
+        <ProfileProvider>
+          <FirefoxView
+            {...firefoxViewProps}
+            smartWindowMode={true}
+          />
+        </ProfileProvider>
       );
 
       // Should show embedded toolbar in Smart Window mode
@@ -330,7 +340,7 @@ describe("Smart Window Functionality", () => {
     });
 
     it("should focus search when dropdown Focus Search is clicked", async () => {
-      render(
+      renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={true}
@@ -348,7 +358,7 @@ describe("Smart Window Functionality", () => {
     });
 
     it("should have transparent background in Smart Window mode (gradient handled by BrowserShell)", () => {
-      const { container } = render(
+      const { container } = renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={true}
@@ -361,7 +371,7 @@ describe("Smart Window Functionality", () => {
     });
 
     it("should have transparent background in classic mode", () => {
-      const { container } = render(
+      const { container } = renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={false}
@@ -377,7 +387,7 @@ describe("Smart Window Functionality", () => {
       const onNavigate = vi.fn();
       const onNewTab = vi.fn();
       
-      render(
+      renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={true}
@@ -399,7 +409,7 @@ describe("Smart Window Functionality", () => {
       const onNavigate = vi.fn();
       const onNewTab = vi.fn();
       
-      render(
+      renderWithProfileProvider(
         <FirefoxView
           {...firefoxViewProps}
           smartWindowMode={true}
@@ -426,7 +436,7 @@ describe("Smart Window Functionality", () => {
 
     describe("Embedded Toolbar Behavior", () => {
       it("should not show sidebar button in FirefoxView embedded toolbar", () => {
-        render(
+        renderWithProfileProvider(
           <FirefoxView
             {...firefoxViewProps}
             smartWindowMode={true}
@@ -439,7 +449,7 @@ describe("Smart Window Functionality", () => {
       });
 
       it("should show embedded toolbar icons in Smart Window mode", () => {
-        render(
+        renderWithProfileProvider(
           <FirefoxView
             {...firefoxViewProps}
             smartWindowMode={true}
@@ -451,7 +461,7 @@ describe("Smart Window Functionality", () => {
       });
 
       it("should not show embedded toolbar in classic mode", () => {
-        render(
+        renderWithProfileProvider(
           <FirefoxView
             {...firefoxViewProps}
             smartWindowMode={false}
@@ -487,17 +497,18 @@ describe("Smart Window Functionality", () => {
 
       // Render FirefoxView in Smart Window mode
       rerender(
-        <FirefoxView
-          tabs={mockTabs}
-          activeTabId="firefox-view"
-          onTabClick={onTabClick}
-          onTabClose={vi.fn()}
-          onNavigate={vi.fn()}
-          onNewTab={vi.fn()}
-          iframeRefs={{ current: {} }}
-          smartWindowMode={true}
-          onSidebarToggle={vi.fn()}
-        />
+        <ProfileProvider>
+          <FirefoxView
+            tabs={mockTabs}
+            activeTabId="firefox-view"
+            onTabClick={onTabClick}
+            onTabClose={vi.fn()}
+            onNavigate={vi.fn()}
+            onNewTab={vi.fn()}
+            iframeRefs={{ current: {} }}
+            smartWindowMode={true}
+          />
+        </ProfileProvider>
       );
 
       // Should show Smart Window UI elements (no Exit button since it's now in TabStrip)

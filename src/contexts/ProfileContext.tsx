@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import Papa from "papaparse";
+import { parse } from "csv/browser/esm/sync";
 import { defaultShortcuts, type Shortcut } from "~/constants/shortcuts";
 
 const MAX_SHORTCUTS = 18;
@@ -29,7 +29,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`/src/profiles/${profileName}.csv`);
       const csvText = await response.text();
-      const { data } = Papa.parse(csvText, { header: true, dynamicTyping: true });
+      const data = parse(csvText, { columns: true, cast: true });
 
       // Sort by frecency and get top unique domains
       const sortedData = (data as any[]).sort((a, b) => b.frecency - a.frecency);

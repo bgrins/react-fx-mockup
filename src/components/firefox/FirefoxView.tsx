@@ -341,7 +341,7 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
 
         {browsableTabs.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-16">
+          <div className="text-center py-8">
             <div className="text-gray-300 mb-4">
               <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="mx-auto">
                 <path d="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V5H19V19M17,17H7V15H17V17M17,13H7V11H17V13M17,9H7V7H17V9Z" />

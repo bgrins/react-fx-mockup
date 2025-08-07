@@ -15,7 +15,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     typeof window !== "undefined" ? localStorage.getItem("infer-access-key") || "" : ""
   );
   const { debugInfo } = useDebug();
-  const { profiles, selectedProfile, selectProfile } = useProfile();
+  const { selectedProfile, selectProfile } = useProfile();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     states: true,
     shortcuts: true,

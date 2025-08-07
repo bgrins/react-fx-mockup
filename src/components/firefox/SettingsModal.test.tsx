@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { SettingsModal } from "./SettingsModal";
 import { DebugProvider } from "../../contexts/DebugContext";
+import { ProfileProvider } from "../../contexts/ProfileContext";
 
 // Mock the Link component from tanstack/react-router
 vi.mock("@tanstack/react-router", () => ({
@@ -56,9 +57,11 @@ Object.defineProperty(navigator, "cookieEnabled", {
 
 const renderWithProviders = (component: React.ReactElement) => {
   // Since SettingsModal uses Link from tanstack/router, we need to provide a router context
-  // For simplicity, we'll just render the component directly with DebugProvider
+  // For simplicity, we'll just render the component directly with DebugProvider and ProfileProvider
   return render(
-    <DebugProvider>{component}</DebugProvider>
+    <ProfileProvider>
+      <DebugProvider>{component}</DebugProvider>
+    </ProfileProvider>
   );
 };
 
@@ -188,7 +191,8 @@ describe("SettingsModal", () => {
   it("should display starting states", () => {
     renderWithProviders(<SettingsModal isOpen={true} onClose={() => {}} />);
     
-    expect(screen.getByText("Default")).toBeTruthy();
+    // Check for the starting states section
+    expect(screen.getByText("Starting States")).toBeTruthy();
     expect(screen.getByText("Fresh browser state")).toBeTruthy();
     expect(screen.getByText("Split View")).toBeTruthy();
     expect(screen.getByText("Two tabs side by side")).toBeTruthy();
