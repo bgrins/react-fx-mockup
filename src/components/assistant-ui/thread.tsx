@@ -78,7 +78,7 @@ const ThreadWelcome: FC = () => {
     <ThreadPrimitive.Empty>
       <div className="mx-auto flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col px-[var(--thread-padding-x)]">
         <div className="flex w-full flex-grow flex-col items-center justify-center">
-          <div className="flex size-full flex-col justify-center px-8 md:mt-20">
+          <div className="flex size-full flex-col justify-center mb-4 md:mt-20">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -86,7 +86,7 @@ const ThreadWelcome: FC = () => {
               transition={{ delay: 0.5 }}
               className="text-2xl font-semibold"
             >
-              Hello there!
+             Hi Mina,
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -109,24 +109,24 @@ const ThreadWelcomeSuggestions: FC = () => {
     <div className="grid w-full gap-2 sm:grid-cols-2">
       {[
         {
-          title: "What are the advantages",
-          label: "of using Assistant Cloud?",
-          action: "What are the advantages of using Assistant Cloud?",
+          title: "Compare nearby listing",
+          label: "Compare listings and recommended ones.",
+          action: "Can you come pare some nearby listing for me?",
         },
         {
-          title: "Write code to",
-          label: `demonstrate topological sorting`,
-          action: `Write code to demonstrate topological sorting`,
+          title: "Summarize key details",
+          label: `An overview of the key details, tailored to you`,
+          action: `Write a summary of the key details for me`,
         },
         {
-          title: "Help me write an essay",
-          label: `about AI chat applications`,
-          action: `Help me write an essay about AI chat applications`,
+          title: "Trip planning assited",
+          label: `Group of similar tabs connected to your trip`,
+          action: `Help me plan my trip`,
         },
         {
-          title: "What is the weather",
-          label: "in San Francisco?",
-          action: "What is the weather in San Francisco?",
+          title: "Update my browser settings",
+          label: "Be able to change your browser settings on the fly",
+          action: "Help me change my settings",
         },
       ].map((suggestedAction, index) => (
         <motion.div
@@ -148,10 +148,10 @@ const ThreadWelcomeSuggestions: FC = () => {
               className="dark:hover:bg-accent/60 h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-xl border px-4 py-3.5 text-left text-sm sm:flex-col"
               aria-label={suggestedAction.action}
             >
-              <span className="font-medium">
+              <span className="font-medium whitespace-normal">
                 {suggestedAction.title}
               </span>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground whitespace-normal text-xs">
                 {suggestedAction.label}
               </p>
             </Button>
@@ -169,10 +169,10 @@ const Composer: FC = () => {
       <ThreadPrimitive.Empty>
         <ThreadWelcomeSuggestions />
       </ThreadPrimitive.Empty>
-      <ComposerPrimitive.Root className="focus-within:ring-offset-2 relative flex w-full flex-col rounded-2xl focus-within:ring-2 focus-within:ring-black dark:focus-within:ring-white">
+      <ComposerPrimitive.Root className="focus-within:ring-offset-2 relative flex w-full flex-col rounded-2xl focus-within:ring-2 focus-within:ring-black dark:focus-within:ring-white z-10">
         <ComposerPrimitive.Input
           placeholder="Send a message..."
-          className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
+          className=" border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
           rows={1}
           autoFocus
           aria-label="Message input"
@@ -205,7 +205,7 @@ const ComposerAction: FC = () => {
   };
 
   return (
-    <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2">
+    <div className=" border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2">
       <TooltipIconButton
         tooltip="Attach file"
         variant="ghost"
