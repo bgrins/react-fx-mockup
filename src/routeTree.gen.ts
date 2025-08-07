@@ -18,6 +18,7 @@ import { Route as LinkPreviewDemoRouteImport } from './routes/link-preview-demo'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InferTestIndexRouteImport } from './routes/infer-test/index'
 import { Route as InferTestInferTestRouteImport } from './routes/infer-test/_infer-test'
+import { ServerRoute as ApiChatServerRouteImport } from './routes/api/chat'
 import { ServerRoute as ApiInferV1ChatCompletionsServerRouteImport } from './routes/api/infer/v1/chat/completions'
 
 const InferTestRouteImport = createFileRoute('/infer-test')()
@@ -56,6 +57,11 @@ const InferTestIndexRoute = InferTestIndexRouteImport.update({
 const InferTestInferTestRoute = InferTestInferTestRouteImport.update({
   id: '/_infer-test',
   getParentRoute: () => InferTestRoute,
+} as any)
+const ApiChatServerRoute = ApiChatServerRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootServerRouteImport,
 } as any)
 const ApiInferV1ChatCompletionsServerRoute =
   ApiInferV1ChatCompletionsServerRouteImport.update({
@@ -124,24 +130,28 @@ export interface RootRouteChildren {
   InferTestRoute: typeof InferTestRouteWithChildren
 }
 export interface FileServerRoutesByFullPath {
+  '/api/chat': typeof ApiChatServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesByTo {
+  '/api/chat': typeof ApiChatServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
+  '/api/chat': typeof ApiChatServerRoute
   '/api/infer/v1/chat/completions': typeof ApiInferV1ChatCompletionsServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/infer/v1/chat/completions'
+  fullPaths: '/api/chat' | '/api/infer/v1/chat/completions'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/infer/v1/chat/completions'
-  id: '__root__' | '/api/infer/v1/chat/completions'
+  to: '/api/chat' | '/api/infer/v1/chat/completions'
+  id: '__root__' | '/api/chat' | '/api/infer/v1/chat/completions'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
+  ApiChatServerRoute: typeof ApiChatServerRoute
   ApiInferV1ChatCompletionsServerRoute: typeof ApiInferV1ChatCompletionsServerRoute
 }
 
@@ -200,6 +210,13 @@ declare module '@tanstack/react-router' {
 }
 declare module '@tanstack/react-start/server' {
   interface ServerFileRoutesByPath {
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
     '/api/infer/v1/chat/completions': {
       id: '/api/infer/v1/chat/completions'
       path: '/api/infer/v1/chat/completions'
@@ -235,6 +252,7 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
+  ApiChatServerRoute: ApiChatServerRoute,
   ApiInferV1ChatCompletionsServerRoute: ApiInferV1ChatCompletionsServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport

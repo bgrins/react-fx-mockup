@@ -18,6 +18,7 @@ import {
 import { Label } from "../../components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Alert, AlertDescription } from "../../components/ui/alert";
+import { MegaChat } from "~/components/assistant-ui/mega-chat";
 
 export const Route = createFileRoute("/infer-test/")({
   component: InferTestPage,
@@ -314,6 +315,9 @@ function InferTestPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      <div>
+        <MegaChat accessKey={accessKey} />
+      </div>
     </div>
   );
 }
