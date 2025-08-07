@@ -42,7 +42,6 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
   activeTabId, 
   onTabClick, 
   onTabClose,
-  onNavigate,
   onNewTab,
   iframeRefs,
   smartWindowMode = false,
@@ -227,10 +226,6 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
               >
                 <SidebarCollapsedIcon />
               </button>
-              <div className="ml-2">
-                <h1 className="text-sm font-medium text-gray-800 leading-tight">Smart Window</h1>
-                <p className="text-xs text-gray-600 leading-none -mt-0.5">AI-powered browsing</p>
-              </div>
             </div>
             
             {/* Right side - toolbar icons */}
@@ -307,79 +302,53 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
           </div>
         )}
 
-        {/* Smart Window Features (when in smart mode) */}
+        {/* User Suggestions (when in smart mode) */}
         {smartWindowMode && (
           <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-center space-x-2 mb-2">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 1.5A6.5 6.5 0 1 0 14.5 8A6.5 6.5 0 0 0 8 1.5zM8 12.5A4.5 4.5 0 1 1 12.5 8A4.5 4.5 0 0 1 8 12.5z" fill="#2563eb"/>
+                    <path d="M2 3h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm0 2v6h12V5H2z" fill="#2563eb"/>
                   </svg>
                 </div>
-                <h3 className="font-medium text-gray-900">Smart Search</h3>
+                <h3 className="font-medium text-gray-900">Pick up where you left off</h3>
               </div>
               <p className="text-sm text-gray-600">
-                Enhanced search with AI-powered suggestions and context understanding
+                Continue reading and working from your recently closed tabs
               </p>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-center space-x-2 mb-2">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M2 3h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm0 2v6h12V5H2z" fill="#16a34a"/>
+                    <path d="M8 1L10.5 6H15L11.5 9.5L13 15L8 12L3 15L4.5 9.5L1 6H5.5L8 1z" fill="#16a34a"/>
                   </svg>
                 </div>
-                <h3 className="font-medium text-gray-900">Tab Intelligence</h3>
+                <h3 className="font-medium text-gray-900">Plan a trip</h3>
               </div>
               <p className="text-sm text-gray-600">
-                Automatic tab grouping, preview cards, and intelligent organization
+                Research destinations, compare flights, and organize your travel plans
               </p>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-center space-x-2 mb-2">
                 <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 2L9.5 6.5H14L10.5 9.5L12 14L8 11L4 14L5.5 9.5L2 6.5H6.5L8 2z" fill="#7c3aed"/>
+                    <path d="M3 3h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v6h8V5H4z" fill="#7c3aed"/>
                   </svg>
                 </div>
-                <h3 className="font-medium text-gray-900">AI Assistant</h3>
+                <h3 className="font-medium text-gray-900">Research a topic</h3>
               </div>
               <p className="text-sm text-gray-600">
-                Built-in AI to help with research, summarization, and web navigation
+                Gather information from multiple sources and organize your findings
               </p>
             </div>
           </div>
         )}
 
-        {/* Quick Actions (when in smart mode) */}
-        {smartWindowMode && onNavigate && onNewTab && (
-          <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => handleSafeNavigation('https://github.com/mozilla-firefox/firefox')}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-              >
-                🔧 Firefox Source Code
-              </button>
-              <button
-                onClick={() => handleSafeNavigation('https://developer.mozilla.org')}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-              >
-                📚 MDN Web Docs
-              </button>
-              <button
-                onClick={() => handleSafeNavigation('/link-preview-demo')}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-              >
-                🔗 OpenGraph Demo
-              </button>
-            </div>
-          </div>
-        )}
 
         {browsableTabs.length === 0 ? (
           /* Empty State */

@@ -278,8 +278,10 @@ describe("Smart Window Functionality", () => {
         />
       );
 
-      expect(screen.getByText("Smart Window")).toBeTruthy();
+      // Should show embedded toolbar and search input instead of title
+      expect(screen.getByPlaceholderText("Search or enter address")).toBeTruthy();
       expect(screen.queryByText("Exit")).toBe(null); // Exit button removed
+      expect(screen.queryByText("Smart Window AI-powered browsing")).toBe(null); // Label removed
     });
 
     it("should show search input in Smart Window mode", () => {
@@ -414,13 +416,8 @@ describe("Smart Window Functionality", () => {
       // Should create new tab instead of navigating current tab
       expect(onNewTab).toHaveBeenCalledWith("https://example.com");
 
-      // Test quick action click
-      const quickActionButton = screen.getByText("🔧 Firefox Source Code");
-      fireEvent.click(quickActionButton);
-
-      // Should create another new tab
-      expect(onNewTab).toHaveBeenCalledTimes(2);
-      expect(onNewTab).toHaveBeenLastCalledWith("https://github.com/mozilla-firefox/firefox");
+      // Test that onNewTab was called only once for the search
+      expect(onNewTab).toHaveBeenCalledTimes(1);
 
       // Verify onNavigate is NEVER called directly by Firefox View
       expect(onNavigate).toHaveBeenCalledTimes(0);
@@ -463,8 +460,7 @@ describe("Smart Window Functionality", () => {
         />
       );
 
-      // Should show Smart Window UI (no Exit button since it's now in TabStrip)
-      expect(screen.getByText("Smart Window")).toBeTruthy();
+      // Should show Smart Window UI elements (no Exit button since it's now in TabStrip)
       expect(screen.queryByText("Exit")).toBe(null);
       expect(screen.getByPlaceholderText("Search or enter address")).toBeTruthy();
     });
