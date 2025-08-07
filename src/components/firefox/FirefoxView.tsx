@@ -4,7 +4,7 @@ import { extractOpenGraphFromHTML } from '~/utils/opengraph';
 import { PROXY_MESSAGE_TYPES } from '~/constants/browser';
 import type { Tab } from '~/types/browser';
 import type { OpenGraphData } from '~/utils/opengraph';
-import { defaultShortcuts } from '~/constants/shortcuts';
+import { useProfile } from '~/contexts/ProfileContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +48,8 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
   onSidebarToggle
 }, ref) => {
   const [tabOpenGraphData, setTabOpenGraphData] = useState<TabOpenGraphData>({});
+  const { selectedProfile } = useProfile();
+  const shortcuts = selectedProfile?.shortcuts || [];
 
   // Navigation is now handled centrally in handleNavigate - no special logic needed here
 
@@ -472,7 +474,7 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 mb-8">
-              {defaultShortcuts.map((shortcut) => (
+              {shortcuts.map((shortcut) => (
                 <button
                   key={shortcut.id}
                   onClick={() => handleSafeNavigation(shortcut.url)}
