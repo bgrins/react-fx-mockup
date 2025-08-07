@@ -217,44 +217,42 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
       {/* Fixed toolbar header for Smart Window Mode */}
       {smartWindowMode && (
         <div className="sticky top-0 z-20 border-b border-white/20">
-          <div className="max-w-6xl mx-auto px-8 py-4">
-            <div className="flex items-center justify-between">
-              {/* Left side - sidebar and title */}
-              <div className="flex items-center gap-4">
-                <button 
-                  className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/50 transition-colors"
-                  onClick={onSidebarToggle}
-                  title="Sidebar"
-                >
-                  <SidebarCollapsedIcon />
-                </button>
-                <div>
-                  <h1 className="text-xl font-medium text-gray-800">Smart Window</h1>
-                  <p className="text-xs text-gray-600">AI-powered browsing</p>
-                </div>
+          <div className="h-10 flex items-center justify-between px-2 py-1">
+            {/* Left side - sidebar and title */}
+            <div className="flex items-center gap-1">
+              <button 
+                className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/50 transition-colors"
+                onClick={onSidebarToggle}
+                title="Sidebar"
+              >
+                <SidebarCollapsedIcon />
+              </button>
+              <div className="ml-2">
+                <h1 className="text-sm font-medium text-gray-800 leading-tight">Smart Window</h1>
+                <p className="text-xs text-gray-600 leading-none -mt-0.5">AI-powered browsing</p>
               </div>
-              
-              {/* Right side - toolbar icons + exit button */}
-              <div className="flex items-center gap-1">
-                <EmbeddedToolbarIcon icon={<DownloadsIcon />} />
-                <EmbeddedToolbarIcon icon={<AccountIcon />} />
-                <EmbeddedToolbarIcon icon={<ExtensionsIcon />} />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/50 transition-colors relative">
-                      <AppMenuIcon />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => searchInputRef.current?.focus()}>
-                      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
-                      </svg>
-                      <span className="ml-2">Focus Search</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+            </div>
+            
+            {/* Right side - toolbar icons */}
+            <div className="flex items-center gap-1">
+              <EmbeddedToolbarIcon icon={<DownloadsIcon />} />
+              <EmbeddedToolbarIcon icon={<AccountIcon />} />
+              <EmbeddedToolbarIcon icon={<ExtensionsIcon />} />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/50 transition-colors relative">
+                    <AppMenuIcon />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => searchInputRef.current?.focus()}>
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+                    </svg>
+                    <span className="ml-2">Focus Search</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
