@@ -1,37 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { parse } from "csv/browser/esm/sync";
 import { defaultShortcuts, type Shortcut } from "~/constants/shortcuts";
+import type { BrowserState, Profile } from "~/types/profile";
+import { ProfileContext } from "./ProfileContext.context";
 
 const MAX_SHORTCUTS = 18;
-
-// Define the structure of browser state
-export interface BrowserState {
-  windowType: "classic" | "smart";
-  // Future: we can add more browser state here like:
-  // sidebarOpen?: boolean;
-  // sidebarExpanded?: boolean;
-  // zoomLevel?: number;
-  // etc.
-}
-
-// Define the structure of a profile
-interface Profile {
-  name: string;
-  shortcuts: Shortcut[];
-}
-
-// Define the context value
-interface ProfileContextValue {
-  profiles: Profile[];
-  selectedProfile: Profile | null;
-  selectProfile: (profileName: string) => void;
-  browserState: BrowserState;
-  updateBrowserState: (updates: Partial<BrowserState>) => void;
-  resetBrowserState: () => void;
-}
-
-// Create the context
-const ProfileContext = createContext<ProfileContextValue | null>(null);
 
 // Default browser state
 const defaultBrowserState: BrowserState = {
@@ -208,13 +181,4 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ProfileContext.Provider>
   );
-}
-
-// Create a custom hook to use the profile context
-export function useProfile() {
-  const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error("useProfile must be used within a ProfileProvider");
-  }
-  return context;
 }

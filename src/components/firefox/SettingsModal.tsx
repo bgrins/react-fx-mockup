@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import type { Platform } from "~/types/browser";
 import { getMockupShortcuts, formatShortcut, shortcutCategories } from "~/lib/keyboard-shortcuts";
 import { useDebug } from "~/contexts/useDebug";
-import { useProfile } from "~/contexts/ProfileContext";
+import { useProfile } from "~/hooks/useProfile";
 import { Link } from "@tanstack/react-router";
 
 interface SettingsModalProps {

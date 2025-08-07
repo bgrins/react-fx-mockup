@@ -8,7 +8,8 @@ import { seo } from "~/utils/seo";
 import { SettingsIcon, ResetIcon } from "~/components/icons";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { DebugProvider } from "~/contexts/DebugContext";
-import { ProfileProvider, useProfile } from "~/contexts/ProfileContext";
+import { ProfileProvider } from "~/contexts/ProfileContext";
+import { useProfile } from "~/hooks/useProfile";
 import { Toaster } from "~/components/ui/sonner";
 
 export const Route = createRootRoute({

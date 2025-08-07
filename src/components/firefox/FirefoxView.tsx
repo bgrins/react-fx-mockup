@@ -4,7 +4,7 @@ import { extractOpenGraphFromHTML } from '~/utils/opengraph';
 import { PROXY_MESSAGE_TYPES } from '~/constants/browser';
 import type { Tab } from '~/types/browser';
 import type { OpenGraphData } from '~/utils/opengraph';
-import { useProfile } from '~/contexts/ProfileContext';
+import { useProfile } from '~/hooks/useProfile';
 import {
   DropdownMenu,
   DropdownMenuContent,

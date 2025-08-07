@@ -1,5 +1,5 @@
 import { cn } from '~/lib/utils'
-import { useProfile } from '~/contexts/ProfileContext';
+import { useProfile } from '~/hooks/useProfile';
 
 interface NewTabPageProps {
   onNavigate?: (url: string) => void

@@ -35,7 +35,7 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
 }, ref) {
   console.log('[TOOLBAR] Props received:', { canGoBack, canGoForward, url });
   return (
-    <div className={cn("h-10 bg-[#f9f9fb] flex items-center gap-1 px-2 py-1", className)}>
+    <div className={cn("h-10 flex items-center gap-1 px-2 py-1", className)}>
       {/* Left actions */}
       <div className="flex items-center gap-1">
         <button 

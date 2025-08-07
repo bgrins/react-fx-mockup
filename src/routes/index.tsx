@@ -9,7 +9,7 @@ import { urlToProxy } from "~/utils/proxy";
 import { useBrowserScale } from "~/hooks/useBrowserScale";
 import { useBrowserCore } from "~/hooks/useBrowserCore";
 import { useKeyboardShortcuts } from "~/hooks/useKeyboardShortcuts";
-import { useProfile } from "~/contexts/ProfileContext";
+import { useProfile } from "~/hooks/useProfile";
 import React from "react";
 import type { AddressBarHandle } from "~/components/firefox/AddressBar";
 import type { FirefoxViewHandle } from "~/components/firefox/FirefoxView";
@@ -103,16 +103,19 @@ function Browser(): React.ReactElement {
     }
   }, [activeTab]);
 
-  const handleTabClose = (id: string) => {
-    const newActiveTabId = coreHandleTabClose(id);
+  const handleTabClose = React.useCallback(
+    (id: string) => {
+      const newActiveTabId = coreHandleTabClose(id);
 
-    // Focus the address bar if we created a new tab
-    if (newActiveTabId && tabs.length === 1) {
-      setTimeout(() => {
-        addressBarRef.current?.focus();
-      }, 0);
-    }
-  };
+      // Focus the address bar if we created a new tab
+      if (newActiveTabId && tabs.length === 1) {
+        setTimeout(() => {
+          addressBarRef.current?.focus();
+        }, 0);
+      }
+    },
+    [coreHandleTabClose, tabs.length],
+  );
 
   const handleNewTab = (url?: string) => {
     const newTabId = coreHandleNewTab(url);
@@ -152,6 +155,21 @@ function Browser(): React.ReactElement {
       }
     }
   };
+
+  // When smart mode is restored at startup, prune New Tabs
+  React.useEffect(() => {
+    if (smartWindowMode) {
+      // Find all New Tab tabs (about:blank) that are not the Firefox View tab
+      const newTabs = tabs.filter(
+        (tab) => tab.url === ABOUT_PAGES.BLANK && tab.id !== "firefox-view",
+      );
+
+      // Close all New Tab tabs
+      newTabs.forEach((tab) => {
+        handleTabClose(tab.id);
+      });
+    }
+  }, [smartWindowMode, tabs, handleTabClose]);
 
   // Calculate scale for mobile
   const { containerStyle, browserStyle } = useBrowserScale();
@@ -339,8 +357,11 @@ function Browser(): React.ReactElement {
                 </div>
                 <div
                   className={cn(
-                    "flex-1 min-w-0 h-full overflow-hidden relative transition-all duration-200 ease-in-out",
-                    sidebarOpen && "rounded-tl-lg",
+                    "flex-1 min-w-0 h-full relative transition-all duration-200 ease-in-out",
+                    smartWindowMode && activeTab?.url !== ABOUT_PAGES.FIREFOX_VIEW
+                      ? "p-4"
+                      : "overflow-hidden",
+                    sidebarOpen && !smartWindowMode && "rounded-tl-lg",
                   )}
                 >
                   {/* Render all proxy iframes but only show the active one */}
@@ -356,7 +377,10 @@ function Browser(): React.ReactElement {
                           }}
                           src={urlToProxy(tab.url)}
                           className={cn(
-                            "w-full h-full absolute inset-0",
+                            "w-full h-full",
+                            smartWindowMode && activeTab?.url !== ABOUT_PAGES.FIREFOX_VIEW
+                              ? "rounded-lg shadow-lg border border-black/5"
+                              : "absolute inset-0",
                             tab.id === activeTabId && tab.url !== ABOUT_PAGES.BLANK
                               ? "block"
                               : "hidden",
@@ -460,7 +484,10 @@ function Browser(): React.ReactElement {
                           }}
                           src={tab.url} // Serve local file directly
                           className={cn(
-                            "w-full h-full absolute inset-0",
+                            "w-full h-full",
+                            smartWindowMode && activeTab?.url !== ABOUT_PAGES.FIREFOX_VIEW
+                              ? "rounded-lg shadow-lg border border-black/5"
+                              : "absolute inset-0",
                             tab.id === activeTabId ? "block" : "hidden",
                           )}
                           title={tab.title}
