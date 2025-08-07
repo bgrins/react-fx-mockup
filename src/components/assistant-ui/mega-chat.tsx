@@ -389,7 +389,7 @@ export function MegaChat({ accessKey }: MegaChatProps) {
   return (
     <div className="w-full h-full">
       <Tooltip.Provider>
-        <AssistantRuntimeProvider runtime={runtime}>
+        <AssistantRuntimeProvider runtime={runtime} >
           <Thread />
         </AssistantRuntimeProvider>
       </Tooltip.Provider>
