@@ -15,7 +15,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     typeof window !== "undefined" ? localStorage.getItem("infer-access-key") || "" : ""
   );
   const { debugInfo } = useDebug();
-  const { selectedProfile, selectProfile } = useProfile();
+  const { selectedProfile, selectProfile, availableProfiles } = useProfile();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     states: true,
     shortcuts: true,
@@ -163,8 +163,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     onChange={(e) => selectProfile(e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="Default">Default</option>
-                    <option value="theo">Theo's Profile</option>
+                    {availableProfiles.map((profileName) => (
+                      <option key={profileName} value={profileName}>
+                        {profileName === "Default" ? "Default" : `${profileName}'s Profile`}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </section>

@@ -9,6 +9,7 @@ interface ProfileContextValue {
   browserState: BrowserState;
   updateBrowserState: (updates: Partial<BrowserState>) => void;
   resetBrowserState: () => void;
+  availableProfiles: string[];
 }
 
 // Create the context
