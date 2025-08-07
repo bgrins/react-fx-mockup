@@ -37,7 +37,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const loadProfile = async (profileName: string) => {
     try {
-      const response = await fetch(`/src/profiles/${profileName}.csv`);
+      const response = await fetch(`/profiles/${profileName}.csv`);
       const csvText = await response.text();
       const data = parse(csvText, { columns: true, cast: true });
 
