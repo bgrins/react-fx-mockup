@@ -25,6 +25,10 @@ interface FirefoxViewProps {
   onSidebarToggle?: () => void;
 }
 
+export interface FirefoxViewHandle {
+  focusSearch: () => void;
+}
+
 interface TabOpenGraphData {
   [tabId: string]: {
     data: OpenGraphData | null;
@@ -34,7 +38,7 @@ interface TabOpenGraphData {
 }
 
 
-export function FirefoxView({ 
+export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>(({ 
   tabs, 
   activeTabId, 
   onTabClick, 
@@ -45,7 +49,7 @@ export function FirefoxView({
   smartWindowMode = false,
   onSmartWindowToggle,
   onSidebarToggle
-}: FirefoxViewProps) {
+}, ref) => {
   const [tabOpenGraphData, setTabOpenGraphData] = useState<TabOpenGraphData>({});
 
   // Navigation is now handled centrally in handleNavigate - no special logic needed here
@@ -61,6 +65,15 @@ export function FirefoxView({
   const [commandToTabMap, setCommandToTabMap] = useState<{[key: string]: string}>({});
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Expose imperative handle for focusing search
+  React.useImperativeHandle(ref, () => ({
+    focusSearch: () => {
+      if (smartWindowMode && searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }
+  }));
 
   // Extract OpenGraph data for tabs using proxy tunnel
   useEffect(() => {
@@ -266,7 +279,20 @@ export function FirefoxView({
           
           {/* Header for Classic Mode */}
           {!smartWindowMode && (
-            <div className="mb-8">
+            <div className="mb-8 relative">
+              {onSmartWindowToggle && (
+                <div className="absolute top-0 right-0">
+                  <button
+                    onClick={onSmartWindowToggle}
+                    className="px-6 py-3 bg-[#0060df] hover:bg-[#0050bb] text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm flex items-center gap-2"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
+                      <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2H2V3zm0 4h12v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7zm9 2a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/>
+                    </svg>
+                    Switch to Smart Window
+                  </button>
+                </div>
+              )}
               <div className="flex items-center justify-center">
                 <div className="text-center">
                   <h1 className="text-3xl font-light text-gray-700 mb-2">Firefox View</h1>
@@ -555,7 +581,9 @@ export function FirefoxView({
       </div>
     </div>
   );
-}
+});
+
+FirefoxView.displayName = 'FirefoxView';
 
 function CloseIcon() {
   return (
