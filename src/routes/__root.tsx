@@ -8,6 +8,7 @@ import { seo } from "~/utils/seo";
 import { SettingsIcon } from "~/components/icons";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
 import { DebugProvider } from "~/contexts/DebugContext";
+import { ProfileProvider } from "~/contexts/ProfileContext";
 import { Toaster } from "~/components/ui/sonner";
 
 export const Route = createRootRoute({
@@ -38,9 +39,11 @@ export const Route = createRootRoute({
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
   shellComponent: (props) => (
-    <DebugProvider>
-      <RootDocument {...props} />
-    </DebugProvider>
+    <ProfileProvider>
+      <DebugProvider>
+        <RootDocument {...props} />
+      </DebugProvider>
+    </ProfileProvider>
   ),
 });
 

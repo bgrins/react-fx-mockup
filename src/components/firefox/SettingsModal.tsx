@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { Platform } from "~/types/browser";
 import { getMockupShortcuts, formatShortcut, shortcutCategories } from "~/lib/keyboard-shortcuts";
 import { useDebug } from "~/contexts/useDebug";
+import { useProfile } from "~/contexts/ProfileContext";
 import { Link } from "@tanstack/react-router";
 
 interface SettingsModalProps {
@@ -14,6 +15,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     typeof window !== "undefined" ? localStorage.getItem("infer-access-key") || "" : ""
   );
   const { debugInfo } = useDebug();
+  const { profiles, selectedProfile, selectProfile } = useProfile();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     states: true,
     shortcuts: true,
@@ -146,6 +148,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </p>
                   </div>
                 </form>
+              </section>
+
+              {/* Profile Selection */}
+              <section className="border-t border-gray-200 pt-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">User Profile</h3>
+                <div className="flex items-center gap-4">
+                  <label htmlFor="profile-select" className="text-sm font-medium text-gray-700">
+                    Select Profile:
+                  </label>
+                  <select
+                    id="profile-select"
+                    value={selectedProfile?.name || ""}
+                    onChange={(e) => selectProfile(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="Default">Default</option>
+                    <option value="theo">Theo's Profile</option>
+                  </select>
+                </div>
               </section>
 
               {/* Keyboard Shortcuts */}

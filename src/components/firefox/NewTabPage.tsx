@@ -1,11 +1,13 @@
 import { cn } from '~/lib/utils'
-import { defaultShortcuts } from '~/constants/shortcuts'
+import { useProfile } from '~/contexts/ProfileContext';
 
 interface NewTabPageProps {
   onNavigate?: (url: string) => void
 }
 
 export function NewTabPage({ onNavigate }: NewTabPageProps) {
+  const { selectedProfile } = useProfile();
+  const shortcuts = selectedProfile?.shortcuts || [];
   const handleTileClick = (url: string) => {
     onNavigate?.(url)
   }
@@ -15,7 +17,7 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
       <div className="max-w-6xl mx-auto w-full">
         
         <div className="flex flex-wrap justify-center gap-4 mb-8">
-          {defaultShortcuts.map((tile) => (
+          {shortcuts.map((tile) => (
             <button
               key={tile.id}
               onClick={() => handleTileClick(tile.url)}
@@ -42,7 +44,7 @@ export function NewTabPage({ onNavigate }: NewTabPageProps) {
                   "w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center text-gray-500 text-2xl font-bold",
                   tile.favicon ? "hidden" : ""
                 )}>
-                  {tile.title.charAt(0).toUpperCase()}
+                  {tile.title?.charAt(0).toUpperCase()}
                 </div>
               </div>
               <span className="text-xs text-gray-700 font-medium truncate w-full text-center px-1">
