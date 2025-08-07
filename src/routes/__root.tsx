@@ -7,6 +7,7 @@ import appCss from "~/styles/app.css?url";
 import { seo } from "~/utils/seo";
 import { SettingsIcon, ResetIcon } from "~/components/icons";
 import { SettingsModal } from "~/components/firefox/SettingsModal";
+import { ProfileSwitcher } from "~/components/firefox/ProfileSwitcher";
 import { DebugProvider } from "~/contexts/DebugContext";
 import { ProfileProvider } from "~/contexts/ProfileContext";
 import { useProfile } from "~/hooks/useProfile";
@@ -112,6 +113,7 @@ function RootDocumentInner({ children }: { children: React.ReactNode }): React.R
             >
               <ResetIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
+            <ProfileSwitcher />
             <button
               onClick={() => setSettingsOpen(true)}
               className="p-1 sm:p-2 hover:bg-gray-100 rounded-md"

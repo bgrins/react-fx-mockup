@@ -13,6 +13,15 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+// Mock useSqliteVec hook to prevent Worker not defined error
+vi.mock("~/hooks/useSqliteVec", () => ({
+  useSqliteVec: () => ({
+    isInitialized: false,
+    selectArrays: vi.fn(),
+    exec: vi.fn(),
+  }),
+}));
+
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(),

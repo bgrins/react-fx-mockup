@@ -36,6 +36,15 @@ vi.mock("~/utils/opengraph", () => ({
   })),
 }));
 
+// Mock useSqliteVec hook to prevent Worker not defined error
+vi.mock("~/hooks/useSqliteVec", () => ({
+  useSqliteVec: () => ({
+    isInitialized: false,
+    selectArrays: vi.fn(),
+    exec: vi.fn(),
+  }),
+}));
+
 // Helper function to wrap components with ProfileProvider
 const renderWithProfileProvider = (component: React.ReactElement) => {
   return render(

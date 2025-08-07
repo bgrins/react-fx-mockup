@@ -85,14 +85,16 @@ export const Toolbar = forwardRef<AddressBarHandle, ToolbarProps>(function Toolb
             </span>
           </div>
 
-          {/* Right refresh button for smart mode */}
-          <button
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(21,20,26,0.07)] mr-2"
-            onClick={onRefresh}
-            title="Refresh"
-          >
-            <RefreshIcon />
-          </button>
+          {/* Right actions for smart mode */}
+          <div className="flex items-center gap-1">
+            <button
+              className="w-8 h-8 flex items-center justify-center rounded hover:bg-[rgba(21,20,26,0.07)]"
+              onClick={onRefresh}
+              title="Refresh"
+            >
+              <RefreshIcon />
+            </button>
+          </div>
         </>
       ) : (
         /* Classic mode: Show address bar and right actions */
