@@ -48,7 +48,7 @@ test.describe("Test Page - Proxy Tunnel", () => {
     // Verify the URL bar shows the example.com URL
     // The URL bar displays as separate domain and path spans when not focused
     const domain = await page.locator(".text-gray-900").textContent();
-    const path = await page.locator(".text-gray-500").textContent();
+    const path = await page.locator(".url-path").textContent();
     console.log("URL bar domain:", domain);
     console.log("URL bar path:", path);
     expect(domain).toBe("example.com");

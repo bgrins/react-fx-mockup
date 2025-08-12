@@ -19,7 +19,7 @@ test.describe("Back Navigation - URL Bar Update", () => {
 
     // Verify Wikipedia URL is shown in URL bar
     const domainAfterLocal = await page.locator(".text-gray-900").textContent();
-    const pathAfterLocal = await page.locator(".text-gray-500").textContent();
+    const pathAfterLocal = await page.locator(".url-path").textContent();
     console.log("Domain after navigating to local file:", domainAfterLocal);
     console.log("Path after navigating to local file:", pathAfterLocal);
     expect(domainAfterLocal).toBe("en.wikipedia.org");

@@ -11,10 +11,16 @@ test.describe("Smart Window Mode - Local Pages Title Updates", () => {
     // Wait for the app to load
     await page.waitForLoadState("networkidle");
 
-    // Enable Smart Window mode first by clicking the Smart toggle in the tab bar
-    const smartToggle = page.getByRole("button", { name: "Smart" });
-    await expect(smartToggle).toBeVisible();
-    await smartToggle.click();
+    // Enable Smart Window mode first by clicking the window mode toggle button
+    // The toggle is in a popover - first click the trigger button
+    const windowModeToggle = page
+      .locator('button[title="Classic Mode"], button[title="Smart Window Mode"]')
+      .first();
+    await expect(windowModeToggle).toBeVisible();
+    await windowModeToggle.click();
+
+    // Now click on "Smart" option in the popover
+    await page.locator('text="Smart"').click();
 
     // Click on Test Page bookmark
     console.log("Clicking on Test Page bookmark...");
