@@ -125,11 +125,11 @@
     "wrangler": "^4.26.0"
   },
   "lint-staged": {
-    "!(src/components/**).{ts,tsx}": [
+    "*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
-    "!(src/components/**).{js,jsx,json,css,md}": [
+    "*.{js,jsx,json,css,md}": [
       "prettier --write"
     ]
   }

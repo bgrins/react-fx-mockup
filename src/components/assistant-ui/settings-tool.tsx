@@ -6,16 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 
 export function SettingsTool() {
-  const [formData, setFormData] = useState({
-    username: "john_doe",
-    email: "john@example.com",
-    theme: "dark",
-    notifications: true,
-    language: "en",
-    autoSave: false,
-  });
-
-  const [submitted, setSubmitted] = useState(false);
   const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
@@ -26,21 +16,6 @@ export function SettingsTool() {
     setTokenStats(chatHistory.getTokenStats());
     setChatSessions(chatHistory.getAllChatSessions());
   }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Settings updated:", formData);
-    setSubmitted(true);
-
-    // Simulate saving
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 2000);
-  };
-
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
 
   const handleClearHistory = () => {
     if (confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
