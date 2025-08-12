@@ -40,7 +40,12 @@ test.describe("Keyboard Shortcuts", () => {
 
     // Verify settings modal is now visible
     await expect(page.locator('text="Settings & Help"')).toBeVisible();
-    await expect(page.locator('text="Starting States"')).toBeVisible();
+
+    // Click on the Shortcuts tab
+    await page.locator('text="Shortcuts"').click();
+
+    // Verify shortcuts content is visible
+    await expect(page.locator('text="Keyboard Shortcuts"')).toBeVisible();
     await expect(page.locator('text="Page Info"')).toBeVisible();
     await expect(page.locator('text="⌥I"')).toBeVisible();
 
@@ -63,6 +68,9 @@ test.describe("Keyboard Shortcuts", () => {
 
     // Wait for modal to be visible
     await expect(page.locator('text="Settings & Help"')).toBeVisible();
+
+    // Click on the Shortcuts tab to see keyboard shortcuts
+    await page.locator('text="Shortcuts"').click();
 
     // Verify Page Info shortcut is listed
     await expect(page.locator('text="Page Info"')).toBeVisible();
