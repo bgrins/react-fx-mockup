@@ -291,56 +291,10 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
           </div>
         )}
 
-        {/* User Suggestions (when in smart mode) */}
-        {smartWindowMode && (
-          <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M2 3h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm0 2v6h12V5H2z" fill="#2563eb"/>
-                  </svg>
-                </div>
-                <h3 className="font-medium text-gray-900">Pick up where you left off</h3>
-              </div>
-              <p className="text-sm text-gray-600">
-                Continue reading and working from your recently closed tabs
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 1L10.5 6H15L11.5 9.5L13 15L8 12L3 15L4.5 9.5L1 6H5.5L8 1z" fill="#16a34a"/>
-                  </svg>
-                </div>
-                <h3 className="font-medium text-gray-900">Plan a trip</h3>
-              </div>
-              <p className="text-sm text-gray-600">
-                Research destinations, compare flights, and organize your travel plans
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 3h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v6h8V5H4z" fill="#7c3aed"/>
-                  </svg>
-                </div>
-                <h3 className="font-medium text-gray-900">Research a topic</h3>
-              </div>
-              <p className="text-sm text-gray-600">
-                Gather information from multiple sources and organize your findings
-              </p>
-            </div>
-          </div>
-        )}
 
 
-        {browsableTabs.length === 0 ? (
-          /* Empty State */
+        {browsableTabs.length === 0 && !smartWindowMode ? (
+          /* Empty State - only show in classic mode */
           <div className="text-center py-8">
             <div className="text-gray-300 mb-4">
               <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="mx-auto">
@@ -352,7 +306,7 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
               Open some web pages to see link previews and manage your browsing session.
             </p>
           </div>
-        ) : (
+        ) : browsableTabs.length > 0 ? (
           /* Tab Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {browsableTabs.map(tab => {
@@ -395,47 +349,49 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
                     </div>
                   </div>
 
-                  {/* OpenGraph Preview */}
-                  <div 
-                    className="cursor-pointer"
-                    onClick={() => handleTabClick(tab.id)}
-                  >
-                    {ogData?.loading ? (
-                      <div className="p-4">
-                        <div className="animate-pulse space-y-3">
-                          <div className="h-32 bg-gray-200 rounded" />
-                          <div className="h-4 bg-gray-200 rounded w-3/4" />
-                          <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  {/* OpenGraph Preview - only show in classic mode */}
+                  {!smartWindowMode && (
+                    <div 
+                      className="cursor-pointer"
+                      onClick={() => handleTabClick(tab.id)}
+                    >
+                      {ogData?.loading ? (
+                        <div className="p-4">
+                          <div className="animate-pulse space-y-3">
+                            <div className="h-32 bg-gray-200 rounded" />
+                            <div className="h-4 bg-gray-200 rounded w-3/4" />
+                            <div className="h-3 bg-gray-200 rounded w-1/2" />
+                          </div>
                         </div>
-                      </div>
-                    ) : ogData?.error ? (
-                      <div className="p-4 text-center text-gray-500">
-                        <div className="text-gray-300 mb-2">
-                          <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="mx-auto">
-                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1,1 0 0,1 11,16A1,1 0 0,1 12,15A1,1 0 0,1 13,16A1,1 0 0,1 12,17M12,14A1,1 0 0,1 11,13V7A1,1 0 0,1 12,6A1,1 0 0,1 13,7V13A1,1 0 0,1 12,14Z" />
-                          </svg>
+                      ) : ogData?.error ? (
+                        <div className="p-4 text-center text-gray-500">
+                          <div className="text-gray-300 mb-2">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="mx-auto">
+                              <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1,1 0 0,1 11,16A1,1 0 0,1 12,15A1,1 0 0,1 13,16A1,1 0 0,1 12,17M12,14A1,1 0 0,1 11,13V7A1,1 0 0,1 12,6A1,1 0 0,1 13,7V13A1,1 0 0,1 12,14Z" />
+                            </svg>
+                          </div>
+                          <p className="text-xs">Preview unavailable</p>
                         </div>
-                        <p className="text-xs">Preview unavailable</p>
-                      </div>
-                    ) : ogData?.data && Object.keys(ogData.data).length > 0 ? (
-                      <div className="p-4">
-                        <OpenGraphPreview 
-                          data={ogData.data}
-                          loading={false}
-                          className="shadow-none border-0 bg-transparent p-0"
-                        />
-                      </div>
-                    ) : (
-                      <div className="p-4 text-center text-gray-500">
-                        <div className="text-gray-300 mb-2">
-                          <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="mx-auto">
-                            <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" />
-                          </svg>
+                      ) : ogData?.data && Object.keys(ogData.data).length > 0 ? (
+                        <div className="p-4">
+                          <OpenGraphPreview 
+                            data={ogData.data}
+                            loading={false}
+                            className="shadow-none border-0 bg-transparent p-0"
+                          />
                         </div>
-                        <p className="text-xs">No preview available</p>
-                      </div>
-                    )}
-                  </div>
+                      ) : (
+                        <div className="p-4 text-center text-gray-500">
+                          <div className="text-gray-300 mb-2">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" className="mx-auto">
+                              <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" />
+                            </svg>
+                          </div>
+                          <p className="text-xs">No preview available</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Actions */}
                   <div className="px-4 pb-4">
@@ -450,16 +406,11 @@ export const FirefoxView = React.forwardRef<FirefoxViewHandle, FirefoxViewProps>
               );
             })}
           </div>
-        )}
+        ) : null}
 
         {/* URL Shortcuts Section (only in Smart Window mode) */}
         {smartWindowMode && (
           <div className="mt-16">
-            <div className="mb-8">
-              <h2 className="text-xl font-medium text-gray-900 mb-2">Quick Access</h2>
-              <p className="text-gray-600 text-sm">Your favorite sites, one click away</p>
-            </div>
-            
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 mb-8">
               {shortcuts.map((shortcut) => (
                 <button

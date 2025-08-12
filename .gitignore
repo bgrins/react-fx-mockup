@@ -21,3 +21,5 @@ yarn.lock
 .tanstack
 workers/wrangler.jsonc
 .env.production.local
+
+scripts/.venv

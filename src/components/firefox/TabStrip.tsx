@@ -2,6 +2,7 @@ import React from 'react'
 import { CloseIcon, PlusIcon } from '~/components/icons'
 import { cn } from '~/lib/utils'
 import type { TabStripProps } from '~/types/browser'
+import { SmartWindowPopover } from './SmartWindowPopover'
 
 const TAB_WIDTH = {
   REGULAR: `w-[224px]`,
@@ -200,41 +201,10 @@ export function TabStrip({
       )}
       
       {onSmartWindowToggle && (
-        <div className="mr-4 flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden shrink-0 shadow-sm">
-          <button
-            onClick={smartWindowMode ? onSmartWindowToggle : undefined}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
-              !smartWindowMode 
-                ? "bg-blue-500 text-white shadow-sm" 
-                : "text-gray-600 hover:bg-gray-50 cursor-pointer"
-            )}
-            title="Classic Mode"
-            disabled={!smartWindowMode}
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
-              <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2H2V3zm0 4h12v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z"/>
-            </svg>
-            Classic
-          </button>
-          <div className="w-px h-4 bg-gray-300" />
-          <button
-            onClick={!smartWindowMode ? onSmartWindowToggle : undefined}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
-              smartWindowMode 
-                ? "bg-orange-500 text-white shadow-sm" 
-                : "text-gray-600 hover:bg-gray-50 cursor-pointer"
-            )}
-            title="Smart Window Mode"
-            disabled={smartWindowMode}
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" className="opacity-90">
-              <path d="M8 2L9.5 6.5H14L10.5 9.5L12 14L8 11L4 14L5.5 9.5L2 6.5H6.5L8 2z"/>
-            </svg>
-            Smart
-          </button>
-        </div>
+        <SmartWindowPopover 
+          smartWindowMode={smartWindowMode}
+          onSmartWindowToggle={onSmartWindowToggle}
+        />
       )}
     </div>
   )

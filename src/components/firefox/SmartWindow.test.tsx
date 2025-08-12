@@ -11,6 +11,9 @@ import type { Tab } from "~/types/browser";
 vi.mock("~/components/icons", () => ({
   PlusIcon: () => <div data-testid="plus-icon">+</div>,
   CloseIcon: () => <div data-testid="close-icon">×</div>,
+  SparklesIcon: () => <div data-testid="sparkles-icon">✨</div>,
+  WindowIcon: () => <div data-testid="window-icon">🪟</div>,
+  CheckIcon: () => <div data-testid="check-icon">✓</div>,
 }));
 
 // Mock dropdown components
@@ -20,6 +23,13 @@ vi.mock("~/components/ui/dropdown-menu", () => ({
   DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div data-testid="dropdown-menu">{children}</div>,
   DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => 
     <div data-testid="dropdown-item" onClick={onClick}>{children}</div>,
+}));
+
+// Mock popover components
+vi.mock("~/components/ui/popover", () => ({
+  Popover: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PopoverTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PopoverContent: ({ children }: { children: React.ReactNode }) => <div data-testid="popover-content">{children}</div>,
 }));
 
 // Mock OpenGraph components
@@ -215,8 +225,8 @@ describe("Smart Window Functionality", () => {
           />
         );
 
-        expect(screen.getByText("Classic")).toBeTruthy();
-        expect(screen.getByText("Smart")).toBeTruthy();
+        // The popover trigger button should be visible with the window icon in classic mode
+        expect(screen.getByTestId("window-icon")).toBeTruthy();
       });
 
       it("should not show toggle when onSmartWindowToggle is not provided", () => {
