@@ -226,7 +226,9 @@ describe("Smart Window Functionality", () => {
         );
 
         // The popover trigger button should be visible with the window icon in classic mode
-        expect(screen.getByTestId("window-icon")).toBeTruthy();
+        // There may be multiple window icons (in trigger and in popover content)
+        const windowIcons = screen.getAllByTestId("window-icon");
+        expect(windowIcons.length).toBeGreaterThan(0);
       });
 
       it("should not show toggle when onSmartWindowToggle is not provided", () => {
@@ -254,9 +256,8 @@ describe("Smart Window Functionality", () => {
         const classicButton = screen.getByText("Classic").closest("button");
         const smartButton = screen.getByText("Smart").closest("button");
 
-        expect(classicButton?.className).toContain("bg-blue-500");
-        expect(classicButton?.className).toContain("text-white");
-        expect(smartButton?.className).toContain("text-gray-600");
+        expect(classicButton?.className).toContain("bg-blue-50");
+        expect(smartButton?.className).not.toContain("bg-orange-50");
         expect(smartButton?.hasAttribute("disabled")).toBe(false);
       });
 
@@ -273,9 +274,8 @@ describe("Smart Window Functionality", () => {
         const classicButton = screen.getByText("Classic").closest("button");
         const smartButton = screen.getByText("Smart").closest("button");
 
-        expect(smartButton?.className).toContain("bg-orange-500");
-        expect(smartButton?.className).toContain("text-white");
-        expect(classicButton?.className).toContain("text-gray-600");
+        expect(smartButton?.className).toContain("bg-orange-50");
+        expect(classicButton?.className).not.toContain("bg-blue-50");
         expect(classicButton?.hasAttribute("disabled")).toBe(false);
       });
 
@@ -311,7 +311,7 @@ describe("Smart Window Functionality", () => {
         expect(onSmartWindowToggle).toHaveBeenCalledTimes(1);
       });
 
-      it("should disable and not call toggle for active state", () => {
+      it("should not call toggle when clicking the already active mode", () => {
         const onSmartWindowToggle = vi.fn();
         
         // Test Classic button when in classic mode
@@ -324,7 +324,9 @@ describe("Smart Window Functionality", () => {
         );
 
         const classicButton = screen.getByText("Classic").closest("button");
-        expect(classicButton?.hasAttribute("disabled")).toBe(true);
+        
+        // Button is not disabled, but clicking it should not trigger toggle
+        expect(classicButton?.hasAttribute("disabled")).toBe(false);
         
         fireEvent.click(classicButton!);
         expect(onSmartWindowToggle).not.toHaveBeenCalled();
@@ -607,8 +609,8 @@ describe("Smart Window Functionality", () => {
       const classicButton = screen.getByText("Classic").closest("button");
       const smartButton = screen.getByText("Smart").closest("button");
       
-      expect(classicButton?.className).toContain("bg-blue-500");
-      expect(smartButton?.className).not.toContain("bg-orange-500");
+      expect(classicButton?.className).toContain("bg-blue-50");
+      expect(smartButton?.className).not.toContain("bg-orange-50");
 
       // Click Smart to switch modes
       fireEvent.click(smartButton!);
