@@ -1,0 +1,102 @@
+/* Enhanced Composer CSS Module */
+
+.container {
+  position: relative;
+}
+
+.input {
+  max-height: calc(50dvh);
+  min-height: 4rem;
+  width: 100%;
+  resize: none;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  padding: 0.5rem 1rem 0.75rem 1rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.suggestionsDropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 0.25rem;
+  width: 100%;
+  max-width: 24rem;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.suggestionsContent {
+  padding: 0.5rem;
+}
+
+.suggestionsHeader {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.toolOption {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: background-color 0.15s ease-in-out;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.toolOption:hover {
+  background-color: #f9fafb;
+}
+
+.toolOptionSelected {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+.toolOptionContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.toolIcon {
+  font-size: 1.125rem;
+}
+
+.toolDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.toolName {
+  font-weight: 500;
+}
+
+.toolDescription {
+  font-size: 0.75rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolTrigger {
+  font-size: 0.75rem;
+  color: #2563eb;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}

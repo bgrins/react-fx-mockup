@@ -23,23 +23,26 @@ import {
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { motion } from "framer-motion";
 import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
 import { MarkdownText } from "./markdown-text";
+import { cn } from "~/lib/utils";
 import { ToolFallback } from "./tool-fallback";
-import { SettingsTool } from "./settings-tool";
+// import { SettingsTool } from "./settings-tool";
 import { TripPlanningTool } from "./trip-planning-tool";
+import { ShoppingTool } from "./shopping-tool";
+import { EnhancedComposer } from "./enhanced-composer";
+import styles from "./thread.module.css";
 
 export const Thread: FC = () => {
   return (
     <ThreadPrimitive.Root
-      className="backdrop-blur-sm bg-white/40 flex h-full flex-col"
+      className={styles.threadRoot}
       style={{
         ["--thread-max-width" as string]: "48rem",
         ["--thread-padding-x" as string]: "1rem",
       }}
     >
-      <ThreadPrimitive.Viewport className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll">
-        <ThreadWelcome />
+      <ThreadPrimitive.Viewport className={styles.threadViewport}>
+        {/* <ThreadWelcome />  */}
 
         <ThreadPrimitive.Messages
           components={{
@@ -50,7 +53,7 @@ export const Thread: FC = () => {
         />
 
         <ThreadPrimitive.If empty={false}>
-          <motion.div className="min-h-6 min-w-6 shrink-0" />
+          <motion.div className={styles.threadSpacer} />
         </ThreadPrimitive.If>
       </ThreadPrimitive.Viewport>
 
@@ -65,7 +68,7 @@ const ThreadScrollToBottom: FC = () => {
       <TooltipIconButton
         tooltip="Scroll to bottom"
         variant="outline"
-        className="dark:bg-background dark:hover:bg-accent absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible"
+        className={styles.scrollToBottomButton}
       >
         <ArrowDownIcon />
       </TooltipIconButton>
@@ -73,60 +76,18 @@ const ThreadScrollToBottom: FC = () => {
   );
 };
 
-const ThreadWelcome: FC = () => {
-  return (
-    <ThreadPrimitive.Empty>
-      <div className="mx-auto flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col px-[var(--thread-padding-x)]">
-        <div className="flex w-full flex-grow flex-col items-center justify-center">
-          <div className="flex size-full flex-col justify-center mb-4 md:mt-20">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.5 }}
-              className="text-2xl font-semibold"
-            >
-             Hi Mina,
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.6 }}
-              className="text-muted-foreground/65 text-2xl"
-            >
-              How can I help you today?
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    </ThreadPrimitive.Empty>
-  );
-};
 
 const ThreadWelcomeSuggestions: FC = () => {
   return (
-    <div className="grid w-full gap-2 sm:grid-cols-2">
+    <div className={styles.welcomeSuggestions}>
       {[
         {
-          title: "Compare nearby listing",
-          label: "Compare listings and recommended ones.",
-          action: "Can you come pare some nearby listing for me?",
+          title: "Compare options",
+          action: "Compare options",
         },
         {
-          title: "Summarize key details",
-          label: `An overview of the key details, tailored to you`,
-          action: `Write a summary of the key details for me`,
-        },
-        {
-          title: "Trip planning assited",
-          label: `Group of similar tabs connected to your trip`,
-          action: `Help me plan my trip`,
-        },
-        {
-          title: "Update my browser settings",
-          label: "Be able to change your browser settings on the fly",
-          action: "Help me change my settings",
+          title: "Show more",
+          action: `show more`,
         },
       ].map((suggestedAction, index) => (
         <motion.div
@@ -135,7 +96,7 @@ const ThreadWelcomeSuggestions: FC = () => {
           exit={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.05 * index }}
           key={`suggested-action-${suggestedAction.title}-${index}`}
-          className="[&:nth-child(n+3)]:hidden sm:[&:nth-child(n+3)]:block"
+          className={styles.suggestionItem}
         >
           <ThreadPrimitive.Suggestion
             prompt={suggestedAction.action}
@@ -145,16 +106,13 @@ const ThreadWelcomeSuggestions: FC = () => {
           >
             <Button
               variant="ghost"
-              className="dark:hover:bg-accent/60 h-auto w-full items-start justify-start rounded-xl border px-4 py-3.5 text-left text-sm"
+              className={styles.suggestionButton}
               aria-label={suggestedAction.action}
             >
-              <div className="flex flex-col gap-1 w-full min-w-0">
-                <span className="font-medium leading-tight break-words">
+              <div className={styles.suggestionContent}>
+                <span className={styles.suggestionTitle}>
                   {suggestedAction.title}
                 </span>
-                <p className="text-muted-foreground leading-tight break-words">
-                  {suggestedAction.label}
-                </p>
               </div>
             </Button>
           </ThreadPrimitive.Suggestion>
@@ -166,18 +124,19 @@ const ThreadWelcomeSuggestions: FC = () => {
 
 const Composer: FC = () => {
   return (
-    <div className=" relative mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 px-[var(--thread-padding-x)] pb-4 md:pb-6">
+    <div className={styles.composer}>
       <ThreadScrollToBottom />
       <ThreadPrimitive.Empty>
         <ThreadWelcomeSuggestions />
       </ThreadPrimitive.Empty>
-      <ComposerPrimitive.Root className="focus-within:ring-offset-2 relative flex w-full flex-col rounded-2xl focus-within:ring-2 focus-within:ring-black dark:focus-within:ring-white z-10">
-        <ComposerPrimitive.Input
-          placeholder="Send a message..."
-          className=" border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
-          rows={1}
-          autoFocus
-          aria-label="Message input"
+      <ComposerPrimitive.Root className={styles.composerRoot}>
+        <EnhancedComposer
+          placeholder="Send a message... (try @shopping, @trip, @tabs)"
+          onToolSelect={(tool) => {
+            console.log('Tool selected:', tool);
+            // Auto-trigger the selected tool when user picks it from @ mentions
+            // This could modify the input to include the trigger text
+          }}
         />
         <ComposerAction />
       </ComposerPrimitive.Root>
@@ -207,11 +166,11 @@ const ComposerAction: FC = () => {
   };
 
   return (
-    <div className=" border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2">
+    <div className={styles.composerAction}>
       <TooltipIconButton
         tooltip="Attach file"
         variant="ghost"
-        className="hover:bg-foreground/15 dark:hover:bg-background/50 scale-115 p-3.5"
+        className={styles.attachButton}
         onClick={handleFileAttachment}
       >
         <PlusIcon />
@@ -222,10 +181,10 @@ const ComposerAction: FC = () => {
           <Button
             type="submit"
             variant="default"
-            className="dark:border-muted-foreground/90 border-muted-foreground/60 hover:bg-primary/75 size-8 rounded-full border"
+            className={styles.sendButton}
             aria-label="Send message"
           >
-            <ArrowUpIcon className="size-5" />
+            <ArrowUpIcon className={styles.sendButtonIcon} />
           </Button>
         </ComposerPrimitive.Send>
       </ThreadPrimitive.If>
@@ -235,10 +194,10 @@ const ComposerAction: FC = () => {
           <Button
             type="button"
             variant="default"
-            className="dark:border-muted-foreground/90 border-muted-foreground/60 hover:bg-primary/75 size-8 rounded-full border"
+            className={styles.cancelButton}
             aria-label="Stop generating"
           >
-            <Square className="size-3.5 fill-white dark:size-4 dark:fill-black" />
+            <Square className={styles.cancelButtonIcon} />
           </Button>
         </ComposerPrimitive.Cancel>
       </ThreadPrimitive.If>
@@ -249,8 +208,8 @@ const ComposerAction: FC = () => {
 const MessageError: FC = () => {
   return (
     <MessagePrimitive.Error>
-      <ErrorPrimitive.Root className="border-destructive bg-destructive/10 dark:bg-destructive/5 text-destructive mt-2 rounded-md border p-3 text-sm dark:text-red-200">
-        <ErrorPrimitive.Message className="line-clamp-2" />
+      <ErrorPrimitive.Root className={styles.messageError}>
+        <ErrorPrimitive.Message className={styles.messageErrorText} />
       </ErrorPrimitive.Root>
     </MessagePrimitive.Error>
   );
@@ -260,23 +219,24 @@ const AssistantMessage: FC = () => {
   return (
     <MessagePrimitive.Root asChild>
       <motion.div
-        className="relative mx-auto grid w-full max-w-[var(--thread-max-width)] grid-cols-[auto_auto_1fr] grid-rows-[auto_1fr] px-[var(--thread-padding-x)] py-4"
+        className={styles.assistantMessage}
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role="assistant"
       >
-        <div className="ring-border bg-background col-start-1 row-start-1 flex size-8 shrink-0 items-center justify-center rounded-full ring-1">
+        <div className={styles.assistantAvatar}>
           <StarIcon size={14} />
         </div>
 
-        <div className="text-foreground col-span-2 col-start-2 row-start-1 ml-4 leading-7 break-words">
+        <div className={styles.assistantContent}>
           <MessagePrimitive.Content
             components={{
               Text: MarkdownText,
               tools: { 
                 by_name: {
-                  settings: SettingsTool,
+                  // settings: SettingsTool,
                   tripPlanning: TripPlanningTool,
+                  shopping: ShoppingTool,
                 },
                 Fallback: ToolFallback 
               },
@@ -287,7 +247,7 @@ const AssistantMessage: FC = () => {
 
         <AssistantActionBar />
 
-        <BranchPicker className="col-start-2 row-start-2 mr-2 -ml-2" />
+        <BranchPicker className={cn(styles.branchPicker, "col-start-2 row-start-2 mr-2 -ml-2")} />
       </motion.div>
     </MessagePrimitive.Root>
   );
@@ -299,7 +259,7 @@ const AssistantActionBar: FC = () => {
       hideWhenRunning
       autohide="not-last"
       autohideFloat="single-branch"
-      className="text-muted-foreground data-floating:bg-background col-start-3 row-start-2 mt-3 ml-3 flex gap-1 data-floating:absolute data-floating:mt-2 data-floating:rounded-md data-floating:border data-floating:p-1 data-floating:shadow-sm"
+      className={styles.assistantActionBar}
     >
       <ActionBarPrimitive.Copy asChild>
         <TooltipIconButton tooltip="Copy">
@@ -324,18 +284,18 @@ const UserMessage: FC = () => {
   return (
     <MessagePrimitive.Root asChild>
       <motion.div
-        className="mx-auto grid w-full max-w-[var(--thread-max-width)] auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-1 px-[var(--thread-padding-x)] py-4 [&:where(>*)]:col-start-2"
+        className={styles.userMessage}
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role="user"
       >
         <UserActionBar />
 
-        <div className="bg-muted text-foreground col-start-2 rounded-3xl px-5 py-2.5 break-words">
+        <div className={styles.userMessageBubble}>
           <MessagePrimitive.Content components={{ Text: MarkdownText }} />
         </div>
 
-        <BranchPicker className="col-span-full col-start-1 row-start-3 -mr-1 justify-end" />
+        <BranchPicker className={cn(styles.userBranchPicker, "col-span-full col-start-1 row-start-3 -mr-1 justify-end")} />
       </motion.div>
     </MessagePrimitive.Root>
   );
@@ -346,7 +306,7 @@ const UserActionBar: FC = () => {
     <ActionBarPrimitive.Root
       hideWhenRunning
       autohide="not-last"
-      className="col-start-1 mt-2.5 mr-3 flex flex-col items-end"
+      className={styles.userActionBar}
     >
       <ActionBarPrimitive.Edit asChild>
         <TooltipIconButton tooltip="Edit">
@@ -359,14 +319,14 @@ const UserActionBar: FC = () => {
 
 const EditComposer: FC = () => {
   return (
-    <div className="mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 px-[var(--thread-padding-x)]">
-      <ComposerPrimitive.Root className="bg-muted ml-auto flex w-full max-w-7/8 flex-col rounded-xl">
+    <div className={styles.editComposer}>
+      <ComposerPrimitive.Root className={styles.editComposerRoot}>
         <ComposerPrimitive.Input
-          className="text-foreground flex min-h-[60px] w-full resize-none bg-transparent p-4 outline-none"
+          className={styles.editComposerInput}
           autoFocus
         />
 
-        <div className="mx-3 mb-3 flex items-center justify-center gap-2 self-end">
+        <div className={styles.editComposerActions}>
           <ComposerPrimitive.Cancel asChild>
             <Button variant="ghost" size="sm" aria-label="Cancel edit">
               Cancel
@@ -390,7 +350,7 @@ const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({
   return (
     <BranchPickerPrimitive.Root
       hideWhenSingleBranch
-      className={cn("text-muted-foreground inline-flex items-center text-xs", className)}
+      className={cn(styles.branchPickerRoot, className)}
       {...rest}
     >
       <BranchPickerPrimitive.Previous asChild>
@@ -398,7 +358,7 @@ const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({
           <ChevronLeftIcon />
         </TooltipIconButton>
       </BranchPickerPrimitive.Previous>
-      <span className="font-medium">
+      <span className={styles.branchPickerText}>
         <BranchPickerPrimitive.Number /> / <BranchPickerPrimitive.Count />
       </span>
       <BranchPickerPrimitive.Next asChild>

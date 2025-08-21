@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BrowserShell } from "~/components/firefox/BrowserShell";
-import { Toolbar } from "~/components/firefox/Toolbar";
+import { SmartToolbar } from "~/components/firefox/SmartToolbar";
 import { FirefoxViewIcon, SparklyFirefoxViewIcon } from "~/components/firefox/Favicons";
 import { NewTabPage } from "~/components/firefox/NewTabPage";
 import { Sidebar } from "~/components/firefox/Sidebar";
@@ -75,6 +75,12 @@ function Browser(): React.ReactElement {
       switchTab("firefox-view");
     }
   }, [smartWindowMode, activeTab?.url, switchTab]);
+
+  React.useEffect(() => {
+    if (smartWindowMode && activeTab?.url) {
+      setSidebarExpanded(true);
+    }
+  }, [activeTab?.url]);
 
   // Request page content when sidebar is opened or tab changes
   React.useEffect(() => {
@@ -330,7 +336,7 @@ function Browser(): React.ReactElement {
                   className={cn(
                     "flex-shrink-0 transition-all duration-200 ease-in-out",
                     // In Smart Window mode, hide sidebar when on Firefox View; otherwise show sidebar. In classic mode, use sidebarOpen
-                    smartWindowMode
+                    sidebarExpanded && smartWindowMode
                       ? activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW
                         ? "w-0 overflow-hidden"
                         : "w-[352px] p-1 pr-0"
@@ -341,25 +347,13 @@ function Browser(): React.ReactElement {
                 >
                   {smartWindowMode && activeTab?.url !== ABOUT_PAGES.FIREFOX_VIEW ? (
                     <div className="flex flex-col h-full rounded-xl border border-white/30 shadow-[0px_4px_14px_0px_rgba(0,0,0,0.1)] overflow-hidden">
-                      {/* Smart Mode Narrow Toolbar - positioned above sidebar */}
+                      {/* Smart Mode Toolbar - positioned above sidebar */}
                       <div className="border-b border-[rgba(21,20,26,0.1)]">
-                        <Toolbar
-                          url={activeTab?.displayUrl ?? activeTab?.url ?? ""}
-                          onBack={handleBack}
-                          onForward={handleForward}
+                        <SmartToolbar
                           onRefresh={handleRefresh}
-                          onNavigate={handleNavigate}
-                          onNewTab={handleNewTab}
-                          canGoBack={canGoBack}
-                          canGoForward={canGoForward}
-                          onSidebarToggle={() => {
-                            if (smartWindowMode) {
-                              setSidebarExpanded(!sidebarExpanded);
-                            } else {
-                              setSidebarOpen(!sidebarOpen);
-                            }
+                          onClose={() => {
+                            setSidebarExpanded(false);
                           }}
-                          smartMode={true}
                           pageTitle={activeTab?.title}
                           className="shrink-0"
                         />
@@ -370,10 +364,39 @@ function Browser(): React.ReactElement {
                             ? localStorage.getItem("infer-access-key") || ""
                             : ""
                         }
+                        onNavigateUrl={(url) => {
+                          console.log("[Browser] Navigating to URL from chat:", url);
+                          console.log("[Browser] Current active tab:", activeTab?.url);
+                          console.log("[Browser] Smart window mode:", smartWindowMode);
+
+                          try {
+                            // In Smart Window mode, always create a new tab for URLs
+                            if (smartWindowMode) {
+                              console.log(
+                                "[Browser] Creating new tab for URL in Smart Window mode",
+                              );
+                              handleNewTab(url);
+                            } else {
+                              // In classic mode, navigate current tab if it's about:blank, otherwise create new tab
+                              if (activeTab?.url === ABOUT_PAGES.BLANK) {
+                                console.log("[Browser] Navigating current blank tab");
+                                handleNavigate(url);
+                              } else {
+                                console.log("[Browser] Creating new tab for URL in classic mode");
+                                handleNewTab(url);
+                              }
+                            }
+                            console.log("[Browser] Navigation completed");
+                            // Expand sidebar to show the page
+                            setSidebarExpanded(true);
+                          } catch (error) {
+                            console.error("[Browser] Navigation error:", error);
+                          }
+                        }}
                       />
                     </div>
                   ) : !smartWindowMode ? (
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0 h-full">
                       <Sidebar
                         isOpen={sidebarOpen}
                         onClose={() => setSidebarOpen(false)}
@@ -392,6 +415,24 @@ function Browser(): React.ReactElement {
                         smartWindowMode={smartWindowMode}
                         isExpanded={sidebarExpanded}
                         isFirefoxViewActive={activeTab?.url === ABOUT_PAGES.FIREFOX_VIEW}
+                        onNavigateUrl={(url) => {
+                          console.log("[Browser] Navigating to URL from sidebar chat:", url);
+                          console.log("[Browser] Current active tab:", activeTab?.url);
+
+                          try {
+                            // In classic mode, navigate current tab if it's about:blank, otherwise create new tab
+                            if (activeTab?.url === ABOUT_PAGES.BLANK) {
+                              console.log("[Browser] Navigating current blank tab");
+                              handleNavigate(url);
+                            } else {
+                              console.log("[Browser] Creating new tab for URL");
+                              handleNewTab(url);
+                            }
+                            console.log("[Browser] Sidebar navigation completed");
+                          } catch (error) {
+                            console.error("[Browser] Sidebar navigation error:", error);
+                          }
+                        }}
                       />
                     </div>
                   ) : null}

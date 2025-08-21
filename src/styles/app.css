@@ -94,6 +94,25 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
   }
+
+  /* Transparent scrollbar */
+  .scrollbar-transparent {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  }
+  .scrollbar-transparent::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-transparent::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+  .scrollbar-transparent::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.7);
+  }
 }
 
 /* Smart Window Mode styling */

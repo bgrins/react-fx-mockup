@@ -9,6 +9,7 @@ import { useEffect } from "react";
 
 interface MegaChatProps {
   accessKey: string;
+  onNavigateUrl?: (url: string) => void;
 }
 
 // Helper function to extract destination from user message
@@ -152,7 +153,7 @@ function extractDuration(message: string): string | null {
   return null;
 }
 
-export function MegaChat({ accessKey }: MegaChatProps) {
+export function MegaChat({ accessKey, onNavigateUrl }: MegaChatProps) {
   // Initialize or restore chat session on mount
   useEffect(() => {
     // Create a new session if none exists
@@ -189,6 +190,7 @@ export function MegaChat({ accessKey }: MegaChatProps) {
           Object.keys({
             settings: "settings tool",
             tripPlanning: "trip planning tool",
+            shopping: "shopping tool",
           }),
         );
 
@@ -200,6 +202,10 @@ export function MegaChat({ accessKey }: MegaChatProps) {
 
         // Check if user is asking for trip planning and force tool call if needed
         const userMessage = mappedMessages[mappedMessages.length - 1]?.content.toLowerCase() || "";
+        
+        // Debug: log the raw user message
+        console.log("Raw user message received:", userMessage);
+        
         const tripPlanningTriggers = [
           "plan a trip",
           "plan trip",
@@ -221,6 +227,7 @@ export function MegaChat({ accessKey }: MegaChatProps) {
           "going to",
           "holiday",
           "getaway",
+          "@trip",
         ];
 
         const settingsTriggers = [
@@ -234,16 +241,126 @@ export function MegaChat({ accessKey }: MegaChatProps) {
           "account settings",
           "profile settings",
           "user settings",
+          "@settings",
+        ];
+
+        const shoppingTriggers = [
+          "shopping",
+          "shop",
+          "buy",
+          "purchase",
+          "shoes",
+          "sneakers",
+          "running shoes",
+          "footwear",
+          "boots",
+          "sandals",
+          "need shoes",
+          "looking for shoes",
+          "want to buy",
+          "help me shop",
+          "find shoes",
+          "shoe shopping",
+          "@shopping",
         ];
 
         const isTripPlanningRequest = tripPlanningTriggers.some((trigger) =>
           userMessage.includes(trigger),
         );
         const isSettingsRequest = settingsTriggers.some((trigger) => userMessage.includes(trigger));
+        const isShoppingRequest = shoppingTriggers.some((trigger) => userMessage.includes(trigger));
+        
+        // Add tabs trigger detection (for future implementation)
+        const tabsTriggers = ["@tabs", "browser tabs", "tab management", "manage tabs"];
+        const isTabsRequest = tabsTriggers.some((trigger) => userMessage.includes(trigger));
+        
+        // Check for @url trigger - capture everything after @url: until whitespace or end of string
+        const urlMatch = userMessage.match(/@url:([^\s]+)/);
+        const isUrlRequest = urlMatch !== null;
+        
+        // Debug logging
+        if (urlMatch) {
+          console.log("URL regex match:", urlMatch);
+          console.log("Captured URL:", urlMatch[1]);
+          console.log("Full match:", urlMatch[0]);
+        }
 
         console.log("Is trip planning request:", isTripPlanningRequest);
         console.log("Is settings request:", isSettingsRequest);
+        console.log("Is shopping request:", isShoppingRequest);
+        console.log("Is tabs request:", isTabsRequest);
+        console.log("Is URL request:", isUrlRequest, urlMatch?.[1]);
         console.log("User message:", userMessage);
+
+        // Handle @url request first (highest priority)
+        if (isUrlRequest && urlMatch && urlMatch[1]) {
+          const urlToNavigate = urlMatch[1];
+          console.log("=== URL PROCESSING DEBUG ===");
+          console.log("Raw extracted URL:", urlToNavigate);
+          console.log("URL length:", urlToNavigate.length);
+          console.log("URL chars:", Array.from(urlToNavigate));
+          
+          // Ensure the URL has a protocol
+          let fullUrl = urlToNavigate.trim();
+          if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+            fullUrl = 'https://' + fullUrl;
+          }
+          
+          // Basic URL validation
+          try {
+            new URL(fullUrl);
+            console.log("URL validation passed:", fullUrl);
+          } catch (urlError) {
+            console.error("Invalid URL format:", fullUrl, urlError);
+            // Try with www prefix
+            if (!fullUrl.includes('www.') && !fullUrl.includes('://localhost')) {
+              fullUrl = fullUrl.replace('https://', 'https://www.');
+              try {
+                new URL(fullUrl);
+                console.log("URL validation passed with www prefix:", fullUrl);
+              } catch (urlError2) {
+                console.error("URL still invalid after www prefix:", fullUrl, urlError2);
+              }
+            }
+          }
+          
+          console.log("Final URL being navigated to:", fullUrl);
+          console.log("=== END URL DEBUG ===");
+          
+          // Call the navigation callback if provided
+          if (onNavigateUrl) {
+            console.log("Calling onNavigateUrl with:", fullUrl);
+            try {
+              onNavigateUrl(fullUrl);
+              console.log("Navigation callback completed successfully");
+            } catch (error) {
+              console.error("Error in navigation callback:", error);
+            }
+          } else {
+            console.warn("onNavigateUrl callback not provided!");
+          }
+          
+          const responseText = `Opening ${fullUrl} in the browser...`;
+          
+          // Track assistant response
+          chatHistory.addMessage('assistant', responseText, 
+            {
+              promptTokens: 10, // Estimated
+              completionTokens: 8, // Estimated
+              totalTokens: 18,
+              model: 'gpt-4o-mini'
+            },
+            200, // Estimated response time
+          );
+
+          const content = [];
+          content.push({
+            type: "text" as const,
+            text: responseText,
+          });
+
+          return { content };
+        }
 
         // Force trip planning tool if detected
         if (isTripPlanningRequest) {
@@ -333,11 +450,79 @@ export function MegaChat({ accessKey }: MegaChatProps) {
           return { content };
         }
 
+        // Force shopping tool if detected
+        if (isShoppingRequest) {
+          console.log("Forcing shopping tool call");
+
+          const responseText = "I'll help you find the perfect shoes! Let me show you some options.";
+
+          // Track assistant response (estimated token usage for forced responses)
+          chatHistory.addMessage('assistant', responseText, 
+            {
+              promptTokens: 15, // Estimated
+              completionTokens: 12, // Estimated
+              totalTokens: 27,
+              model: 'gpt-4o-mini'
+            },
+            400, // Estimated response time
+            [{ toolName: 'shopping', args: { category: 'shoes' } }]
+          );
+
+          const content = [];
+
+          content.push({
+            type: "text" as const,
+            text: responseText,
+          });
+
+          content.push({
+            type: "tool-call" as const,
+            toolCallId: `shopping_${Date.now()}`,
+            toolName: "shopping",
+            args: {
+              category: "shoes",
+              query: userMessage,
+            },
+            argsText: JSON.stringify({
+              category: "shoes",
+              query: userMessage,
+            }),
+          });
+
+          return { content };
+        }
+
+        // Handle @tabs request (future feature demo)
+        if (isTabsRequest) {
+          console.log("Tabs feature requested");
+          
+          const responseText = "Browser tab management isn't available yet, but when implemented, you'll be able to use @tabs to organize, search, and manage your browser tabs!";
+          
+          // Track assistant response
+          chatHistory.addMessage('assistant', responseText, 
+            {
+              promptTokens: 20, // Estimated
+              completionTokens: 25, // Estimated
+              totalTokens: 45,
+              model: 'gpt-4o-mini'
+            },
+            300, // Estimated response time
+          );
+
+          const content = [];
+          content.push({
+            type: "text" as const,
+            text: responseText,
+          });
+
+          return { content };
+        }
+
         const startTime = Date.now();
         const result = await generateText({
           model: infer("gpt-4o-mini"),
           system:
-            "You are a helpful assistant with access to interactive tools. When users ask about planning trips, traveling, vacations, or itineraries, use the tripPlanning tool to show them an interactive planning interface. When users ask about settings, preferences, or configuration, use the settings tool. Always try to use the appropriate tool when the user's request matches a tool's purpose.",
+            "You are a helpful assistant with access to interactive tools. When users ask about planning trips, traveling, vacations, or itineraries, use the tripPlanning tool to show them an interactive planning interface. When users ask about settings, preferences, or configuration, use the settings tool. When users ask about shopping, shoes, or making purchases, use the shopping tool to show them product options. Always try to use the appropriate tool when the user's request matches a tool's purpose.",
           messages: mappedMessages,
           tools: {
             settings: tool({
@@ -386,6 +571,31 @@ export function MegaChat({ accessKey }: MegaChatProps) {
                   duration,
                   interests,
                   message: "Trip planning interface displayed",
+                };
+              },
+            }),
+            shopping: tool({
+              description:
+                "Show a shopping interface with product cards when the user wants to shop for shoes, footwear, or asks about shopping, buying products, or needs help finding shoes. Use this tool for any shopping-related requests.",
+              parameters: z.object({
+                category: z
+                  .string()
+                  .optional()
+                  .describe("The category of products (e.g., 'shoes', 'running shoes', 'boots')"),
+                query: z
+                  .string()
+                  .optional()
+                  .describe("The user's search query or specific requirements"),
+              }),
+              execute: async ({ category, query }) => {
+                console.log("Shopping tool called with:", {
+                  category,
+                  query,
+                });
+                return {
+                  category,
+                  query,
+                  message: "Shopping interface displayed",
                 };
               },
             }),
@@ -459,7 +669,7 @@ export function MegaChat({ accessKey }: MegaChatProps) {
   });
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full backdrop-blur-sm bg-white/60">
       <Tooltip.Provider>
         <AssistantRuntimeProvider runtime={runtime} >
           <Thread />

@@ -12,6 +12,7 @@ interface SidebarProps {
   smartWindowMode?: boolean;
   isExpanded?: boolean; // For Smart Window mode: narrow vs expanded
   isFirefoxViewActive?: boolean; // Whether Firefox View is the active tab
+  onNavigateUrl?: (url: string) => void; // For navigating to URLs from chat
 }
 
 type SidebarSection = "pageInfo" | "bookmarks" | "history" | "synced" | "settings" | null;
@@ -62,6 +63,7 @@ export function Sidebar({
   smartWindowMode = false,
   isExpanded = false,
   isFirefoxViewActive = false,
+  onNavigateUrl,
 }: SidebarProps) {
   const [activeSection, setActiveSection] = React.useState<SidebarSection>(null);
   const [previousSection, setPreviousSection] = React.useState<SidebarSection>(null);
@@ -191,8 +193,11 @@ export function Sidebar({
                 </svg>
               </button>
             </div>
-            <div className="max-h-[93%]">
-              <MegaChat accessKey={accessKey ? accessKey : ''} />
+            <div className="max-h-[93%] h-full">
+              <MegaChat 
+                accessKey={accessKey ? accessKey : ''} 
+                onNavigateUrl={onNavigateUrl}
+              />
             </div>
 
 
